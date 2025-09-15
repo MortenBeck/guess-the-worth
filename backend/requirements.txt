@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+psycopg2-binary
+alembic
+python-jose[cryptography]
+passlib[bcrypt]
+aiofiles
+pillow
+stripe
+python-socketio
+python-multipart
+python-dotenv
+pytest
+pytest-asyncio
+httpx
