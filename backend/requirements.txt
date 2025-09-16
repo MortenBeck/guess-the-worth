@@ -11,6 +11,8 @@ stripe
 python-socketio
 python-multipart
 python-dotenv
+pydantic-settings
+pydantic[email]
 pytest
 pytest-asyncio
 httpx

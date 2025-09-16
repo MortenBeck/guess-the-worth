@@ -1,14 +1,17 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import socketio
-from database import engine, Base
+from database import engine
+from models.base import Base
+from models import User, Artwork, Bid
 from routers import auth, artworks, bids, users
+from config.settings import settings
 
 app = FastAPI(title="Guess The Worth API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=settings.allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -16,7 +19,7 @@ app.add_middleware(
 
 sio = socketio.AsyncServer(
     async_mode="asgi",
-    cors_allowed_origins=["http://localhost:5173"]
+    cors_allowed_origins=settings.allowed_origins
 )
 
 socket_app = socketio.ASGIApp(sio, app)
