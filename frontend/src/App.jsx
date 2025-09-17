@@ -1,9 +1,18 @@
 import { useEffect } from 'react'
 import { useAuth0 } from '@auth0/auth0-react'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Box, Spinner, Center } from '@chakra-ui/react'
 import useAuthStore from './store/authStore'
 import socketService from './services/socket'
+import Header from './components/Header'
+import NotificationSystem from './components/NotificationSystem'
 import HomePage from './pages/HomePage'
+import ArtworksPage from './pages/ArtworksPage'
+import ArtworkPage from './pages/ArtworkPage'
+import UserDashboard from './pages/UserDashboard'
+import SellerDashboard from './pages/SellerDashboard'
+import AdminDashboard from './pages/AdminDashboard'
+import ProfilePage from './pages/ProfilePage'
 
 function App() {
   const { isLoading: auth0Loading, isAuthenticated, user, getAccessTokenSilently } = useAuth0()
@@ -52,15 +61,27 @@ function App() {
   if (auth0Loading || isLoading) {
     return (
       <Center h="100vh">
-        <Spinner size="xl" color="blue.500" />
+        <Spinner size="xl" color="primary" />
       </Center>
     )
   }
 
   return (
-    <Box minH="100vh" bg="gray.50">
-      <HomePage />
-    </Box>
+    <BrowserRouter>
+      <Box minH="100vh" bg="bg">
+        <Header />
+        <NotificationSystem />
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/artworks" element={<ArtworksPage />} />
+          <Route path="/artwork/:id" element={<ArtworkPage />} />
+          <Route path="/dashboard" element={<UserDashboard />} />
+          <Route path="/seller-dashboard" element={<SellerDashboard />} />
+          <Route path="/admin-dashboard" element={<AdminDashboard />} />
+          <Route path="/profile" element={<ProfilePage />} />
+        </Routes>
+      </Box>
+    </BrowserRouter>
   )
 }
 

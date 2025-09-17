@@ -13,7 +13,6 @@
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.4.0",
-    "@chakra-ui/icons": "^2.2.4",
     "@chakra-ui/react": "^3.27.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
@@ -22,6 +21,7 @@
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-dropzone": "^14.3.8",
+    "react-router-dom": "^7.9.1",
     "socket.io-client": "^4.8.1",
     "zustand": "^5.0.8"
   },

@@ -1,35 +1,62 @@
 import { io } from 'socket.io-client';
-import { config } from '../config/env';
 
 class SocketService {
   constructor() {
     this.socket = null;
     this.isConnected = false;
+    this.isEnabled = false;
   }
 
   connect() {
-    if (this.socket) {
+    // Skip connection if no backend is available or websockets are disabled
+    if (!this.isEnabled || this.socket) {
       return this.socket;
     }
 
-    this.socket = io(config.SOCKET_URL, {
-      transports: ['websocket'],
-      auth: {
-        token: localStorage.getItem('access_token')
-      }
-    });
+    try {
+      // Use environment variable or default to localhost:8000
+      const socketUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:8000';
+      
+      this.socket = io(socketUrl, {
+        transports: ['websocket'],
+        timeout: 5000,
+        forceNew: false,
+        auth: {
+          token: localStorage.getItem('access_token')
+        }
+      });
 
-    this.socket.on('connect', () => {
-      this.isConnected = true;
-      console.log('Socket connected');
-    });
+      this.socket.on('connect', () => {
+        this.isConnected = true;
+        console.log('Socket connected');
+      });
 
-    this.socket.on('disconnect', () => {
-      this.isConnected = false;
-      console.log('Socket disconnected');
-    });
+      this.socket.on('disconnect', () => {
+        this.isConnected = false;
+        console.log('Socket disconnected');
+      });
+
+      this.socket.on('connect_error', (error) => {
+        console.warn('Socket connection failed:', error.message);
+        this.isConnected = false;
+        this.socket = null;
+      });
+
+    } catch (error) {
+      console.warn('Socket service initialization failed:', error.message);
+      this.socket = null;
+    }
 
     return this.socket;
+  }
+
+  enable() {
+    this.isEnabled = true;
+  }
+
+  disable() {
+    this.isEnabled = false;
+    this.disconnect();
   }
 
   disconnect() {
@@ -73,6 +100,26 @@ class SocketService {
   offArtworkSold() {
     if (this.socket) {
       this.socket.off('artwork_sold');
+    }
+  }
+
+  // Generic method to listen to socket events
+  on(event, callback) {
+    if (!this.isEnabled) {
+      return; // Skip if websockets are disabled
+    }
+    if (!this.socket) {
+      this.connect();
+    }
+    if (this.socket) {
+      this.socket.on(event, callback);
+    }
+  }
+
+  // Generic method to remove socket event listeners
+  off(event, callback) {
+    if (this.socket) {
+      this.socket.off(event, callback);
     }
   }
 }
