@@ -65,7 +65,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Box minH="100vh" bg="bg">
+      <Box minH="100vh">
         <Header />
         <NotificationSystem />
         <Routes>
