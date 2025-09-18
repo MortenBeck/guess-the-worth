@@ -6,6 +6,8 @@ import {
   HStack,
   Avatar,
   Badge,
+  IconButton,
+  Text,
 } from '@chakra-ui/react'
 const BellIcon = () => <span>🔔</span>
 import { useAuth0 } from '@auth0/auth0-react'
@@ -40,40 +42,66 @@ const Header = () => {
     { label: 'Profile', path: '/profile', roles: ['admin', 'seller', 'buyer'] },
   ]
 
+  const publicNavItems = [
+    { label: 'How It Works', path: '/#how-it-works' },
+    { label: 'Artworks', path: '/artworks' },
+    { label: 'About', path: '/#about' },
+  ]
+
   const getVisibleNavItems = () => {
-    if (!isAuthenticated || !user?.role) return []
+    if (!isAuthenticated || !user?.role) return publicNavItems
     return navigationItems.filter(item => item.roles.includes(user.role))
   }
 
   return (
-    <Box bg="bg" shadow="sm" borderBottom="1px" borderColor="gray.200" position="sticky" top={0} zIndex={1000}>
+    <Box bg="white" shadow="sm" borderBottom="1px" borderColor="gray.200" position="sticky" top={0} zIndex={1000}>
       <Container maxW="container.xl" py={4}>
-        <HStack justify="space-between">
-          <Heading 
-            size="lg" 
-            color="primary" 
-            cursor="pointer" 
-            onClick={() => navigate('/')}
-          >
-            {config.APP_NAME}
-          </Heading>
+        <HStack w="full">
+          {/* Logo - Left */}
+          <Box flex="1">
+            <Heading 
+              size="lg" 
+              color="blue.600" 
+              cursor="pointer" 
+              onClick={() => navigate('/')}
+            >
+              {config.APP_NAME}
+            </Heading>
+          </Box>
 
+          {/* Center Navigation */}
+          <Box flex="1" display="flex" justifyContent="center">
+            <HStack spacing={32}>
+              {publicNavItems.map((item) => (
+                <Text
+                  key={item.path}
+                  color="gray.600"
+                  cursor="pointer"
+                  fontSize="md"
+                  fontWeight="500"
+                  _hover={{ color: "gray.800" }}
+                  onClick={() => {
+                    if (item.path.startsWith('/#')) {
+                      // Handle anchor links
+                      const element = document.querySelector(item.path.substring(1));
+                      if (element) {
+                        element.scrollIntoView({ behavior: 'smooth' });
+                      }
+                    } else {
+                      navigate(item.path);
+                    }
+                  }}
+                >
+                  {item.label}
+                </Text>
+              ))}
+            </HStack>
+          </Box>
+
+          {/* Right side - Auth buttons or User menu */}
+          <Box flex="1" display="flex" justifyContent="flex-end">
           {isAuthenticated ? (
             <HStack spacing={4}>
-              <HStack spacing={2} display={{ base: 'none', md: 'flex' }}>
-                {getVisibleNavItems().map((item) => (
-                  <Button
-                    key={item.path}
-                    variant={location.pathname === item.path ? 'solid' : 'ghost'}
-                    colorScheme={location.pathname === item.path ? 'primary' : 'gray'}
-                    size="sm"
-                    onClick={() => navigate(item.path)}
-                  >
-                    {item.label}
-                  </Button>
-                ))}
-              </HStack>
-
               <IconButton
                 icon={<BellIcon />}
                 variant="ghost"
@@ -122,12 +150,13 @@ const Header = () => {
             </HStack>
           ) : (
             <Button
-              colorScheme="primary"
+              colorScheme="blue"
               onClick={handleLogin}
             >
               Login
             </Button>
           )}
+          </Box>
         </HStack>
       </Container>
     </Box>
