@@ -79,6 +79,7 @@ const Header = () => {
                   cursor="pointer"
                   fontSize="md"
                   fontWeight="500"
+                  mx={4}
                   _hover={{ color: "gray.800" }}
                   onClick={() => {
                     if (item.path.startsWith('/#')) {
