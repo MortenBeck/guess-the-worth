@@ -7,7 +7,6 @@ import {
   Avatar,
   Badge,
 } from '@chakra-ui/react'
-// Simple custom icon to avoid dependency issues
 const BellIcon = () => <span>🔔</span>
 import { useAuth0 } from '@auth0/auth0-react'
 import { useNavigate, useLocation } from 'react-router-dom'
@@ -61,7 +60,6 @@ const Header = () => {
 
           {isAuthenticated ? (
             <HStack spacing={4}>
-              {/* Navigation Links */}
               <HStack spacing={2} display={{ base: 'none', md: 'flex' }}>
                 {getVisibleNavItems().map((item) => (
                   <Button
@@ -76,7 +74,6 @@ const Header = () => {
                 ))}
               </HStack>
 
-              {/* Notifications */}
               <IconButton
                 icon={<BellIcon />}
                 variant="ghost"
@@ -99,7 +96,6 @@ const Header = () => {
                 </Badge>
               </IconButton>
 
-              {/* User Info */}
               <HStack spacing={3}>
                 <Avatar
                   size="sm"

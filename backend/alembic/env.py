@@ -13,7 +13,7 @@ from pathlib import Path
 backend_path = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_path))
 
-# Import your models and database configuration
+# Import models and database configuration
 from database import DATABASE_URL
 from models import Base
 
@@ -26,7 +26,7 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# add your model's MetaData object here
+# add model's MetaData object here
 # for 'autogenerate' support
 target_metadata = Base.metadata
 

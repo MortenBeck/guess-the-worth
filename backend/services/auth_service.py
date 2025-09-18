@@ -13,14 +13,11 @@ class AuthService:
             userinfo_url = f"https://{settings.auth0_domain}/userinfo"
 
             async with httpx.AsyncClient() as client:
-                # Verify token with Auth0 userinfo endpoint
                 headers = {"Authorization": f"Bearer {token}"}
                 response = await client.get(userinfo_url, headers=headers)
 
                 if response.status_code == 200:
                     user_data = response.json()
-
-                    # Extract Auth0 roles from custom claims
                     auth0_roles = user_data.get(f"https://api.guesstheworth.com/roles", [])
 
                     return AuthUser(
@@ -41,7 +38,6 @@ class AuthService:
         if not auth0_roles:
             return UserRole.BUYER
 
-        # Priority order: admin > seller > buyer
         if "admin" in auth0_roles:
             return UserRole.ADMIN
         elif "seller" in auth0_roles:
@@ -53,12 +49,9 @@ class AuthService:
     def get_or_create_user(db: Session, auth_user: AuthUser) -> User:
         """Get existing user or create new one from Auth0 data with role assignment"""
         user = db.query(User).filter(User.auth0_sub == auth_user.sub).first()
-
-        # Map Auth0 roles to our UserRole
         user_role = AuthService.map_auth0_role_to_user_role(auth_user.roles)
 
         if not user:
-            # Create new user with assigned role
             user = User(
                 auth0_sub=auth_user.sub,
                 email=auth_user.email,
@@ -69,7 +62,6 @@ class AuthService:
             db.commit()
             db.refresh(user)
         else:
-            # Update existing user role if it changed in Auth0
             if user.role != user_role:
                 user.role = user_role
                 db.commit()

@@ -33,5 +33,4 @@ async def upload_artwork_image(artwork_id: int, file: UploadFile = File(...), db
     if not artwork:
         raise HTTPException(status_code=404, detail="Artwork not found")
 
-    # TODO: Implement image upload logic with aiofiles and Pillow
     return {"message": "Image upload endpoint - to be implemented"}

@@ -32,7 +32,6 @@ const useAuthStore = create(
           user: { ...state.user, ...userData },
         })),
 
-      // Role helpers
       hasRole: (role) => {
         const state = get();
         return state.user?.role === role;

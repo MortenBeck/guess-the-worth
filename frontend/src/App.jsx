@@ -34,10 +34,7 @@ function App() {
             picture: user.picture,
           }, token)
 
-          // Store token in localStorage for API calls
           localStorage.setItem('access_token', token)
-
-          // Connect socket with authentication
           socketService.connect()
 
         } catch (error) {
