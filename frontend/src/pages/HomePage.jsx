@@ -22,7 +22,7 @@ const HomePage = () => {
   }
 
   return (
-    <Box bg="#0f172a" color="white" minH="100vh">
+    <Box bg="bg" color="text" minH="100vh">
       {/* Hero Section */}
       <Box 
         pt="6rem" 
@@ -37,7 +37,7 @@ const HomePage = () => {
           left="0"
           right="0"
           bottom="0"
-          background="radial-gradient(circle at 30% 20%, rgba(99, 102, 241, 0.25) 0%, transparent 50%), radial-gradient(circle at 70% 80%, rgba(236, 72, 153, 0.25) 0%, transparent 50%)"
+          background="radial-gradient(circle at 30% 20%, rgba(33, 124, 96, 0.25) 0%, transparent 50%), radial-gradient(circle at 70% 80%, rgba(204, 204, 50, 0.25) 0%, transparent 50%)"
           zIndex="-1"
         />
         <Container maxW="7xl" position="relative" zIndex="1">
@@ -47,7 +47,7 @@ const HomePage = () => {
                 size={{ base: "3xl", md: "4xl", lg: "5xl" }}
                 fontWeight="800"
                 textAlign="center"
-                background="linear-gradient(135deg, #6366f1 0%, #ec4899 100%)"
+                background="linear-gradient(135deg, #217C60 0%, #cccc32 100%)"
                 backgroundClip="text"
                 color="transparent"
                 lineHeight="1.2"
@@ -55,7 +55,7 @@ const HomePage = () => {
                 Bid on Art.<br />Guess the Worth.
               </Heading>
               
-              <Text fontSize="xl" color="#94a3b8" maxW="600px">
+              <Text fontSize="xl" color="text.muted" maxW="600px">
                 Experience the thrill of secret threshold bidding. Artists set hidden minimum prices - 
                 bid what you think it's worth and instantly win when you hit the mark.
               </Text>
@@ -63,7 +63,7 @@ const HomePage = () => {
               <HStack spacing={12} wrap="wrap" justify="center">
                 <Button
                   size="lg"
-                  background="linear-gradient(135deg, #6366f1 0%, #ec4899 100%)"
+                  background="linear-gradient(135deg, #217C60 0%, #cccc32 100%)"
                   color="white"
                   px={10}
                   py={8}
@@ -118,20 +118,20 @@ const HomePage = () => {
             <Box w="full" mt={24}>
               <SimpleGrid columns={{ base: 2, md: 4 }} spacing={12}>
                 <VStack spacing={3}>
-                  <Text fontSize="3xl" fontWeight="700" color="#ec4899">1,247</Text>
-                  <Text fontSize="sm" color="#94a3b8" textAlign="center">Active Artworks</Text>
+                  <Text fontSize="3xl" fontWeight="700" color="primary">1,247</Text>
+                  <Text fontSize="sm" color="text.muted" textAlign="center">Active Artworks</Text>
                 </VStack>
                 <VStack spacing={3}>
-                  <Text fontSize="3xl" fontWeight="700" color="#ec4899">$89k</Text>
-                  <Text fontSize="sm" color="#94a3b8" textAlign="center">Total Bids Placed</Text>
+                  <Text fontSize="3xl" fontWeight="700" color="primary">$89k</Text>
+                  <Text fontSize="sm" color="text.muted" textAlign="center">Total Bids Placed</Text>
                 </VStack>
                 <VStack spacing={3}>
-                  <Text fontSize="3xl" fontWeight="700" color="#ec4899">156</Text>
-                  <Text fontSize="sm" color="#94a3b8" textAlign="center">Artists</Text>
+                  <Text fontSize="3xl" fontWeight="700" color="primary">156</Text>
+                  <Text fontSize="sm" color="text.muted" textAlign="center">Artists</Text>
                 </VStack>
                 <VStack spacing={3}>
-                  <Text fontSize="3xl" fontWeight="700" color="#ec4899">24/7</Text>
-                  <Text fontSize="sm" color="#94a3b8" textAlign="center">Live Bidding</Text>
+                  <Text fontSize="3xl" fontWeight="700" color="primary">24/7</Text>
+                  <Text fontSize="sm" color="text.muted" textAlign="center">Live Bidding</Text>
                 </VStack>
               </SimpleGrid>
             </Box>
@@ -140,14 +140,14 @@ const HomePage = () => {
       </Box>
 
       {/* How It Works Section */}
-      <Box bg="#1e293b" py={32}>
+      <Box bg="bg.surface" py={32}>
         <Container maxW="7xl">
           <VStack spacing={20}>
             <Heading 
               size="3xl" 
               textAlign="center" 
               fontWeight="700"
-              background="linear-gradient(135deg, #6366f1 0%, #ec4899 100%)"
+              background="linear-gradient(135deg, #217C60 0%, #cccc32 100%)"
               backgroundClip="text"
               color="transparent"
               mb={4}
@@ -156,12 +156,12 @@ const HomePage = () => {
             </Heading>
             
             <SimpleGrid columns={{ base: 1, md: 3 }} spacing={{ base: 16, md: 32 }}>
-              <Box bg="#0f172a" p={12} borderRadius="xl" textAlign="center" border="1px solid" borderColor="rgba(255,255,255,0.1)">
+              <Box bg="bg" p={12} borderRadius="xl" textAlign="center" border="1px solid" borderColor="gray.200" boxShadow="sm">
                 <VStack spacing={8}>
                   <Box
                     w="80px"
                     h="80px"
-                    bg="blue.500"
+                    bg="primary"
                     borderRadius="full"
                     display="flex"
                     alignItems="center"
@@ -170,19 +170,19 @@ const HomePage = () => {
                   >
                     🎯
                   </Box>
-                  <Heading size="md" color="white">Browse Art</Heading>
-                  <Text color="#94a3b8" lineHeight="1.6">
+                  <Heading size="md" color="text">Browse Art</Heading>
+                  <Text color="text.muted" lineHeight="1.6">
                     Discover unique artworks from talented artists. Each piece has a secret minimum price set by the artist.
                   </Text>
                 </VStack>
               </Box>
 
-              <Box bg="#0f172a" p={12} borderRadius="xl" textAlign="center" border="1px solid" borderColor="rgba(255,255,255,0.1)">
+              <Box bg="bg" p={12} borderRadius="xl" textAlign="center" border="1px solid" borderColor="gray.200" boxShadow="sm">
                 <VStack spacing={8}>
                   <Box
                     w="80px"
                     h="80px"
-                    bg="blue.500"
+                    bg="primary"
                     borderRadius="full"
                     display="flex"
                     alignItems="center"
@@ -191,19 +191,19 @@ const HomePage = () => {
                   >
                     💰
                   </Box>
-                  <Heading size="md" color="white">Place Your Bid</Heading>
-                  <Text color="#94a3b8" lineHeight="1.6">
+                  <Heading size="md" color="text">Place Your Bid</Heading>
+                  <Text color="text.muted" lineHeight="1.6">
                     Bid what you think the artwork is worth. You won't know the secret threshold until you hit it!
                   </Text>
                 </VStack>
               </Box>
 
-              <Box bg="#0f172a" p={12} borderRadius="xl" textAlign="center" border="1px solid" borderColor="rgba(255,255,255,0.1)">
+              <Box bg="bg" p={12} borderRadius="xl" textAlign="center" border="1px solid" borderColor="gray.200" boxShadow="sm">
                 <VStack spacing={8}>
                   <Box
                     w="80px"
                     h="80px"
-                    bg="blue.500"
+                    bg="primary"
                     borderRadius="full"
                     display="flex"
                     alignItems="center"
@@ -212,8 +212,8 @@ const HomePage = () => {
                   >
                     ⚡
                   </Box>
-                  <Heading size="md" color="white">Instant Win</Heading>
-                  <Text color="#94a3b8" lineHeight="1.6">
+                  <Heading size="md" color="text">Instant Win</Heading>
+                  <Text color="text.muted" lineHeight="1.6">
                     When your bid meets or exceeds the secret threshold, you instantly win and purchase the artwork!
                   </Text>
                 </VStack>
@@ -232,7 +232,7 @@ const HomePage = () => {
                 size="3xl" 
                 textAlign="center" 
                 fontWeight="700"
-                background="linear-gradient(135deg, #6366f1 0%, #ec4899 100%)"
+                background="linear-gradient(135deg, #217C60 0%, #cccc32 100%)"
                 backgroundClip="text"
                 color="transparent"
                 mb={4}
@@ -295,7 +295,7 @@ const HomePage = () => {
                         </Badge>
                       </HStack>
                       
-                      <Text color="#94a3b8" fontSize="sm">by {artwork.artist}</Text>
+                      <Text color="text.muted" fontSize="sm">by {artwork.artist}</Text>
                       
                       <Text fontWeight="bold" color="green.400" fontSize="lg">
                         Current Bid: ${artwork.bid}
@@ -317,7 +317,7 @@ const HomePage = () => {
               size="3xl" 
               textAlign="center" 
               fontWeight="700"
-              background="linear-gradient(135deg, #6366f1 0%, #ec4899 100%)"
+              background="linear-gradient(135deg, #217C60 0%, #cccc32 100%)"
               backgroundClip="text"
               color="transparent"
               mb={8}
@@ -361,12 +361,12 @@ const HomePage = () => {
 
               <Box bg="#1e293b" p={12} borderRadius="2xl" border="1px solid" borderColor="rgba(255,255,255,0.1)">
                 <VStack spacing={8}>
-                  <Text fontSize="4xl" fontWeight="bold" color="#ec4899">🎨</Text>
+                  <Text fontSize="4xl" fontWeight="bold" color="#217C60">🎨</Text>
                   <VStack spacing={6}>
                     <Heading size="lg" color="white" textAlign="center">
                       Built for DTU DevOps Course
                     </Heading>
-                    <Text color="#94a3b8" textAlign="center" lineHeight="1.6">
+                    <Text color="text.muted" textAlign="center" lineHeight="1.6">
                       This platform demonstrates modern web development practices, 
                       containerization, and deployment strategies as part of our 
                       DevOps learning journey.
@@ -401,7 +401,7 @@ const HomePage = () => {
               <Heading 
                 size="2xl" 
                 fontWeight="700"
-                background="linear-gradient(135deg, #6366f1 0%, #ec4899 100%)"
+                background="linear-gradient(135deg, #217C60 0%, #cccc32 100%)"
                 backgroundClip="text"
                 color="transparent"
                 textAlign="center"
@@ -418,7 +418,7 @@ const HomePage = () => {
                 <>
                   <Button 
                     size="lg" 
-                    background="linear-gradient(135deg, #6366f1 0%, #ec4899 100%)"
+                    background="linear-gradient(135deg, #217C60 0%, #cccc32 100%)"
                     color="white"
                     border="none"
                     px={10} 
@@ -453,7 +453,7 @@ const HomePage = () => {
               ) : (
                 <Button 
                   size="lg" 
-                  background="linear-gradient(135deg, #6366f1 0%, #ec4899 100%)"
+                  background="linear-gradient(135deg, #217C60 0%, #cccc32 100%)"
                   color="white"
                   border="none"
                   px={10} 

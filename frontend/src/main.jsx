@@ -1,9 +1,10 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { ChakraProvider, defaultSystem } from '@chakra-ui/react'
+import { ChakraProvider } from '@chakra-ui/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Auth0Provider } from '@auth0/auth0-react'
 import { config } from './config/env'
+import { system } from './theme'
 import './index.css'
 import App from './App.jsx'
 
@@ -27,7 +28,7 @@ createRoot(document.getElementById('root')).render(
       }}
     >
       <QueryClientProvider client={queryClient}>
-        <ChakraProvider value={defaultSystem}>
+        <ChakraProvider value={system}>
           <App />
         </ChakraProvider>
       </QueryClientProvider>
