@@ -55,12 +55,12 @@ const HomePage = () => {
                 Bid on Art.<br />Guess the Worth.
               </Heading>
               
-              <Text fontSize="xl" color="#94a3b8" maxW="600px">
+              <Text fontSize="xl" color="#94a3b8" maxW="600px" mb={8}>
                 Experience the thrill of secret threshold bidding. Artists set hidden minimum prices - 
                 bid what you think it's worth and instantly win when you hit the mark.
               </Text>
 
-              <HStack spacing={12} wrap="wrap" justify="center">
+              <HStack spacing={60} wrap="wrap" justify="center">
                 <Button
                   size="lg"
                   background="linear-gradient(135deg, #6366f1 0%, #ec4899 100%)"
@@ -155,7 +155,7 @@ const HomePage = () => {
               How It Works
             </Heading>
             
-            <SimpleGrid columns={{ base: 1, md: 3 }} spacing={{ base: 16, md: 32 }}>
+            <SimpleGrid columns={{ base: 1, md: 3 }} spacing={{ base: 32, md: 64 }}>
               <Box bg="#0f172a" p={12} borderRadius="xl" textAlign="center" border="1px solid" borderColor="rgba(255,255,255,0.1)">
                 <VStack spacing={8}>
                   <Box
@@ -177,7 +177,7 @@ const HomePage = () => {
                 </VStack>
               </Box>
 
-              <Box bg="#0f172a" p={12} borderRadius="xl" textAlign="center" border="1px solid" borderColor="rgba(255,255,255,0.1)">
+              <Box bg="#0f172a" p={12} borderRadius="xl" textAlign="center" border="1px solid" borderColor="rgba(255,255,255,0.1)" mx={8}>
                 <VStack spacing={8}>
                   <Box
                     w="80px"
@@ -264,6 +264,8 @@ const HomePage = () => {
                   onClick={() => navigate(`/artwork/${index + 1}`)}
                   border="1px solid"
                   borderColor="rgba(255,255,255,0.1)"
+                  mx={4}
+                  my={4}
                   _hover={{
                     transform: "translateY(-2px)",
                     boxShadow: "0 8px 25px rgba(0,0,0,0.3)"
