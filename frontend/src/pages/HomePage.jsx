@@ -140,7 +140,7 @@ const HomePage = () => {
       </Box>
 
       {/* How It Works Section */}
-      <Box bg="#1e293b" py={32}>
+      <Box id="how-it-works" bg="#1e293b" py={32}>
         <Container maxW="7xl">
           <VStack spacing={20}>
             <Heading 
