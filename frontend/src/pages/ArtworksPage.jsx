@@ -121,30 +121,33 @@ const ArtworksPage = () => {
   const categories = ['all', 'Painting', 'Photography', 'Digital Art', 'Abstract', 'Sculpture']
 
   return (
-    <Container maxW="container.xl" py={8}>
-      <VStack spacing={8} align="stretch">
-        {/* Header */}
-        <Box>
-          <Heading size="xl" color="text" mb={2}>
-            Artwork Gallery
-          </Heading>
-          <Text color="gray.600">
-            Discover and bid on unique artworks from talented artists around the world.
-          </Text>
-        </Box>
+    <Box bg="#0f172a" color="white" minH="100vh" pt={6}>
+      <Container maxW="container.xl" py={8}>
+        <VStack spacing={8} align="stretch">
+          {/* Header */}
+          <Box>
+            <Heading size="xl" color="white" mb={2}>
+              Artwork Gallery
+            </Heading>
+            <Text color="#94a3b8">
+              Discover and bid on unique artworks from talented artists around the world.
+            </Text>
+          </Box>
 
         {/* Search and Filters */}
-        <Box bg="white" p={6} borderRadius="lg" boxShadow="sm" border="1px" borderColor="gray.200">
+        <Box bg="#1e293b" p={6} borderRadius="lg" border="1px" borderColor="rgba(255,255,255,0.1)">
           <Box display="flex" flexDirection={{ base: 'column', md: 'row' }} gap={4}>
             <Box flex={2}>
               <input
                 style={{
                   width: '100%',
                   padding: '8px 12px',
-                  border: '1px solid #e2e8f0',
+                  border: '1px solid #334155',
                   borderRadius: '6px',
                   fontSize: '14px',
-                  outline: 'none'
+                  outline: 'none',
+                  backgroundColor: '#0f172a',
+                  color: 'white'
                 }}
                 placeholder="🔍 Search artworks or artists..."
                 value={searchTerm}
@@ -157,11 +160,12 @@ const ArtworksPage = () => {
                 style={{
                   width: '100%',
                   padding: '8px 12px',
-                  border: '1px solid #e2e8f0',
+                  border: '1px solid #334155',
                   borderRadius: '6px',
                   fontSize: '14px',
                   outline: 'none',
-                  backgroundColor: 'white'
+                  backgroundColor: '#0f172a',
+                  color: 'white'
                 }}
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value)}
@@ -180,11 +184,12 @@ const ArtworksPage = () => {
                 style={{
                   width: '100%',
                   padding: '8px 12px',
-                  border: '1px solid #e2e8f0',
+                  border: '1px solid #334155',
                   borderRadius: '6px',
                   fontSize: '14px',
                   outline: 'none',
-                  backgroundColor: 'white'
+                  backgroundColor: '#0f172a',
+                  color: 'white'
                 }}
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
@@ -200,7 +205,7 @@ const ArtworksPage = () => {
         </Box>
 
         {/* Results Count */}
-        <Text color="gray.600">
+        <Text color="#94a3b8">
           Showing {filteredArtworks.length} artwork{filteredArtworks.length !== 1 ? 's' : ''}
         </Text>
 
@@ -209,14 +214,13 @@ const ArtworksPage = () => {
           {filteredArtworks.map((artwork) => (
             <Box 
               key={artwork.id} 
-              bg="white"
+              bg="#1e293b"
               borderRadius="lg"
               overflow="hidden"
-              boxShadow="sm"
               border="1px"
-              borderColor="gray.200"
+              borderColor="rgba(255,255,255,0.1)"
               cursor="pointer" 
-              _hover={{ transform: 'translateY(-2px)', shadow: 'lg' }}
+              _hover={{ transform: 'translateY(-2px)', boxShadow: '0 8px 25px rgba(0,0,0,0.3)' }}
               transition="all 0.2s"
               onClick={() => navigate(`/artwork/${artwork.id}`)}
             >
@@ -243,38 +247,43 @@ const ArtworksPage = () => {
                   </HStack>
                   
                   <Box w="full">
-                    <Heading size="sm" color="text" mb={1}>
+                    <Heading size="sm" color="white" mb={1}>
                       {artwork.title}
                     </Heading>
-                    <Text color="gray.600" fontSize="sm">
+                    <Text color="#94a3b8" fontSize="sm">
                       by {artwork.artist}
                     </Text>
                   </Box>
                   
                   <VStack align="start" spacing={1} w="full">
                     <HStack justify="space-between" w="full">
-                      <Text fontSize="sm" color="gray.600">Current Bid</Text>
-                      <Text fontSize="sm" fontWeight="bold" color="primary">
+                      <Text fontSize="sm" color="#94a3b8">Current Bid</Text>
+                      <Text fontSize="sm" fontWeight="bold" color="green.400">
                         ${artwork.currentBid}
                       </Text>
                     </HStack>
                     <HStack justify="space-between" w="full">
-                      <Text fontSize="xs" color="gray.500">
+                      <Text fontSize="xs" color="#94a3b8">
                         {artwork.totalBids} bid{artwork.totalBids !== 1 ? 's' : ''}
                       </Text>
-                      <Text fontSize="xs" color="gray.500">
+                      <Text fontSize="xs" color="#94a3b8">
                         {artwork.timeLeft} left
                       </Text>
                     </HStack>
                   </VStack>
                   
                   <Button 
-                    colorScheme="primary" 
+                    background="linear-gradient(135deg, #6366f1 0%, #ec4899 100%)"
+                    color="white"
                     size="sm" 
                     w="full"
                     onClick={(e) => {
                       e.stopPropagation()
                       navigate(`/artwork/${artwork.id}`)
+                    }}
+                    _hover={{
+                      transform: "translateY(-1px)",
+                      boxShadow: "0 4px 15px rgba(99, 102, 241, 0.3)",
                     }}
                   >
                     Place Bid (Min: ${artwork.minimumBid})
@@ -286,13 +295,15 @@ const ArtworksPage = () => {
         </Box>
 
         {filteredArtworks.length === 0 && (
-          <Box bg="white" p={12} borderRadius="lg" boxShadow="sm" border="1px" borderColor="gray.200" textAlign="center">
-            <Text color="gray.500" fontSize="lg">
+          <Box bg="#1e293b" p={12} borderRadius="lg" border="1px" borderColor="rgba(255,255,255,0.1)" textAlign="center">
+            <Text color="#94a3b8" fontSize="lg">
               No artworks found matching your criteria.
             </Text>
             <Button 
               mt={4} 
               variant="outline" 
+              borderColor="#334155"
+              color="#94a3b8"
               onClick={() => {
                 setSearchTerm('')
                 setFilterCategory('all')
@@ -303,8 +314,9 @@ const ArtworksPage = () => {
             </Button>
           </Box>
         )}
-      </VStack>
-    </Container>
+        </VStack>
+      </Container>
+    </Box>
   )
 }
 

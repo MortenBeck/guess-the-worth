@@ -7,6 +7,7 @@ import socketService from './services/socket'
 import Header from './components/Header'
 import NotificationSystem from './components/NotificationSystem'
 import HomePage from './pages/HomePage'
+import Home from './pages/Home'
 import ArtworksPage from './pages/ArtworksPage'
 import ArtworkPage from './pages/ArtworkPage'
 import UserDashboard from './pages/UserDashboard'
@@ -69,7 +70,8 @@ function App() {
         <Header />
         <NotificationSystem />
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={isAuthenticated ? <Home /> : <HomePage />} />
+          <Route path="/home" element={<Home />} />
           <Route path="/artworks" element={<ArtworksPage />} />
           <Route path="/artwork/:id" element={<ArtworkPage />} />
           <Route path="/dashboard" element={<UserDashboard />} />
