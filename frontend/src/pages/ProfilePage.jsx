@@ -106,11 +106,12 @@ const ProfilePage = () => {
   }
 
   return (
-    <Container maxW="container.xl" py={8}>
-      <Box display="grid" gridTemplateColumns={{ base: "1fr", lg: "1fr 2fr" }} gap={8}>
+    <Box bg="#0f172a" minH="100vh" color="white">
+      <Container maxW="container.xl" py={8}>
+        <Box display="grid" gridTemplateColumns={{ base: "1fr", lg: "1fr 2fr" }} gap={8}>
         {/* Left Column - Profile Info */}
         <VStack spacing={6} align="stretch">
-          <Box bg="white" p={6} borderRadius="lg" boxShadow="sm" border="1px" borderColor="gray.200" textAlign="center">
+          <Box bg="#1e293b" p={6} borderRadius="lg" boxShadow="sm" border="1px" borderColor="rgba(255,255,255,0.1)" textAlign="center">
             <VStack spacing={4}>
               <Image
                 w="120px"
@@ -130,7 +131,7 @@ const ProfilePage = () => {
                     {userStats.verificationStatus}
                   </Badge>
                 </HStack>
-                <Text color="gray.600">{formData.location}</Text>
+                <Text color="#94a3b8">{formData.location}</Text>
               </VStack>
               
               <Button
@@ -146,7 +147,7 @@ const ProfilePage = () => {
           </Box>
 
           {/* Stats */}
-          <Box bg="white" p={6} borderRadius="lg" boxShadow="sm" border="1px" borderColor="gray.200">
+          <Box bg="#1e293b" p={6} borderRadius="lg" boxShadow="sm" border="1px" borderColor="rgba(255,255,255,0.1)">
             <Heading size="md" color="text" mb={4}>Profile Statistics</Heading>
             <VStack spacing={3}>
               <HStack justify="space-between" w="full">
@@ -177,7 +178,7 @@ const ProfilePage = () => {
 
         {/* Right Column - Profile Details */}
         <VStack spacing={6} align="stretch">
-          <Box bg="white" p={6} borderRadius="lg" boxShadow="sm" border="1px" borderColor="gray.200">
+          <Box bg="#1e293b" p={6} borderRadius="lg" boxShadow="sm" border="1px" borderColor="rgba(255,255,255,0.1)">
             <HStack justify="space-between" mb={4}>
               <Heading size="md" color="text">Profile Information</Heading>
               {isEditing && (
@@ -308,13 +309,13 @@ const ProfilePage = () => {
           </Box>
 
           {/* Notification Preferences */}
-          <Box bg="white" p={6} borderRadius="lg" boxShadow="sm" border="1px" borderColor="gray.200">
+          <Box bg="#1e293b" p={6} borderRadius="lg" boxShadow="sm" border="1px" borderColor="rgba(255,255,255,0.1)">
             <Heading size="md" color="text" mb={4}>Notification Preferences</Heading>
             <VStack spacing={4} align="stretch">
               <HStack justify="space-between">
                 <VStack align="start" spacing={0}>
                   <Text fontWeight="medium">Bid Updates</Text>
-                  <Text fontSize="sm" color="gray.600">Get notified when you're outbid</Text>
+                  <Text fontSize="sm" color="#94a3b8">Get notified when you're outbid</Text>
                 </VStack>
                 <Button
                   size="sm"
@@ -328,7 +329,7 @@ const ProfilePage = () => {
               <HStack justify="space-between">
                 <VStack align="start" spacing={0}>
                   <Text fontWeight="medium">Auction Reminders</Text>
-                  <Text fontSize="sm" color="gray.600">Reminders before auctions end</Text>
+                  <Text fontSize="sm" color="#94a3b8">Reminders before auctions end</Text>
                 </VStack>
                 <Button
                   size="sm"
@@ -342,7 +343,7 @@ const ProfilePage = () => {
               <HStack justify="space-between">
                 <VStack align="start" spacing={0}>
                   <Text fontWeight="medium">New Artworks</Text>
-                  <Text fontSize="sm" color="gray.600">Notify when new artworks are added</Text>
+                  <Text fontSize="sm" color="#94a3b8">Notify when new artworks are added</Text>
                 </VStack>
                 <Button
                   size="sm"
@@ -356,7 +357,7 @@ const ProfilePage = () => {
               <HStack justify="space-between">
                 <VStack align="start" spacing={0}>
                   <Text fontWeight="medium">Price Alerts</Text>
-                  <Text fontSize="sm" color="gray.600">Alert when watched items hit target price</Text>
+                  <Text fontSize="sm" color="#94a3b8">Alert when watched items hit target price</Text>
                 </VStack>
                 <Button
                   size="sm"
@@ -370,7 +371,7 @@ const ProfilePage = () => {
               <HStack justify="space-between">
                 <VStack align="start" spacing={0}>
                   <Text fontWeight="medium">Marketing Emails</Text>
-                  <Text fontSize="sm" color="gray.600">Receive promotional emails</Text>
+                  <Text fontSize="sm" color="#94a3b8">Receive promotional emails</Text>
                 </VStack>
                 <Button
                   size="sm"
@@ -384,7 +385,7 @@ const ProfilePage = () => {
           </Box>
 
           {/* Recent Activity */}
-          <Box bg="white" p={6} borderRadius="lg" boxShadow="sm" border="1px" borderColor="gray.200">
+          <Box bg="#1e293b" p={6} borderRadius="lg" boxShadow="sm" border="1px" borderColor="rgba(255,255,255,0.1)">
             <Heading size="md" color="text" mb={4}>Recent Activity</Heading>
             <VStack spacing={3} align="stretch">
               {recentActivity.map((activity) => (
@@ -392,7 +393,7 @@ const ProfilePage = () => {
                   <Text fontSize="lg">{getActivityIcon(activity.type)}</Text>
                   <VStack align="start" spacing={0} flex={1}>
                     <Text fontSize="sm" fontWeight="medium">{activity.description}</Text>
-                    <Text fontSize="xs" color="gray.600">
+                    <Text fontSize="xs" color="#94a3b8">
                       {new Date(activity.date).toLocaleDateString()}
                     </Text>
                   </VStack>
@@ -407,7 +408,7 @@ const ProfilePage = () => {
           </Box>
 
           {/* Account Settings */}
-          <Box bg="white" p={6} borderRadius="lg" boxShadow="sm" border="1px" borderColor="gray.200">
+          <Box bg="#1e293b" p={6} borderRadius="lg" boxShadow="sm" border="1px" borderColor="rgba(255,255,255,0.1)">
             <Heading size="md" color="text" mb={4}>Account Settings</Heading>
             <VStack spacing={3} align="stretch">
               <Button variant="outline" colorScheme="primary">
@@ -416,15 +417,16 @@ const ProfilePage = () => {
               <Button variant="outline" colorScheme="yellow">
                 Download My Data
               </Button>
-              <Box h="1px" bg="gray.200" />
+              <Box h="1px" bg="rgba(255,255,255,0.1)" />
               <Button variant="outline" colorScheme="red">
                 Delete Account
               </Button>
             </VStack>
           </Box>
         </VStack>
-      </Box>
-    </Container>
+        </Box>
+      </Container>
+    </Box>
   )
 }
 
