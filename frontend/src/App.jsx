@@ -14,6 +14,8 @@ import UserDashboard from './pages/UserDashboard'
 import SellerDashboard from './pages/SellerDashboard'
 import AdminDashboard from './pages/AdminDashboard'
 import ProfilePage from './pages/ProfilePage'
+import FavouritesPage from './pages/FavouritesPage'
+import HelpPage from './pages/HelpPage'
 
 function App() {
   const { isLoading: auth0Loading, isAuthenticated, user, getAccessTokenSilently } = useAuth0()
@@ -78,6 +80,8 @@ function App() {
           <Route path="/seller-dashboard" element={<SellerDashboard />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/favourites" element={<FavouritesPage />} />
+          <Route path="/help" element={<HelpPage />} />
         </Routes>
       </Box>
     </BrowserRouter>

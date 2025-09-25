@@ -64,7 +64,8 @@ const ArtworkPage = () => {
   }
 
   return (
-    <Container maxW="container.xl" py={8}>
+    <Box bg="#0f172a" minH="100vh" color="white">
+      <Container maxW="container.xl" py={8}>
       <Box display="grid" gridTemplateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap={8}>
         {/* Left Column - Artwork Details */}
         <VStack spacing={6} align="stretch">
@@ -77,39 +78,39 @@ const ArtworkPage = () => {
             borderRadius="lg"
           />
           
-          <Box bg="white" p={6} borderRadius="lg" boxShadow="sm" border="1px" borderColor="gray.200">
+          <Box bg="#1e293b" p={6} borderRadius="lg" boxShadow="sm" border="1px" borderColor="rgba(255,255,255,0.1)">
             <VStack spacing={4} align="stretch">
               <Box>
                 <Heading size="lg" color="text" mb={2}>
                   {artwork.title}
                 </Heading>
-                <Text color="gray.600" fontSize="lg">
+                <Text color="#94a3b8" fontSize="lg">
                   by {artwork.artist}
                 </Text>
               </Box>
               
-              <Text color="gray.700">
+              <Text color="#94a3b8">
                 {artwork.description}
               </Text>
               
-              <Box h="1px" bg="gray.200" />
+              <Box h="1px" bg="rgba(255,255,255,0.1)" />
               
               <Box display="grid" gridTemplateColumns="repeat(2, 1fr)" gap={4}>
                 <Box>
                   <Text fontWeight="bold" color="text">Category</Text>
-                  <Text color="gray.600">{artwork.category}</Text>
+                  <Text color="#94a3b8">{artwork.category}</Text>
                 </Box>
                 <Box>
                   <Text fontWeight="bold" color="text">Medium</Text>
-                  <Text color="gray.600">{artwork.medium}</Text>
+                  <Text color="#94a3b8">{artwork.medium}</Text>
                 </Box>
                 <Box>
                   <Text fontWeight="bold" color="text">Dimensions</Text>
-                  <Text color="gray.600">{artwork.dimensions}</Text>
+                  <Text color="#94a3b8">{artwork.dimensions}</Text>
                 </Box>
                 <Box>
                   <Text fontWeight="bold" color="text">Year</Text>
-                  <Text color="gray.600">{artwork.yearCreated}</Text>
+                  <Text color="#94a3b8">{artwork.yearCreated}</Text>
                 </Box>
               </Box>
             </VStack>
@@ -118,7 +119,7 @@ const ArtworkPage = () => {
 
         {/* Right Column - Bidding */}
         <VStack spacing={6} align="stretch">
-          <Box bg="white" p={6} borderRadius="lg" boxShadow="sm" border="1px" borderColor="gray.200">
+          <Box bg="#1e293b" p={6} borderRadius="lg" boxShadow="sm" border="1px" borderColor="rgba(255,255,255,0.1)">
             <VStack spacing={4} align="stretch">
               <HStack justify="space-between">
                 <Heading size="md" color="text">
@@ -130,7 +131,7 @@ const ArtworkPage = () => {
               </HStack>
               
               <Box>
-                <Text color="gray.600" fontSize="sm">Current Highest Bid</Text>
+                <Text color="#94a3b8" fontSize="sm">Current Highest Bid</Text>
                 <Text fontSize="2xl" fontWeight="bold" color="primary">
                   ${artwork.currentBid}
                 </Text>
@@ -139,15 +140,15 @@ const ArtworkPage = () => {
               <Box display="grid" gridTemplateColumns="repeat(2, 1fr)" gap={4}>
                 <Box>
                   <Text fontWeight="bold" color="text">Total Bids</Text>
-                  <Text color="gray.600">{artwork.totalBids}</Text>
+                  <Text color="#94a3b8">{artwork.totalBids}</Text>
                 </Box>
                 <Box>
                   <Text fontWeight="bold" color="text">Time Left</Text>
-                  <Text color="gray.600">{artwork.timeLeft}</Text>
+                  <Text color="#94a3b8">{artwork.timeLeft}</Text>
                 </Box>
               </Box>
               
-              <Box h="1px" bg="gray.200" />
+              <Box h="1px" bg="rgba(255,255,255,0.1)" />
               
               {isAuthenticated ? (
                 <VStack spacing={4}>
@@ -157,10 +158,12 @@ const ArtworkPage = () => {
                       style={{
                         width: '100%',
                         padding: '12px',
-                        border: '1px solid #e2e8f0',
+                        border: '1px solid rgba(255,255,255,0.1)',
                         borderRadius: '6px',
                         fontSize: '16px',
-                        outline: 'none'
+                        outline: 'none',
+                        backgroundColor: '#0f172a',
+                        color: 'white'
                       }}
                       type="number"
                       placeholder={`Minimum $${artwork.minimumBid}`}
@@ -171,25 +174,37 @@ const ArtworkPage = () => {
                   </Box>
                   
                   <Button
-                    colorScheme="primary"
+                    bg="white"
+                    color="#1e293b"
                     size="lg"
                     w="full"
                     onClick={handleBidSubmit}
                     isLoading={isSubmitting}
                     isDisabled={!bidAmount || bidAmount < artwork.minimumBid}
+                    _hover={{
+                      bg: "#f1f5f9",
+                      transform: "translateY(-1px)",
+                    }}
+                    _disabled={{
+                      opacity: 0.6,
+                      cursor: "not-allowed",
+                      transform: "none",
+                      boxShadow: "none"
+                    }}
+                    transition="all 0.2s"
                   >
                     Place Bid
                   </Button>
                   
-                  <Text fontSize="sm" color="gray.500" textAlign="center">
+                  <Text fontSize="sm" color="#94a3b8" textAlign="center">
                     Minimum bid: ${artwork.minimumBid}
                   </Text>
                 </VStack>
               ) : (
-                <Box bg="blue.50" border="1px" borderColor="blue.200" borderRadius="md" p={4}>
+                <Box bg="rgba(59, 130, 246, 0.1)" border="1px" borderColor="rgba(59, 130, 246, 0.3)" borderRadius="md" p={4}>
                   <HStack>
                     <Text mr={2}>ℹ️</Text>
-                    <Text color="blue.800">Please log in to place a bid</Text>
+                    <Text color="rgb(147, 197, 253)">Please log in to place a bid</Text>
                   </HStack>
                 </Box>
               )}
@@ -197,7 +212,7 @@ const ArtworkPage = () => {
           </Box>
           
           {/* Seller Info */}
-          <Box bg="white" p={6} borderRadius="lg" boxShadow="sm" border="1px" borderColor="gray.200">
+          <Box bg="#1e293b" p={6} borderRadius="lg" boxShadow="sm" border="1px" borderColor="rgba(255,255,255,0.1)">
             <VStack spacing={4} align="stretch">
               <Heading size="md" color="text">Seller Information</Heading>
               <HStack spacing={3}>
@@ -211,13 +226,13 @@ const ArtworkPage = () => {
                 <VStack align="start" spacing={1}>
                   <Text fontWeight="bold" color="text">{artwork.seller.name}</Text>
                   <HStack>
-                    <Text fontSize="sm" color="gray.600">
+                    <Text fontSize="sm" color="#94a3b8">
                       Rating: {artwork.seller.rating}/5
                     </Text>
-                    <Text fontSize="sm" color="gray.600">
+                    <Text fontSize="sm" color="#94a3b8">
                       •
                     </Text>
-                    <Text fontSize="sm" color="gray.600">
+                    <Text fontSize="sm" color="#94a3b8">
                       {artwork.seller.totalSales} sales
                     </Text>
                   </HStack>
@@ -227,15 +242,15 @@ const ArtworkPage = () => {
           </Box>
           
           {/* Recent Bids */}
-          <Box bg="white" p={6} borderRadius="lg" boxShadow="sm" border="1px" borderColor="gray.200">
+          <Box bg="#1e293b" p={6} borderRadius="lg" boxShadow="sm" border="1px" borderColor="rgba(255,255,255,0.1)">
             <VStack spacing={4} align="stretch">
               <Heading size="md" color="text">Recent Bids</Heading>
               <VStack spacing={2} align="stretch">
                 {recentBids.map((bid) => (
-                  <HStack key={bid.id} justify="space-between" p={2} bg="gray.50" borderRadius="md">
+                  <HStack key={bid.id} justify="space-between" p={2} bg="rgba(255,255,255,0.05)" borderRadius="md">
                     <VStack align="start" spacing={0}>
                       <Text fontWeight="bold" fontSize="sm">{bid.bidder}</Text>
-                      <Text fontSize="xs" color="gray.600">{bid.timestamp}</Text>
+                      <Text fontSize="xs" color="#94a3b8">{bid.timestamp}</Text>
                     </VStack>
                     <Text fontWeight="bold" color="primary">${bid.amount}</Text>
                   </HStack>
@@ -245,7 +260,8 @@ const ArtworkPage = () => {
           </Box>
         </VStack>
       </Box>
-    </Container>
+      </Container>
+    </Box>
   )
 }
 

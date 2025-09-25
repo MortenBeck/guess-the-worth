@@ -1,10 +1,12 @@
-import { Box, Button, HStack, Text, Container } from '@chakra-ui/react'
+import { Box, Button, HStack, Text, Container, VStack } from '@chakra-ui/react'
 import { useAuth0 } from '@auth0/auth0-react'
 import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
 
 const Header = () => {
   const { loginWithRedirect, logout, isAuthenticated, user } = useAuth0()
   const navigate = useNavigate()
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
   const publicNavItems = [
     { label: 'How It Works', path: '#how-it-works' },
@@ -77,24 +79,111 @@ const Header = () => {
           {/* Auth Section - Right */}
           <Box flex="1" display="flex" justifyContent="flex-end">
             {isAuthenticated ? (
-              <HStack spacing={3}>
-                <Text fontSize="sm" color="#94a3b8">Hello {user?.name}</Text>
-                <Button 
-                  size="sm"
-                  variant="outline"
-                  borderColor="#334155"
+              <Box position="relative">
+                <Button
+                  variant="ghost"
                   color="#94a3b8"
-                  bg="transparent"
-                  onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
-                  _hover={{
-                    bg: "#334155",
-                    color: "white",
-                    borderColor: "#334155"
-                  }}
+                  _hover={{ bg: "#334155", color: "white" }}
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 >
-                  Logout
+                  <HStack spacing={2}>
+                    <Text fontSize="sm">Hello {user?.name}</Text>
+                    <Text fontSize="xs">{isDropdownOpen ? '▲' : '▼'}</Text>
+                  </HStack>
                 </Button>
-              </HStack>
+
+                {isDropdownOpen && (
+                  <Box
+                    position="absolute"
+                    top="100%"
+                    right="0"
+                    mt={2}
+                    bg="#1e293b"
+                    border="1px solid"
+                    borderColor="rgba(255,255,255,0.1)"
+                    borderRadius="md"
+                    boxShadow="0 4px 12px rgba(0,0,0,0.3)"
+                    zIndex={1000}
+                    minW="180px"
+                  >
+                    <VStack spacing={0} align="stretch">
+                      <Text
+                        fontSize="sm"
+                        color="#94a3b8"
+                        cursor="pointer"
+                        p={3}
+                        _hover={{ bg: "#334155", color: "white" }}
+                        onClick={() => {
+                          navigate('/profile')
+                          setIsDropdownOpen(false)
+                        }}
+                      >
+                        👤 Profile Settings
+                      </Text>
+
+                      <Text
+                        fontSize="sm"
+                        color="#94a3b8"
+                        cursor="pointer"
+                        p={3}
+                        _hover={{ bg: "#334155", color: "white" }}
+                        onClick={() => {
+                          navigate('/favourites')
+                          setIsDropdownOpen(false)
+                        }}
+                      >
+                        ⭐ Favourites
+                      </Text>
+
+                      <Text
+                        fontSize="sm"
+                        color="#94a3b8"
+                        cursor="pointer"
+                        p={3}
+                        _hover={{ bg: "#334155", color: "white" }}
+                        onClick={() => {
+                          navigate('/dashboard')
+                          setIsDropdownOpen(false)
+                        }}
+                      >
+                        ⚙️ Dashboard
+                      </Text>
+
+                      <Box h="1px" bg="rgba(255,255,255,0.1)" />
+
+                      <Text
+                        fontSize="sm"
+                        color="#94a3b8"
+                        cursor="pointer"
+                        p={3}
+                        _hover={{ bg: "#334155", color: "white" }}
+                        onClick={() => {
+                          navigate('/help')
+                          setIsDropdownOpen(false)
+                        }}
+                      >
+                        ❓ Help & Support
+                      </Text>
+
+                      <Box h="1px" bg="rgba(255,255,255,0.1)" />
+
+                      <Text
+                        fontSize="sm"
+                        color="#f87171"
+                        cursor="pointer"
+                        p={3}
+                        _hover={{ bg: "#7f1d1d", color: "white" }}
+                        onClick={() => {
+                          logout({ logoutParams: { returnTo: window.location.origin } })
+                          setIsDropdownOpen(false)
+                        }}
+                      >
+                        Logout
+                      </Text>
+                    </VStack>
+                  </Box>
+                )}
+              </Box>
             ) : (
               <Button 
                 background="linear-gradient(135deg, #6366f1 0%, #ec4899 100%)"
