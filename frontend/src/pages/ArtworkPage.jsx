@@ -12,17 +12,19 @@ import {
 } from '@chakra-ui/react'
 import { useParams } from 'react-router-dom'
 import useAuthStore from '../store/authStore'
+import useFavoritesStore from '../store/favoritesStore'
 import placeholderImg from '../assets/placeholder.jpg'
 
 const ArtworkPage = () => {
   const { id } = useParams()
   const { user, isAuthenticated } = useAuthStore()
+  const { toggleFavorite, isFavorite } = useFavoritesStore()
   const [bidAmount, setBidAmount] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Mock artwork data - replace with actual API call
   const artwork = {
-    id,
+    id: parseInt(id),
     title: "Sunset Dreams",
     artist: "John Doe",
     description: "A beautiful painting capturing the essence of a perfect sunset over the mountains. This piece represents the artist's journey through different emotional landscapes.",
@@ -81,12 +83,27 @@ const ArtworkPage = () => {
           <Box bg="#1e293b" p={6} borderRadius="lg" boxShadow="sm" border="1px" borderColor="rgba(255,255,255,0.1)">
             <VStack spacing={4} align="stretch">
               <Box>
-                <Heading size="lg" color="text" mb={2}>
-                  {artwork.title}
-                </Heading>
-                <Text color="#94a3b8" fontSize="lg">
-                  by {artwork.artist}
-                </Text>
+                <HStack justify="space-between" align="start" mb={2}>
+                  <VStack align="start" spacing={1}>
+                    <Heading size="lg" color="text">
+                      {artwork.title}
+                    </Heading>
+                    <Text color="#94a3b8" fontSize="lg">
+                      by {artwork.artist}
+                    </Text>
+                  </VStack>
+                  {isAuthenticated && (
+                    <Button
+                      variant="ghost"
+                      color={isFavorite(artwork.id) ? "#ec4899" : "#94a3b8"}
+                      _hover={{ color: "#ec4899" }}
+                      onClick={() => toggleFavorite(artwork)}
+                      size="sm"
+                    >
+                      {isFavorite(artwork.id) ? '❤️' : '🤍'}
+                    </Button>
+                  )}
+                </HStack>
               </Box>
               
               <Text color="#94a3b8">

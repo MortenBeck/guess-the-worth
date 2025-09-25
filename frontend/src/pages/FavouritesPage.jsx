@@ -1,42 +1,25 @@
 import { Box, Container, Heading, Text, VStack, SimpleGrid, Badge, HStack, Button, Image } from '@chakra-ui/react'
 import { useNavigate } from 'react-router-dom'
 import useAuthStore from '../store/authStore'
+import useFavoritesStore from '../store/favoritesStore'
 import placeholderImg from '../assets/placeholder.jpg'
 
 const FavouritesPage = () => {
   const { user } = useAuthStore()
   const navigate = useNavigate()
+  const { favorites, removeFromFavorites } = useFavoritesStore()
 
-  // Mock favourite artworks data
-  const favouriteArtworks = [
-    {
-      id: 1,
-      title: "Sunset Dreams",
-      artist: "Sarah Chen",
-      currentBid: 245,
-      status: "active",
-      image: placeholderImg,
-      dateAdded: "2 days ago"
-    },
-    {
-      id: 3,
-      title: "Ocean Waves",
-      artist: "Emma Rodriguez",
-      currentBid: 320,
-      status: "active",
-      image: placeholderImg,
-      dateAdded: "5 days ago"
-    },
-    {
-      id: 6,
-      title: "Desert Sunset",
-      artist: "Alex Johnson",
-      currentBid: 195,
-      status: "ending",
-      image: placeholderImg,
-      dateAdded: "1 week ago"
-    },
-  ]
+  const formatDateAdded = (dateString) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffInDays = Math.floor((now - date) / (1000 * 60 * 60 * 24))
+
+    if (diffInDays === 0) return 'Today'
+    if (diffInDays === 1) return '1 day ago'
+    if (diffInDays < 7) return `${diffInDays} days ago`
+    if (diffInDays < 30) return `${Math.floor(diffInDays / 7)} week${Math.floor(diffInDays / 7) > 1 ? 's' : ''} ago`
+    return date.toLocaleDateString()
+  }
 
   return (
     <Box bg="#0f172a" minH="100vh" color="white">
@@ -48,14 +31,14 @@ const FavouritesPage = () => {
               Your Favourites
             </Heading>
             <Text color="#94a3b8" fontSize="lg">
-              Artworks you've saved for later • {favouriteArtworks.length} items
+              Artworks you've saved for later • {favorites.length} items
             </Text>
           </Box>
 
           {/* Favourites Grid */}
-          {favouriteArtworks.length > 0 ? (
+          {favorites.length > 0 ? (
             <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={8}>
-              {favouriteArtworks.map((artwork) => (
+              {favorites.map((artwork) => (
                 <Box
                   key={artwork.id}
                   bg="#1e293b"
@@ -98,23 +81,38 @@ const FavouritesPage = () => {
                           Current Bid: ${artwork.currentBid}
                         </Text>
                         <Text fontSize="xs" color="#94a3b8">
-                          Added {artwork.dateAdded}
+                          Added {formatDateAdded(artwork.dateAdded)}
                         </Text>
                       </HStack>
 
-                      <Button
-                        size="sm"
-                        bg="white"
-                        color="#1e293b"
-                        _hover={{ bg: "#f1f5f9" }}
-                        w="full"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          navigate(`/artwork/${artwork.id}`)
-                        }}
-                      >
-                        View Artwork
-                      </Button>
+                      <HStack spacing={2} w="full">
+                        <Button
+                          size="sm"
+                          bg="white"
+                          color="#1e293b"
+                          _hover={{ bg: "#f1f5f9" }}
+                          flex="1"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            navigate(`/artwork/${artwork.id}`)
+                          }}
+                        >
+                          View Artwork
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          borderColor="#f87171"
+                          color="#f87171"
+                          _hover={{ bg: "#7f1d1d", color: "white" }}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            removeFromFavorites(artwork.id)
+                          }}
+                        >
+                          Remove
+                        </Button>
+                      </HStack>
                     </VStack>
                   </Box>
                 </Box>
