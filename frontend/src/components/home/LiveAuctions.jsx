@@ -43,9 +43,9 @@ const LiveAuctions = () => {
             </Text>
           </VStack>
 
-          <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={6} w="full">
+          <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacingX={12} w="full">
             {displayArtworks.map((artwork, index) => (
-              <Box
+              <Box mx={3}
                 key={artwork.id || index}
                 bg="#1e293b"
                 borderRadius="xl"
