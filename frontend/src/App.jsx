@@ -12,6 +12,7 @@ import ArtworksPage from './pages/ArtworksPage'
 import ArtworkPage from './pages/ArtworkPage'
 import UserDashboard from './pages/UserDashboard'
 import SellerDashboard from './pages/SellerDashboard'
+import AddArtworkPage from './pages/AddArtworkPage'
 import AdminDashboard from './pages/AdminDashboard'
 import ProfilePage from './pages/ProfilePage'
 import FavouritesPage from './pages/FavouritesPage'
@@ -78,6 +79,7 @@ function App() {
           <Route path="/artwork/:id" element={<ArtworkPage />} />
           <Route path="/dashboard" element={<UserDashboard />} />
           <Route path="/seller-dashboard" element={<SellerDashboard />} />
+          <Route path="/add-artwork" element={<AddArtworkPage />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/favourites" element={<FavouritesPage />} />

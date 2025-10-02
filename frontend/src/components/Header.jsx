@@ -18,6 +18,7 @@ const Header = () => {
     { label: 'Home', path: '/' },
     { label: 'Artworks', path: '/artworks' },
     { label: 'Dashboard', path: '/dashboard' },
+    { label: 'Sell Artwork', path: '/seller-dashboard' },
   ]
 
   const navItems = isAuthenticated ? authenticatedNavItems : publicNavItems
