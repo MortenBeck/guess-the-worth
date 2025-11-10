@@ -12,6 +12,11 @@ on:
       - 'backend/**'
       - '.github/workflows/backend-ci.yml'
 
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+
 jobs:
   code-quality:
     name: Backend Code Quality
