@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from config.settings import settings
 from database import engine
 from models.base import Base
-from routers import artworks, auth, bids, users
+from routers import artworks, auth, bids, health, users
 
 app = FastAPI(title="Guess The Worth API", version="1.0.0")
 
@@ -21,6 +21,7 @@ sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins=settings.allo
 
 socket_app = socketio.ASGIApp(sio, app)
 
+app.include_router(health.router, prefix="/health", tags=["health"])
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(artworks.router, prefix="/api/artworks", tags=["artworks"])

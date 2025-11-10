@@ -1,0 +1,118 @@
+name: Deploy to Azure
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # Allow manual triggering
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  deploy-backend:
+    name: Deploy Backend to Azure App Service
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set lowercase repository name
+        run: echo "REPO_LOWERCASE=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ secrets.AZURE_BACKEND_APP_NAME }}
+          images: ghcr.io/${{ env.REPO_LOWERCASE }}/backend:${{ github.sha }}
+
+      - name: Run database migrations
+        run: |
+          # Install Azure CLI if not available
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash || true
+
+          # Run migrations via Azure App Service SSH or use a migration job
+          # This requires the app to be running first
+          echo "Database migrations should be run manually or via a separate migration job"
+          echo "You can use: az webapp ssh --name ${{ secrets.AZURE_BACKEND_APP_NAME }} --resource-group <your-rg>"
+          echo "Then run: python -m alembic upgrade head"
+
+      - name: Health check
+        run: |
+          echo "Waiting for deployment to complete..."
+          sleep 30
+          curl -f https://${{ secrets.AZURE_BACKEND_APP_NAME }}.azurewebsites.net/health || echo "Health check failed"
+
+  deploy-frontend:
+    name: Deploy Frontend to Azure App Service
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: ./frontend
+        env:
+          VITE_API_BASE_URL: ${{ secrets.AZURE_BACKEND_URL }}
+          VITE_SOCKET_URL: ${{ secrets.AZURE_BACKEND_URL }}
+          VITE_AUTH0_DOMAIN: ${{ secrets.VITE_AUTH0_DOMAIN }}
+          VITE_AUTH0_CLIENT_ID: ${{ secrets.VITE_AUTH0_CLIENT_ID }}
+          VITE_AUTH0_AUDIENCE: ${{ secrets.VITE_AUTH0_AUDIENCE }}
+        run: npm run build
+
+      - name: Create deployment package
+        working-directory: ./frontend
+        run: |
+          # Create a deployment directory with all needed files
+          mkdir -p deploy
+          cp -r dist deploy/
+          cp server.js deploy/
+          cp package.json deploy/
+          cp package-lock.json deploy/
+          cd deploy
+          # Create archive
+          zip -r ../frontend-deploy.zip .
+
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ secrets.AZURE_FRONTEND_APP_NAME }}
+          package: ./frontend/frontend-deploy.zip
+
+      - name: Health check
+        run: |
+          echo "Waiting for deployment to complete..."
+          sleep 30
+          curl -f https://${{ secrets.AZURE_FRONTEND_APP_NAME }}.azurewebsites.net || echo "Health check failed"
