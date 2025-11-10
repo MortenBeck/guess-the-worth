@@ -11,12 +11,9 @@ import {
   Image,
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
-import useAuthStore from "../store/authStore";
 import useFavoritesStore from "../store/favoritesStore";
-import placeholderImg from "../assets/placeholder.jpg";
 
 const FavouritesPage = () => {
-  const { user } = useAuthStore();
   const navigate = useNavigate();
   const { favorites, removeFromFavorites } = useFavoritesStore();
 

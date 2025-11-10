@@ -1,11 +1,9 @@
 import { useState } from "react";
 import { Box, Container, Heading, Text, Button, VStack, HStack } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
-import useAuthStore from "../store/authStore";
 
 const AddArtworkPage = () => {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
   const [newArtwork, setNewArtwork] = useState({
     title: "",
     description: "",

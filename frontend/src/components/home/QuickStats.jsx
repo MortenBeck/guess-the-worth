@@ -1,11 +1,8 @@
-import { Box, Container, Heading, Text, VStack, SimpleGrid, HStack } from "@chakra-ui/react";
+import { Box, Container, Heading, Text, VStack, SimpleGrid } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { statsService } from "../../services/api";
-import useAuthStore from "../../store/authStore";
 
 const QuickStats = () => {
-  const { user } = useAuthStore();
-
   const { data: platformStats } = useQuery({
     queryKey: ["platform-stats"],
     queryFn: () => statsService.getPlatformStats(),

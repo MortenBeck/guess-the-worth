@@ -17,7 +17,7 @@ import placeholderImg from "../assets/placeholder.jpg";
 
 const ArtworkPage = () => {
   const { id } = useParams();
-  const { user, isAuthenticated } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
   const { toggleFavorite, isFavorite } = useFavoritesStore();
   const [bidAmount, setBidAmount] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);

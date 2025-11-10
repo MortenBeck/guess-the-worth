@@ -10,16 +10,11 @@ import {
   Badge,
 } from "@chakra-ui/react";
 // Simple custom icons
-const SettingsIcon = () => <span>⚙️</span>;
 const ViewIcon = () => <span>👁️</span>;
 const EditIcon = () => <span>✏️</span>;
-const DeleteIcon = () => <span>🗑️</span>;
-import useAuthStore from "../store/authStore";
 import placeholderImg from "../assets/placeholder.jpg";
 
 const AdminDashboard = () => {
-  const { user } = useAuthStore();
-
   // Mock data - replace with actual API calls
   const stats = {
     totalUsers: 1245,

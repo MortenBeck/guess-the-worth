@@ -21,24 +21,20 @@ const createApiClient = () => {
       },
     };
 
-    try {
-      const response = await fetch(url, fetchOptions);
+    const response = await fetch(url, fetchOptions);
 
-      if (response.status === 401) {
-        localStorage.removeItem("access_token");
-        window.location.href = "/login";
-        throw new Error("Unauthorized");
-      }
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return { data };
-    } catch (error) {
-      throw error;
+    if (response.status === 401) {
+      localStorage.removeItem("access_token");
+      window.location.href = "/login";
+      throw new Error("Unauthorized");
     }
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return { data };
   };
 
   return {
@@ -126,7 +122,7 @@ export const statsService = {
         totalArtists: artists,
         liveStatus: "24/7",
       };
-    } catch (error) {
+    } catch {
       // Return mock data if API fails
       return {
         totalArtworks: 1247,

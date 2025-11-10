@@ -12,12 +12,10 @@ import {
 import { useNavigate } from "react-router-dom";
 // Simple custom icon
 const AddIcon = () => <span>➕</span>;
-import useAuthStore from "../store/authStore";
 import placeholderImg from "../assets/placeholder.jpg";
 
 const SellerDashboard = () => {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
 
   // Mock data - replace with actual API calls
   const stats = {

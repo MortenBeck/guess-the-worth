@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-const useBiddingStore = create((set, get) => ({
+const useBiddingStore = create((set) => ({
   activeArtworks: new Map(),
   currentBids: new Map(),
   socketConnected: false,

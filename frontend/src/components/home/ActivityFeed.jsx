@@ -1,9 +1,6 @@
-import { Box, Container, Heading, Text, VStack, HStack, Avatar } from "@chakra-ui/react";
-import useAuthStore from "../../store/authStore";
+import { Box, Container, Heading, Text, VStack, HStack } from "@chakra-ui/react";
 
 const ActivityFeed = () => {
-  const { user } = useAuthStore();
-
   const mockActivities = [
     {
       id: 1,
@@ -41,21 +38,6 @@ const ActivityFeed = () => {
       icon: "🎨",
     },
   ];
-
-  const getActivityColor = (type) => {
-    switch (type) {
-      case "auction_won":
-        return "green.400";
-      case "bid_placed":
-        return "blue.400";
-      case "bid_outbid":
-        return "red.400";
-      case "new_artwork":
-        return "purple.400";
-      default:
-        return "#94a3b8";
-    }
-  };
 
   return (
     <Box py={12}>
