@@ -39,9 +39,7 @@ const createApiClient = () => {
     } catch (error) {
       // Handle network errors (backend offline, no internet, etc.)
       if (error instanceof TypeError && error.message === "Failed to fetch") {
-        throw new Error(
-          "Unable to connect to server. The service may be temporarily offline."
-        );
+        throw new Error("Unable to connect to server. The service may be temporarily offline.");
       }
       // Re-throw other errors
       throw error;
