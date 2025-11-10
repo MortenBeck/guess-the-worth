@@ -12,6 +12,11 @@ on:
       - 'frontend/**'
       - '.github/workflows/frontend-ci.yml'
 
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+
 jobs:
   code-quality:
     name: Frontend Code Quality
