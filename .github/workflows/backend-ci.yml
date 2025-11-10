@@ -8,9 +8,7 @@ on:
       - '.github/workflows/backend-ci.yml'
   pull_request:
     branches: [main, dev]
-    paths:
-      - 'backend/**'
-      - '.github/workflows/backend-ci.yml'
+    # No path filters for PRs to ensure branch protection checks always run
 
 permissions:
   contents: read
