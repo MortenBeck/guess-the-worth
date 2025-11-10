@@ -55,52 +55,115 @@ This guide explains how to set up and deploy the Guess The Worth application to 
   ```
 - Note: Frontend environment variables (VITE_*) are baked into the build during CI/CD
 
+## GitHub Authentication Setup
+
+### Step 1: Create Managed Identity for GitHub Actions
+
+1. In Azure Portal, search for **"Managed Identities"**
+2. Click **+ Create**
+   - **Subscription**: Your subscription
+   - **Resource group**: Same as your App Services
+   - **Region**: Sweden Central (match your resources)
+   - **Name**: `github-actions-identity`
+3. Click **Review + Create** → **Create**
+
+### Step 2: Configure Federated Credentials
+
+1. Go to the managed identity you just created
+2. Navigate to **Settings** → **Federated credentials**
+3. Click **+ Add credential**:
+   - **Federated credential scenario**: GitHub Actions deploying Azure resources
+   - **Organization**: Your GitHub username
+   - **Repository**: `guess-the-worth`
+   - **Entity type**: Branch
+   - **GitHub branch name**: `main`
+   - **Name**: `main-branch-deployer`
+4. Click **Add**
+
+### Step 3: Grant Permissions
+
+1. Go to your **Resource Group** (containing all your resources)
+2. Click **Access control (IAM)**
+3. Click **+ Add** → **Add role assignment**
+4. Select **Contributor** role → Click **Next**
+5. Click **+ Select members** → Search for `github-actions-identity`
+6. Click **Review + assign**
+
+### Step 4: Get Required Values
+
+Run these commands in Azure Cloud Shell:
+
+```bash
+# Get your subscription ID
+az account show --query id -o tsv
+
+# Get your tenant ID
+az account show --query tenantId -o tsv
+
+# Get the client ID of the managed identity
+az identity show --name github-actions-identity --resource-group <your-resource-group-name> --query clientId -o tsv
+```
+
 ## GitHub Secrets Configuration
 
 Add these secrets to your GitHub repository (Settings → Secrets and variables → Actions):
 
 ### Required Secrets
 
-1. **AZURE_CREDENTIALS**: Azure service principal credentials
-   ```bash
-   az ad sp create-for-rbac --name "github-actions-guess-the-worth" \
-     --role contributor \
-     --scopes /subscriptions/<subscription-id>/resourceGroups/<resource-group-name> \
-     --sdk-auth
-   ```
-   Copy the entire JSON output as the secret value.
+1. **AZURE_CLIENT_ID**: The client ID from the managed identity (output from command above)
 
-2. **AZURE_BACKEND_APP_NAME**: Your App Service name (e.g., `guess-the-worth-backend`)
+2. **AZURE_TENANT_ID**: Your Azure tenant ID (output from command above)
 
-3. **AZURE_BACKEND_URL**: Your backend URL (e.g., `https://guess-the-worth-backend.azurewebsites.net`)
+3. **AZURE_SUBSCRIPTION_ID**: Your Azure subscription ID (output from command above)
 
-4. **AZURE_FRONTEND_APP_NAME**: Your frontend App Service name (e.g., `guess-the-worth-frontend`)
+4. **AZURE_BACKEND_APP_NAME**: Your App Service name (e.g., `guess-the-worth-backend`)
 
-5. **VITE_AUTH0_DOMAIN**: Your Auth0 domain
+5. **AZURE_BACKEND_URL**: Your backend URL (e.g., `https://guess-the-worth-backend.azurewebsites.net`)
 
-6. **VITE_AUTH0_CLIENT_ID**: Your Auth0 client ID
+6. **AZURE_FRONTEND_APP_NAME**: Your frontend App Service name (e.g., `guess-the-worth-frontend`)
 
-7. **VITE_AUTH0_AUDIENCE**: Your Auth0 API audience
+7. **VITE_AUTH0_DOMAIN**: Your Auth0 domain
 
-8. **CODECOV_TOKEN**: Your Codecov token (already configured)
+8. **VITE_AUTH0_CLIENT_ID**: Your Auth0 client ID
+
+9. **VITE_AUTH0_AUDIENCE**: Your Auth0 API audience
+
+10. **CODECOV_TOKEN**: Your Codecov token (already configured)
 
 ## Initial Deployment Steps
 
 ### 1. Create Azure Resources
 Follow the sections above to create:
 - PostgreSQL database
-- App Service for backend
-- App Service for frontend
+- App Service for backend (Docker container)
+- App Service for frontend (Node.js)
 
-### 2. Configure GHCR Access for Azure App Service
-Azure App Service needs access to pull images from GitHub Container Registry:
+### 2. Set Up GitHub Actions Authentication
+Follow the **GitHub Authentication Setup** section above to:
+- Create a managed identity for GitHub Actions
+- Configure federated credentials for OIDC authentication
+- Grant contributor permissions to the managed identity
+- Add required secrets to GitHub repository
 
-1. Generate a GitHub Personal Access Token with `read:packages` permission
-2. In App Service → Configuration → Container settings:
-   - Registry username: Your GitHub username
-   - Registry password: The GitHub PAT you generated
+### 3. Configure GHCR Access for Backend App Service
+The backend App Service needs to pull Docker images from GitHub Container Registry:
 
-### 3. Run Database Migrations
+1. Generate a GitHub Personal Access Token:
+   - Go to GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
+   - Click **Generate new token (classic)**
+   - Grant `read:packages` permission
+   - Copy the token (you won't see it again)
+
+2. Configure backend App Service:
+   - Go to Azure Portal → Your Backend App Service
+   - Navigate to **Settings** → **Configuration**
+   - Under **Container settings**:
+     - **Registry server URL**: `https://ghcr.io`
+     - **Registry username**: Your GitHub username (lowercase)
+     - **Registry password**: The GitHub PAT you generated
+   - Click **Save**
+
+### 4. Run Database Migrations
 After first deployment, run migrations:
 
 Option A - Using Azure CLI:
@@ -116,7 +179,7 @@ Option B - Using Azure Portal:
 2. Navigate to app directory
 3. Run: `python -m alembic upgrade head`
 
-### 4. Configure Auth0
+### 5. Configure Auth0
 Update your Auth0 application settings:
 - Add frontend App Service URL (e.g., `https://guess-the-worth-frontend.azurewebsites.net`) to **Allowed Callback URLs**
 - Add frontend App Service URL to **Allowed Web Origins**
