@@ -1,13 +1,36 @@
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies (including dev dependencies for build)
+RUN npm ci
+
+# Copy application files
+COPY . .
+
+# Build the application
+RUN npm run build
+
+# Production stage
 FROM node:20-alpine
 
 WORKDIR /app
 
+# Copy package files
 COPY package*.json ./
 
-RUN npm install
+# Install only production dependencies
+RUN npm ci --only=production
 
-COPY . .
+# Copy built files and server from builder
+COPY --from=builder /app/dist ./dist
+COPY server.js ./
 
-EXPOSE 5173
+# Expose port (Azure will override this with PORT env var)
+EXPOSE 8080
 
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+# Start the Express server
+CMD ["node", "server.js"]
