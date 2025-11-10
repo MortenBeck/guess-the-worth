@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 import httpx
 from sqlalchemy.orm import Session
@@ -21,7 +21,7 @@ class AuthService:
 
                 if response.status_code == 200:
                     user_data = response.json()
-                    auth0_roles = user_data.get(f"https://api.guesstheworth.com/roles", [])
+                    auth0_roles = user_data.get("https://api.guesstheworth.com/roles", [])
 
                     return AuthUser(
                         sub=user_data.get("sub"),

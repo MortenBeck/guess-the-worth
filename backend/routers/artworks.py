@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from database import get_db
-from models import Artwork, User
+from models import Artwork
 from schemas import ArtworkCreate, ArtworkResponse
 
 router = APIRouter()

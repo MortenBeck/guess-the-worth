@@ -1,6 +1,5 @@
 from typing import List
 
-import socketio
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -32,7 +31,10 @@ async def create_bid(bid: BidCreate, db: Session = Depends(get_db)):
 
     # Create bid
     db_bid = Bid(
-        artwork_id=bid.artwork_id, bidder_id=bid.bidder_id, amount=bid.amount, is_winning=is_winning
+        artwork_id=bid.artwork_id,
+        bidder_id=bid.bidder_id,
+        amount=bid.amount,
+        is_winning=is_winning,
     )
 
     # Update artwork current highest bid
@@ -48,6 +50,7 @@ async def create_bid(bid: BidCreate, db: Session = Depends(get_db)):
     db.refresh(db_bid)
 
     # TODO: Emit socket event for real-time bidding
-    # await sio.emit("new_bid", {"bid": db_bid, "artwork_id": artwork.id}, room=f"artwork_{artwork.id}")
+    # await sio.emit("new_bid", {"bid": db_bid, "artwork_id": artwork.id},
+    #                room=f"artwork_{artwork.id}")
 
     return db_bid

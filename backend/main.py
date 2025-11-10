@@ -4,7 +4,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from config.settings import settings
 from database import engine
-from models import Artwork, Bid, User
 from models.base import Base
 from routers import artworks, auth, bids, users
 
