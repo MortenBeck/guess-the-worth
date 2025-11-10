@@ -13,14 +13,19 @@ engine_kwargs = {
 }
 
 # Configure connection pool based on environment
-if "azure" in settings.database_url.lower() or "postgres.database.azure.com" in settings.database_url:
+if (
+    "azure" in settings.database_url.lower()
+    or "postgres.database.azure.com" in settings.database_url
+):
     # Azure PostgreSQL optimizations
-    engine_kwargs.update({
-        "poolclass": QueuePool,
-        "pool_size": 5,  # Number of connections to keep open
-        "max_overflow": 10,  # Additional connections when pool is full
-        "pool_timeout": 30,  # Timeout for getting a connection from pool
-    })
+    engine_kwargs.update(
+        {
+            "poolclass": QueuePool,
+            "pool_size": 5,  # Number of connections to keep open
+            "max_overflow": 10,  # Additional connections when pool is full
+            "pool_timeout": 30,  # Timeout for getting a connection from pool
+        }
+    )
 else:
     # Local development - use NullPool to avoid connection issues
     engine_kwargs["poolclass"] = NullPool
