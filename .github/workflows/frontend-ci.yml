@@ -14,7 +14,7 @@ on:
 
 jobs:
   code-quality:
-    name: Code Quality
+    name: Frontend Code Quality
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -41,7 +41,7 @@ jobs:
         run: npm run format:check
 
   test:
-    name: Tests
+    name: Frontend Tests
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -74,7 +74,7 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   security:
-    name: Security Scanning
+    name: Frontend Security
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -108,7 +108,7 @@ jobs:
         continue-on-error: true
 
   build:
-    name: Build
+    name: Frontend Build
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -141,7 +141,7 @@ jobs:
           ls -la dist/
 
   docker-build:
-    name: Docker Build
+    name: Frontend Docker Build
     runs-on: ubuntu-latest
 
     steps:
