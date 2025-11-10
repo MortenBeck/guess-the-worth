@@ -1,254 +1,182 @@
-# CI/CD Pipeline Implementation - Continuation Prompt
+# Azure Deployment Setup - Continue from Authentication Configuration
 
-**Project**: Guess The Worth (see README.md in root for project details)
-
-**Current Branch**: `cicd-pipeline` (branched from `dev`)
-
-**Current State**:
-- All linting/formatting tool dependencies have been added to `backend/requirements.txt` and `frontend/package.json`
-- Configuration files created: `backend/.flake8`, `backend/pyproject.toml`, `backend/.bandit`, `frontend/.prettierrc`, `frontend/.prettierignore`
-- `frontend/vite.config.js` updated with test coverage configuration
-- All changes are committed
-- Project runs successfully with new dependencies installed
+**Project**: Guess The Worth - Auction/bidding web application
+**Stack**: FastAPI backend, React frontend, PostgreSQL database
+**Current Branch**: `cicd-pipeline`
 
 ---
 
-## IMMEDIATE TASK: Auto-Fix Code with Formatters
+## WHAT HAS BEEN COMPLETED
 
-Run formatters and commit each separately:
+### ✅ Phases 1-6: Full CI/CD Pipeline
+- Backend CI: Linting (Black, flake8, isort), testing, security (Bandit, pip-audit, TruffleHog, Trivy), Docker builds
+- Frontend CI: Linting (ESLint, Prettier), testing, security (npm audit), builds
+- GHCR integration: Docker images pushed to GitHub Container Registry on main branch
+- Codecov integration: Coverage reports on PRs (0% threshold by design)
+- Branch protection: All CI checks must pass before merging to main
 
-1. **Backend - Black formatter**:
-   - Run: `cd backend && black .`
-   - Review changes, commit: "chore: format backend code with black"
+### ✅ Phase 7 - Azure Infrastructure Created
+User has created these Azure resources:
+- Resource Group (containing all resources)
+- Azure Database for PostgreSQL Flexible Server (Sweden Central, B1ms tier)
+- Backend App Service (Docker container, Linux)
+- Frontend App Service (Node 20 LTS, Linux)
+- Managed Identity: `github-actions-identity`
+  - Federated credentials configured for GitHub Actions on `main` branch
+  - Contributor role assigned to resource group
 
-2. **Backend - isort**:
-   - Run: `cd backend && isort .`
-   - Review changes, commit: "chore: organize backend imports with isort"
+### ✅ Phase 7 - Code Changes Completed
+1. **Health endpoints** (`backend/routers/health.py`):
+   - `/health` - Basic health check
+   - `/health/db` - Database connectivity check
 
-3. **Frontend - Prettier**:
-   - Run: `cd frontend && npm run format`
-   - Review changes, commit: "chore: format frontend code with prettier"
+2. **Azure-optimized database pooling** (`backend/database.py`):
+   - QueuePool for Azure PostgreSQL (detects Azure connection string)
+   - NullPool for local development
+   - Handles cold starts and connection recycling
 
-After auto-fixing is complete, proceed with Phase 1.
+3. **Frontend Express server** (`frontend/server.js`):
+   - Serves built React app from `dist/`
+   - Handles client-side routing (SPA)
+   - Port 8080 (Azure default)
 
----
+4. **Frontend error handling** (`frontend/src/services/api.js`):
+   - Graceful handling when backend is offline
+   - User-friendly error messages
 
-## CI/CD IMPLEMENTATION PHASES
+5. **Deployment workflow** (`.github/workflows/deploy-azure.yml`):
+   - OIDC authentication with managed identity
+   - Backend: Pulls Docker image from GHCR, deploys to App Service
+   - Frontend: Builds with VITE_* env vars, deploys as Node.js app
+   - Health checks after deployment
 
-### Phase 1: Backend CI Foundation
-**Goal**: Get backend linting, testing, and Docker build in CI
-
-**Tasks**:
-1. Create `.github/workflows/backend-ci.yml`
-2. Configure to trigger on push/PR to `main` and `dev` branches
-3. Implement jobs:
-   - **Code Quality Job**:
-     - Install dependencies
-     - Run `black --check backend/`
-     - Run `flake8 backend/`
-     - Run `isort --check-only backend/`
-   - **Test Job**:
-     - Set up PostgreSQL service container
-     - Install dependencies
-     - Run `pytest backend/tests/ --cov --cov-report=xml`
-     - **IMPORTANT**: Initially allow 0% coverage (no tests exist yet)
-   - **Docker Build Job**:
-     - Build backend Docker image tagged with `${{ github.sha }}`
-     - Don't push to registry yet (Phase 5)
-
-**Deliverable**: Backend CI workflow runs on every push/PR
-
----
-
-### Phase 2: Frontend CI Foundation
-**Goal**: Get frontend linting, testing, and build in CI
-
-**Tasks**:
-1. Create `.github/workflows/frontend-ci.yml`
-2. Configure to trigger on push/PR to `main` and `dev` branches
-3. Implement jobs:
-   - **Code Quality Job**:
-     - Run `npm ci` in frontend directory
-     - Run `npm run lint`
-     - Run `npm run format:check`
-   - **Test Job**:
-     - Run `npm run test -- --coverage`
-     - **IMPORTANT**: Initially allow 0% coverage
-   - **Build Job**:
-     - Run `npm run build`
-     - Verify build succeeds
-
-**Deliverable**: Frontend CI workflow runs on every push/PR
+6. **Documentation** (`AZURE_SETUP.md`):
+   - Complete setup guide
+   - Cost management commands (start/stop services)
+   - Troubleshooting section
 
 ---
 
-### Phase 3: Security Scanning
-**Goal**: Add security checks to both CI pipelines
+## WHERE WE ARE NOW
 
-**Backend Security** (add to backend-ci.yml):
-- New job: **Security Job**
-  - Run `bandit -r backend/`
-  - Run `pip-audit`
-  - Run TruffleHog to scan for secrets: `trufflehog filesystem backend/ --fail`
-  - Run Trivy scan on Docker image: `trivy image backend:${{ github.sha }}`
+**STUCK AT**: Configuring authentication for GitHub Actions to deploy to Azure
 
-**Frontend Security** (add to frontend-ci.yml):
-- New job: **Security Job**
-  - Run `npm audit --audit-level=high`
-  - Optional: Run Trivy on frontend Docker image
+**Why OIDC with Managed Identity**:
+- Azure Student account can't create service principals (directory permission restriction)
+- Basic authentication disabled (can't download publish profiles)
+- OIDC is the modern, recommended approach
 
-**Deliverable**: Security scanning integrated into both CI workflows
+**What's Been Done**:
+1. ✅ Created managed identity: `github-actions-identity`
+2. ✅ Configured federated credentials for GitHub Actions
+3. ✅ Assigned Contributor role to managed identity (found in "Privileged administrator roles" tab)
+4. ⚠️ **CURRENTLY HERE**: Need to get Azure values and configure GitHub secrets
 
 ---
 
-### Phase 4: Test Coverage Reporting
-**Goal**: Set up Codecov integration for coverage reports
+## WHAT NEEDS TO BE DONE
 
-**Tasks**:
-1. Sign up for Codecov account (codecov.io)
-2. Connect GitHub repository to Codecov
-3. Add Codecov upload to backend test job:
-   ```yaml
-   - uses: codecov/codecov-action@v4
-     with:
-       file: ./coverage.xml
-       flags: backend
-   ```
-4. Add Codecov upload to frontend test job:
-   ```yaml
-   - uses: codecov/codecov-action@v4
-     with:
-       file: ./coverage/lcov.info
-       flags: frontend
-   ```
-5. Configure Codecov to show coverage on PRs
-6. **NOTE**: Keep 0% coverage passing for now - will enforce 70% threshold later after tests are written
+### Step 1: Get Azure Values from Cloud Shell
 
-**Deliverable**: Coverage reports visible on PRs via Codecov
+Run these commands in Azure Cloud Shell (one at a time):
 
----
+```bash
+# Get subscription ID
+az account show --query id -o tsv
 
-### Phase 5: GitHub Container Registry (GHCR)
-**Goal**: Push Docker images to GHCR after successful builds
+# Get tenant ID
+az account show --query tenantId -o tsv
 
-**Tasks**:
-1. Add GHCR login and push to backend-ci.yml (only on `main` branch):
-   ```yaml
-   - name: Log in to GHCR
-     uses: docker/login-action@v3
-     with:
-       registry: ghcr.io
-       username: ${{ github.actor }}
-       password: ${{ secrets.GITHUB_TOKEN }}
+# Get client ID of managed identity (replace <resource-group-name> with actual name)
+az identity show --name github-actions-identity --resource-group <resource-group-name> --query clientId -o tsv
+```
 
-   - name: Push to GHCR
-     run: |
-       docker tag backend:${{ github.sha }} ghcr.io/${{ github.repository }}/backend:latest
-       docker tag backend:${{ github.sha }} ghcr.io/${{ github.repository }}/backend:${{ github.sha }}
-       docker push ghcr.io/${{ github.repository }}/backend:latest
-       docker push ghcr.io/${{ github.repository }}/backend:${{ github.sha }}
-   ```
+Save all three outputs - needed for GitHub secrets.
 
-2. Add same for frontend (if using Docker for frontend deployment)
+### Step 2: Create GitHub Personal Access Token
 
-**Deliverable**: Docker images pushed to GHCR on successful builds to `main`
+For backend to pull Docker images from GHCR:
+1. GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
+2. Generate new token with `read:packages` permission
+3. Copy token (starts with `ghp_...`)
 
----
+### Step 3: Configure Backend Container Settings
 
-### Phase 6: Branch Protection Rules
-**Goal**: Enforce CI checks before merging to main
+Azure Portal → Backend App Service → Settings → Configuration → **Container settings tab**:
+- Registry server URL: `https://ghcr.io`
+- Registry username: GitHub username (lowercase)
+- Registry password: GitHub PAT from Step 2
+- Click Save
 
-**Tasks**:
-1. Go to GitHub repo Settings → Branches → Add rule for `main`
-2. Enable:
-   - Require pull request reviews (at least 1 approval)
-   - Require status checks to pass:
-     - Backend CI: All jobs must pass
-     - Frontend CI: All jobs must pass
-   - Require branches to be up to date before merging
-   - Do not allow force pushes
-   - Require linear history
-3. Optional: Create similar (lighter) rules for `dev` branch
+### Step 4: Add GitHub Secrets
 
-**Deliverable**: Cannot merge to `main` without passing CI and review
+GitHub repo → Settings → Secrets and variables → Actions → New repository secret
 
----
+Add these 9 secrets:
+- `AZURE_CLIENT_ID` (from Step 1, command 3)
+- `AZURE_TENANT_ID` (from Step 1, command 2)
+- `AZURE_SUBSCRIPTION_ID` (from Step 1, command 1)
+- `AZURE_BACKEND_APP_NAME` (your backend App Service name)
+- `AZURE_BACKEND_URL` (https://your-backend-name.azurewebsites.net)
+- `AZURE_FRONTEND_APP_NAME` (your frontend App Service name)
+- `VITE_AUTH0_DOMAIN` (from Auth0 dashboard)
+- `VITE_AUTH0_CLIENT_ID` (from Auth0 dashboard)
+- `VITE_AUTH0_AUDIENCE` (from Auth0 dashboard)
 
-### Phase 7: Continuous Deployment
-**Goal**: Auto-deploy to environments
+Note: `CODECOV_TOKEN` already exists.
 
-**PREREQUISITE**: Choose deployment platform first. Ask user for preference:
-- Render (recommended - easy setup, free tier)
-- Railway
-- Fly.io
-- Cloud provider (Azure/AWS/GCP)
-- Other
+### Step 5: Configure Backend App Service Environment Variables
 
-**Tasks** (platform-specific implementation):
-1. Create `.github/workflows/deploy.yml`
-2. Configure deployment triggers:
-   - Dev environment: Auto-deploy from `dev` branch
-   - Production: Auto-deploy from `main` branch OR manual approval
-3. Backend deployment steps:
-   - Build/pull Docker image from GHCR
-   - Deploy to platform
-   - Run database migrations: `alembic upgrade head`
-   - Health check: Verify `/health` endpoint
-   - Smoke tests (basic API checks)
-   - Rollback on failure
-4. Frontend deployment steps:
-   - Build with production env vars
-   - Deploy static files
-   - Verify deployment with HTTP check
+Azure Portal → Backend App Service → Settings → Configuration → Application settings
 
-**Deliverable**: Automated deployment pipeline for both environments
+Add these variables:
+- `DATABASE_URL` (PostgreSQL connection string)
+- `SECRET_KEY` (generate random secure string)
+- `ALGORITHM=HS256`
+- `ACCESS_TOKEN_EXPIRE_MINUTES=30`
+- `AUTH0_DOMAIN` (from Auth0)
+- `AUTH0_AUDIENCE` (from Auth0)
+- `AUTH0_CLIENT_ID` (from Auth0)
+- `AUTH0_CLIENT_SECRET` (from Auth0)
+- `CORS_ORIGINS` (https://your-frontend-name.azurewebsites.net)
 
----
+### Step 6: Test Deployment
 
-### Phase 8: Monitoring & Observability
-**Goal**: Set up error tracking and monitoring
+1. Commit and push to `cicd-pipeline` branch
+2. Wait for CI to pass
+3. Create PR to main
+4. Merge PR
+5. Watch "Deploy to Azure" workflow run
+6. Test: `https://your-backend-name.azurewebsites.net/health`
 
-**Tasks**:
-1. **Health Check Endpoints** (add to backend):
-   - Create `backend/routers/health.py`
-   - Implement `/health` and `/health/db` endpoints
+### Step 7: Run Database Migrations
 
-2. **Sentry Setup**:
-   - Sign up for Sentry (free tier)
-   - Install SDK in backend: `pip install sentry-sdk`
-   - Install SDK in frontend: `npm install @sentry/react`
-   - Configure with DSN from environment variables
-   - Test error reporting
+After first deployment:
+```bash
+az webapp ssh --name <backend-app-name> --resource-group <resource-group-name>
+cd /home/site/wwwroot
+python -m alembic upgrade head
+```
 
-3. **Uptime Monitoring**:
-   - Sign up for UptimeRobot (free tier)
-   - Add monitors for production URLs
-   - Configure alerts
+### Step 8: Configure Auth0
 
-4. **Create CODEOWNERS file**:
-   - Define automatic review assignments
-
-**Deliverable**: Full observability stack for production
+Add frontend URL to Auth0 application:
+- Allowed Callback URLs
+- Allowed Web Origins
+- Allowed Logout URLs
 
 ---
 
 ## IMPORTANT NOTES
 
-1. **Coverage Threshold**: Keep at 0% for all phases. Will change to 70% requirement ONLY after comprehensive tests are written (separate initiative from CI/CD setup)
-
-2. **Deployment Platform**: Phase 7 requires deployment platform decision before implementation
-
-3. **Commit Messages**: Use conventional commit format:
-   - `feat:` New feature
-   - `fix:` Bug fix
-   - `chore:` Maintenance/tooling
-   - `ci:` CI/CD changes
-   - `test:` Test changes
-
-4. **Testing**: Don't run formatters after auto-fix tasks - code should remain formatted
-
-5. **Branch Strategy**: Work on `cicd-pipeline` branch, merge to `dev` when phases are complete, then `dev` → `main` after testing
+1. **Azure Student Limitations**: Can't create service principals or use basic auth, so using OIDC
+2. **Cost Management**: Start/stop services to save credits (commands in AZURE_SETUP.md)
+3. **Container Settings**: Must be in Configuration → Container settings **tab** (not main page)
+4. **Contributor Role**: Found in "Privileged administrator roles" tab in Azure Portal
+5. **User Handles Git**: Don't auto-commit unless explicitly requested
 
 ---
 
-**START HERE**: Run the auto-fix tasks first, then begin Phase 1.
+## WHAT TO DO NEXT
+
+Continue from Step 1 above. Ask the user which step they're on or need help with.
