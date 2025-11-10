@@ -14,7 +14,7 @@ on:
 
 jobs:
   code-quality:
-    name: Code Quality
+    name: Backend Code Quality
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -46,7 +46,7 @@ jobs:
         run: isort --check-only .
 
   test:
-    name: Tests
+    name: Backend Tests
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -106,7 +106,7 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   security:
-    name: Security Scanning
+    name: Backend Security
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -151,7 +151,7 @@ jobs:
         continue-on-error: true
 
   docker-build:
-    name: Docker Build
+    name: Backend Docker Build
     runs-on: ubuntu-latest
 
     steps:
