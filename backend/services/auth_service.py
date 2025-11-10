@@ -1,9 +1,12 @@
+from typing import Any, Dict, List, Optional
+
 import httpx
-from typing import Optional, Dict, Any, List
 from sqlalchemy.orm import Session
+
+from config.settings import settings
 from models.user import User, UserRole
 from schemas.auth import AuthUser
-from config.settings import settings
+
 
 class AuthService:
     @staticmethod
@@ -26,7 +29,7 @@ class AuthService:
                         name=user_data.get("name"),
                         picture=user_data.get("picture"),
                         email_verified=user_data.get("email_verified", False),
-                        roles=auth0_roles
+                        roles=auth0_roles,
                     )
                 return None
         except Exception:
@@ -53,10 +56,7 @@ class AuthService:
 
         if not user:
             user = User(
-                auth0_sub=auth_user.sub,
-                email=auth_user.email,
-                name=auth_user.name,
-                role=user_role
+                auth0_sub=auth_user.sub, email=auth_user.email, name=auth_user.name, role=user_role
             )
             db.add(user)
             db.commit()

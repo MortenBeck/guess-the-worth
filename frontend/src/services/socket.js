@@ -1,4 +1,4 @@
-import { io } from 'socket.io-client';
+import { io } from "socket.io-client";
 
 class SocketService {
   constructor() {
@@ -15,35 +15,34 @@ class SocketService {
 
     try {
       // Use environment variable or default to localhost:8000
-      const socketUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:8000';
-      
+      const socketUrl = import.meta.env.VITE_SOCKET_URL || "http://localhost:8000";
+
       this.socket = io(socketUrl, {
-        transports: ['websocket'],
+        transports: ["websocket"],
         timeout: 5000,
         forceNew: false,
         auth: {
-          token: localStorage.getItem('access_token')
-        }
+          token: localStorage.getItem("access_token"),
+        },
       });
 
-      this.socket.on('connect', () => {
+      this.socket.on("connect", () => {
         this.isConnected = true;
-        console.log('Socket connected');
+        console.log("Socket connected");
       });
 
-      this.socket.on('disconnect', () => {
+      this.socket.on("disconnect", () => {
         this.isConnected = false;
-        console.log('Socket disconnected');
+        console.log("Socket disconnected");
       });
 
-      this.socket.on('connect_error', (error) => {
-        console.warn('Socket connection failed:', error.message);
+      this.socket.on("connect_error", (error) => {
+        console.warn("Socket connection failed:", error.message);
         this.isConnected = false;
         this.socket = null;
       });
-
     } catch (error) {
-      console.warn('Socket service initialization failed:', error.message);
+      console.warn("Socket service initialization failed:", error.message);
       this.socket = null;
     }
 
@@ -69,37 +68,37 @@ class SocketService {
 
   joinArtwork(artworkId) {
     if (this.socket && this.isConnected) {
-      this.socket.emit('join_artwork', { artwork_id: artworkId });
+      this.socket.emit("join_artwork", { artwork_id: artworkId });
     }
   }
 
   leaveArtwork(artworkId) {
     if (this.socket && this.isConnected) {
-      this.socket.emit('leave_artwork', { artwork_id: artworkId });
+      this.socket.emit("leave_artwork", { artwork_id: artworkId });
     }
   }
 
   onNewBid(callback) {
     if (this.socket) {
-      this.socket.on('new_bid', callback);
+      this.socket.on("new_bid", callback);
     }
   }
 
   onArtworkSold(callback) {
     if (this.socket) {
-      this.socket.on('artwork_sold', callback);
+      this.socket.on("artwork_sold", callback);
     }
   }
 
   offNewBid() {
     if (this.socket) {
-      this.socket.off('new_bid');
+      this.socket.off("new_bid");
     }
   }
 
   offArtworkSold() {
     if (this.socket) {
-      this.socket.off('artwork_sold');
+      this.socket.off("artwork_sold");
     }
   }
 

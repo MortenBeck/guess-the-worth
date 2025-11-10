@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState } from "react";
 import {
   Box,
   Container,
@@ -9,22 +9,22 @@ import {
   HStack,
   Image,
   Badge,
-} from '@chakra-ui/react'
-import { useNavigate } from 'react-router-dom'
-import useAuthStore from '../store/authStore'
-import placeholderImg from '../assets/placeholder.jpg'
+} from "@chakra-ui/react";
+import { useNavigate } from "react-router-dom";
+import useAuthStore from "../store/authStore";
+import placeholderImg from "../assets/placeholder.jpg";
 
 const UserDashboard = () => {
-  const { user } = useAuthStore()
-  const navigate = useNavigate()
+  const { user } = useAuthStore();
+  const navigate = useNavigate();
 
   // Mock data
   const stats = {
     activeBids: 5,
     wonAuctions: 3,
     totalSpent: 1250,
-    watchlist: 12
-  }
+    watchlist: 12,
+  };
 
   const activeBids = [
     {
@@ -36,7 +36,7 @@ const UserDashboard = () => {
       currentHighest: 180,
       status: "outbid",
       timeLeft: "2 days",
-      artworkId: 1
+      artworkId: 1,
     },
     {
       id: 2,
@@ -47,7 +47,7 @@ const UserDashboard = () => {
       currentHighest: 300,
       status: "winning",
       timeLeft: "5 hours",
-      artworkId: 2
+      artworkId: 2,
     },
     {
       id: 3,
@@ -58,9 +58,9 @@ const UserDashboard = () => {
       currentHighest: 450,
       status: "outbid",
       timeLeft: "1 day",
-      artworkId: 3
-    }
-  ]
+      artworkId: 3,
+    },
+  ];
 
   const wonAuctions = [
     {
@@ -70,7 +70,7 @@ const UserDashboard = () => {
       image: placeholderImg,
       winningBid: 320,
       datePurchased: "2024-01-15",
-      artworkId: 4
+      artworkId: 4,
     },
     {
       id: 2,
@@ -79,9 +79,9 @@ const UserDashboard = () => {
       image: placeholderImg,
       winningBid: 200,
       datePurchased: "2024-01-10",
-      artworkId: 5
-    }
-  ]
+      artworkId: 5,
+    },
+  ];
 
   return (
     <Box bg="#0f172a" color="white" minH="100vh" pt={6}>
@@ -98,48 +98,112 @@ const UserDashboard = () => {
           </Box>
 
           {/* Stats Overview */}
-          <Box display="grid" gridTemplateColumns={{ base: "repeat(2, 1fr)", md: "repeat(4, 1fr)" }} gap={6}>
-            <Box bg="#1e293b" p={6} borderRadius="lg" border="1px" borderColor="rgba(255,255,255,0.1)" textAlign="center">
+          <Box
+            display="grid"
+            gridTemplateColumns={{ base: "repeat(2, 1fr)", md: "repeat(4, 1fr)" }}
+            gap={6}
+          >
+            <Box
+              bg="#1e293b"
+              p={6}
+              borderRadius="lg"
+              border="1px"
+              borderColor="rgba(255,255,255,0.1)"
+              textAlign="center"
+            >
               <VStack spacing={3}>
-                <Text fontSize="sm" color="#94a3b8">Active Bids</Text>
-                <Text fontSize="2xl" fontWeight="bold" color="#6366f1">{stats.activeBids}</Text>
-                <Text fontSize="xs" color="#94a3b8">Currently bidding</Text>
+                <Text fontSize="sm" color="#94a3b8">
+                  Active Bids
+                </Text>
+                <Text fontSize="2xl" fontWeight="bold" color="#6366f1">
+                  {stats.activeBids}
+                </Text>
+                <Text fontSize="xs" color="#94a3b8">
+                  Currently bidding
+                </Text>
               </VStack>
             </Box>
-            <Box bg="#1e293b" p={6} borderRadius="lg" border="1px" borderColor="rgba(255,255,255,0.1)" textAlign="center">
+            <Box
+              bg="#1e293b"
+              p={6}
+              borderRadius="lg"
+              border="1px"
+              borderColor="rgba(255,255,255,0.1)"
+              textAlign="center"
+            >
               <VStack spacing={3}>
-                <Text fontSize="sm" color="#94a3b8">Won Auctions</Text>
-                <Text fontSize="2xl" fontWeight="bold" color="#10b981">{stats.wonAuctions}</Text>
-                <Text fontSize="xs" color="#94a3b8">Total artworks won</Text>
+                <Text fontSize="sm" color="#94a3b8">
+                  Won Auctions
+                </Text>
+                <Text fontSize="2xl" fontWeight="bold" color="#10b981">
+                  {stats.wonAuctions}
+                </Text>
+                <Text fontSize="xs" color="#94a3b8">
+                  Total artworks won
+                </Text>
               </VStack>
             </Box>
-            <Box bg="#1e293b" p={6} borderRadius="lg" border="1px" borderColor="rgba(255,255,255,0.1)" textAlign="center">
+            <Box
+              bg="#1e293b"
+              p={6}
+              borderRadius="lg"
+              border="1px"
+              borderColor="rgba(255,255,255,0.1)"
+              textAlign="center"
+            >
               <VStack spacing={3}>
-                <Text fontSize="sm" color="#94a3b8">Total Spent</Text>
-                <Text fontSize="2xl" fontWeight="bold" color="#ec4899">${stats.totalSpent}</Text>
-                <Text fontSize="xs" color="#94a3b8">On artwork purchases</Text>
+                <Text fontSize="sm" color="#94a3b8">
+                  Total Spent
+                </Text>
+                <Text fontSize="2xl" fontWeight="bold" color="#ec4899">
+                  ${stats.totalSpent}
+                </Text>
+                <Text fontSize="xs" color="#94a3b8">
+                  On artwork purchases
+                </Text>
               </VStack>
             </Box>
-            <Box bg="#1e293b" p={6} borderRadius="lg" border="1px" borderColor="rgba(255,255,255,0.1)" textAlign="center">
+            <Box
+              bg="#1e293b"
+              p={6}
+              borderRadius="lg"
+              border="1px"
+              borderColor="rgba(255,255,255,0.1)"
+              textAlign="center"
+            >
               <VStack spacing={3}>
-                <Text fontSize="sm" color="#94a3b8">Watchlist</Text>
-                <Text fontSize="2xl" fontWeight="bold" color="#f59e0b">{stats.watchlist}</Text>
-                <Text fontSize="xs" color="#94a3b8">Items watching</Text>
+                <Text fontSize="sm" color="#94a3b8">
+                  Watchlist
+                </Text>
+                <Text fontSize="2xl" fontWeight="bold" color="#f59e0b">
+                  {stats.watchlist}
+                </Text>
+                <Text fontSize="xs" color="#94a3b8">
+                  Items watching
+                </Text>
               </VStack>
             </Box>
           </Box>
 
           {/* Active Bids */}
-          <Box bg="#1e293b" p={6} borderRadius="lg" border="1px" borderColor="rgba(255,255,255,0.1)">
-            <Heading size="md" color="white" mb={4}>Active Bids</Heading>
+          <Box
+            bg="#1e293b"
+            p={6}
+            borderRadius="lg"
+            border="1px"
+            borderColor="rgba(255,255,255,0.1)"
+          >
+            <Heading size="md" color="white" mb={4}>
+              Active Bids
+            </Heading>
             <VStack spacing={4} align="stretch">
               {activeBids.map((bid) => (
-                <Box 
-                  key={bid.id} 
-                  bg="#0f172a" 
-                  p={4} 
-                  borderRadius="lg" 
-                  border="1px" 
+                <Box
+                  key={bid.id}
+                  bg="#0f172a"
+                  p={4}
+                  borderRadius="lg"
+                  border="1px"
                   borderColor="rgba(255,255,255,0.1)"
                 >
                   <HStack spacing={4}>
@@ -152,20 +216,36 @@ const UserDashboard = () => {
                     />
                     <VStack align="start" spacing={1} flex={1}>
                       <HStack justify="space-between" w="full">
-                        <Text fontWeight="semibold" color="white">{bid.title}</Text>
-                        <Badge colorScheme={bid.status === 'winning' ? 'green' : 'red'}>
-                          {bid.status === 'winning' ? 'Winning' : 'Outbid'}
+                        <Text fontWeight="semibold" color="white">
+                          {bid.title}
+                        </Text>
+                        <Badge colorScheme={bid.status === "winning" ? "green" : "red"}>
+                          {bid.status === "winning" ? "Winning" : "Outbid"}
                         </Badge>
                       </HStack>
-                      <Text fontSize="sm" color="#94a3b8">by {bid.artist}</Text>
+                      <Text fontSize="sm" color="#94a3b8">
+                        by {bid.artist}
+                      </Text>
                       <HStack spacing={4}>
                         <Text fontSize="sm" color="#94a3b8">
-                          Your bid: <Text as="span" color="white" fontWeight="bold">${bid.yourBid}</Text>
+                          Your bid:{" "}
+                          <Text as="span" color="white" fontWeight="bold">
+                            ${bid.yourBid}
+                          </Text>
                         </Text>
                         <Text fontSize="sm" color="#94a3b8">
-                          Current: <Text as="span" color={bid.status === 'winning' ? 'green.400' : 'red.400'} fontWeight="bold">${bid.currentHighest}</Text>
+                          Current:{" "}
+                          <Text
+                            as="span"
+                            color={bid.status === "winning" ? "green.400" : "red.400"}
+                            fontWeight="bold"
+                          >
+                            ${bid.currentHighest}
+                          </Text>
                         </Text>
-                        <Text fontSize="sm" color="#94a3b8">{bid.timeLeft} left</Text>
+                        <Text fontSize="sm" color="#94a3b8">
+                          {bid.timeLeft} left
+                        </Text>
                       </HStack>
                     </VStack>
                     <Button
@@ -187,20 +267,35 @@ const UserDashboard = () => {
           </Box>
 
           {/* Won Auctions */}
-          <Box bg="#1e293b" p={6} borderRadius="lg" border="1px" borderColor="rgba(255,255,255,0.1)">
-            <Heading size="md" color="white" mb={4}>Won Auctions</Heading>
-            <Box display="grid" gridTemplateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(3, 1fr)" }} gap={4}>
+          <Box
+            bg="#1e293b"
+            p={6}
+            borderRadius="lg"
+            border="1px"
+            borderColor="rgba(255,255,255,0.1)"
+          >
+            <Heading size="md" color="white" mb={4}>
+              Won Auctions
+            </Heading>
+            <Box
+              display="grid"
+              gridTemplateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(3, 1fr)" }}
+              gap={4}
+            >
               {wonAuctions.map((auction) => (
-                <Box 
-                  key={auction.id} 
-                  bg="#0f172a" 
-                  borderRadius="lg" 
+                <Box
+                  key={auction.id}
+                  bg="#0f172a"
+                  borderRadius="lg"
                   overflow="hidden"
                   border="1px"
                   borderColor="rgba(255,255,255,0.1)"
                   cursor="pointer"
                   onClick={() => navigate(`/artwork/${auction.artworkId}`)}
-                  _hover={{ transform: 'translateY(-2px)', boxShadow: '0 8px 25px rgba(0,0,0,0.3)' }}
+                  _hover={{
+                    transform: "translateY(-2px)",
+                    boxShadow: "0 8px 25px rgba(0,0,0,0.3)",
+                  }}
                   transition="all 0.2s"
                 >
                   <Image
@@ -212,9 +307,15 @@ const UserDashboard = () => {
                   />
                   <Box p={4}>
                     <VStack align="start" spacing={2}>
-                      <Badge colorScheme="green" variant="subtle">Won</Badge>
-                      <Text fontWeight="semibold" color="white">{auction.title}</Text>
-                      <Text fontSize="sm" color="#94a3b8">by {auction.artist}</Text>
+                      <Badge colorScheme="green" variant="subtle">
+                        Won
+                      </Badge>
+                      <Text fontWeight="semibold" color="white">
+                        {auction.title}
+                      </Text>
+                      <Text fontSize="sm" color="#94a3b8">
+                        by {auction.artist}
+                      </Text>
                       <Text fontSize="sm" color="green.400" fontWeight="bold">
                         Won for ${auction.winningBid}
                       </Text>
@@ -230,7 +331,7 @@ const UserDashboard = () => {
         </VStack>
       </Container>
     </Box>
-  )
-}
+  );
+};
 
-export default UserDashboard
+export default UserDashboard;

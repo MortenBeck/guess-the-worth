@@ -1,25 +1,37 @@
-import { Box, Container, Heading, Text, VStack, SimpleGrid, Badge, HStack, Button, Image } from '@chakra-ui/react'
-import { useNavigate } from 'react-router-dom'
-import useAuthStore from '../store/authStore'
-import useFavoritesStore from '../store/favoritesStore'
-import placeholderImg from '../assets/placeholder.jpg'
+import {
+  Box,
+  Container,
+  Heading,
+  Text,
+  VStack,
+  SimpleGrid,
+  Badge,
+  HStack,
+  Button,
+  Image,
+} from "@chakra-ui/react";
+import { useNavigate } from "react-router-dom";
+import useAuthStore from "../store/authStore";
+import useFavoritesStore from "../store/favoritesStore";
+import placeholderImg from "../assets/placeholder.jpg";
 
 const FavouritesPage = () => {
-  const { user } = useAuthStore()
-  const navigate = useNavigate()
-  const { favorites, removeFromFavorites } = useFavoritesStore()
+  const { user } = useAuthStore();
+  const navigate = useNavigate();
+  const { favorites, removeFromFavorites } = useFavoritesStore();
 
   const formatDateAdded = (dateString) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffInDays = Math.floor((now - date) / (1000 * 60 * 60 * 24))
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
 
-    if (diffInDays === 0) return 'Today'
-    if (diffInDays === 1) return '1 day ago'
-    if (diffInDays < 7) return `${diffInDays} days ago`
-    if (diffInDays < 30) return `${Math.floor(diffInDays / 7)} week${Math.floor(diffInDays / 7) > 1 ? 's' : ''} ago`
-    return date.toLocaleDateString()
-  }
+    if (diffInDays === 0) return "Today";
+    if (diffInDays === 1) return "1 day ago";
+    if (diffInDays < 7) return `${diffInDays} days ago`;
+    if (diffInDays < 30)
+      return `${Math.floor(diffInDays / 7)} week${Math.floor(diffInDays / 7) > 1 ? "s" : ""} ago`;
+    return date.toLocaleDateString();
+  };
 
   return (
     <Box bg="#0f172a" minH="100vh" color="white">
@@ -27,7 +39,13 @@ const FavouritesPage = () => {
         <VStack spacing={8} align="stretch">
           {/* Header */}
           <Box>
-            <Heading size="2xl" mb={2} background="linear-gradient(135deg, #6366f1 0%, #ec4899 100%)" backgroundClip="text" color="transparent">
+            <Heading
+              size="2xl"
+              mb={2}
+              background="linear-gradient(135deg, #6366f1 0%, #ec4899 100%)"
+              backgroundClip="text"
+              color="transparent"
+            >
               Your Favourites
             </Heading>
             <Text color="#94a3b8" fontSize="lg">
@@ -50,7 +68,7 @@ const FavouritesPage = () => {
                   borderColor="rgba(255,255,255,0.1)"
                   _hover={{
                     transform: "translateY(-2px)",
-                    boxShadow: "0 8px 25px rgba(0,0,0,0.3)"
+                    boxShadow: "0 8px 25px rgba(0,0,0,0.3)",
                   }}
                   transition="all 0.3s ease"
                 >
@@ -69,10 +87,15 @@ const FavouritesPage = () => {
                           <Heading size="md" color="white" noOfLines={1}>
                             {artwork.title}
                           </Heading>
-                          <Text color="#94a3b8" fontSize="sm">by {artwork.artist}</Text>
+                          <Text color="#94a3b8" fontSize="sm">
+                            by {artwork.artist}
+                          </Text>
                         </VStack>
-                        <Badge colorScheme={artwork.status === 'active' ? 'green' : 'red'} fontSize="xs">
-                          {artwork.status === 'active' ? 'Active' : 'Ending Soon'}
+                        <Badge
+                          colorScheme={artwork.status === "active" ? "green" : "red"}
+                          fontSize="xs"
+                        >
+                          {artwork.status === "active" ? "Active" : "Ending Soon"}
                         </Badge>
                       </HStack>
 
@@ -93,8 +116,8 @@ const FavouritesPage = () => {
                           _hover={{ bg: "#f1f5f9" }}
                           flex="1"
                           onClick={(e) => {
-                            e.stopPropagation()
-                            navigate(`/artwork/${artwork.id}`)
+                            e.stopPropagation();
+                            navigate(`/artwork/${artwork.id}`);
                           }}
                         >
                           View Artwork
@@ -106,8 +129,8 @@ const FavouritesPage = () => {
                           color="#f87171"
                           _hover={{ bg: "#7f1d1d", color: "white" }}
                           onClick={(e) => {
-                            e.stopPropagation()
-                            removeFromFavorites(artwork.id)
+                            e.stopPropagation();
+                            removeFromFavorites(artwork.id);
                           }}
                         >
                           Remove
@@ -130,16 +153,19 @@ const FavouritesPage = () => {
               <VStack spacing={6}>
                 <Text fontSize="4xl">⭐</Text>
                 <VStack spacing={3}>
-                  <Heading size="lg" color="white">No Favourites Yet</Heading>
+                  <Heading size="lg" color="white">
+                    No Favourites Yet
+                  </Heading>
                   <Text color="#94a3b8" maxW="500px" lineHeight="1.6">
-                    Start exploring artworks and save the ones you love. Your favourite pieces will appear here.
+                    Start exploring artworks and save the ones you love. Your favourite pieces will
+                    appear here.
                   </Text>
                 </VStack>
                 <Button
                   background="linear-gradient(135deg, #6366f1 0%, #ec4899 100%)"
                   color="white"
                   size="lg"
-                  onClick={() => navigate('/artworks')}
+                  onClick={() => navigate("/artworks")}
                   _hover={{
                     transform: "translateY(-1px)",
                     boxShadow: "0 4px 15px rgba(99, 102, 241, 0.3)",
@@ -154,7 +180,7 @@ const FavouritesPage = () => {
         </VStack>
       </Container>
     </Box>
-  )
-}
+  );
+};
 
-export default FavouritesPage
+export default FavouritesPage;

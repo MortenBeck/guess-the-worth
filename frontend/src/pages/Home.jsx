@@ -1,7 +1,7 @@
-import { Box, VStack } from '@chakra-ui/react'
-import WelcomeHero from '../components/home/WelcomeHero'
-import LiveAuctions from '../components/home/LiveAuctions'
-import ActivityFeed from '../components/home/ActivityFeed'
+import { Box, VStack } from "@chakra-ui/react";
+import WelcomeHero from "../components/home/WelcomeHero";
+import LiveAuctions from "../components/home/LiveAuctions";
+import ActivityFeed from "../components/home/ActivityFeed";
 
 const DashboardHome = () => {
   return (
@@ -12,7 +12,7 @@ const DashboardHome = () => {
         <ActivityFeed />
       </VStack>
     </Box>
-  )
-}
+  );
+};
 
-export default DashboardHome
+export default DashboardHome;

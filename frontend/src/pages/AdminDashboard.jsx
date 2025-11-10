@@ -8,17 +8,17 @@ import {
   HStack,
   Image,
   Badge,
-} from '@chakra-ui/react'
+} from "@chakra-ui/react";
 // Simple custom icons
-const SettingsIcon = () => <span>⚙️</span>
-const ViewIcon = () => <span>👁️</span>
-const EditIcon = () => <span>✏️</span>
-const DeleteIcon = () => <span>🗑️</span>
-import useAuthStore from '../store/authStore'
-import placeholderImg from '../assets/placeholder.jpg'
+const SettingsIcon = () => <span>⚙️</span>;
+const ViewIcon = () => <span>👁️</span>;
+const EditIcon = () => <span>✏️</span>;
+const DeleteIcon = () => <span>🗑️</span>;
+import useAuthStore from "../store/authStore";
+import placeholderImg from "../assets/placeholder.jpg";
 
 const AdminDashboard = () => {
-  const { user } = useAuthStore()
+  const { user } = useAuthStore();
 
   // Mock data - replace with actual API calls
   const stats = {
@@ -28,8 +28,8 @@ const AdminDashboard = () => {
     platformFees: 2281,
     usersGrowth: 12.5,
     auctionsGrowth: 8.3,
-    revenueGrowth: 15.2
-  }
+    revenueGrowth: 15.2,
+  };
 
   const recentUsers = [
     {
@@ -39,7 +39,7 @@ const AdminDashboard = () => {
       role: "buyer",
       joinDate: "2024-01-15",
       status: "active",
-      avatar: placeholderImg
+      avatar: placeholderImg,
     },
     {
       id: 2,
@@ -48,9 +48,9 @@ const AdminDashboard = () => {
       role: "seller",
       joinDate: "2024-01-14",
       status: "pending",
-      avatar: placeholderImg
-    }
-  ]
+      avatar: placeholderImg,
+    },
+  ];
 
   const flaggedAuctions = [
     {
@@ -59,7 +59,7 @@ const AdminDashboard = () => {
       seller: "Unknown Artist",
       currentBid: 5000,
       flagReason: "Unusually high bid activity",
-      severity: "high"
+      severity: "high",
     },
     {
       id: 2,
@@ -67,16 +67,16 @@ const AdminDashboard = () => {
       seller: "Art Gallery",
       currentBid: 1200,
       flagReason: "Copyright dispute",
-      severity: "medium"
-    }
-  ]
+      severity: "medium",
+    },
+  ];
 
   const systemHealth = {
     serverStatus: "healthy",
     databaseStatus: "healthy",
     paymentSystem: "warning",
-    uptime: 99.8
-  }
+    uptime: 99.8,
+  };
 
   const recentTransactions = [
     {
@@ -85,9 +85,9 @@ const AdminDashboard = () => {
       seller: "Bob Wilson",
       artwork: "Mountain Peak",
       amount: 450,
-      fee: 22.50,
+      fee: 22.5,
       date: "2024-01-15",
-      status: "completed"
+      status: "completed",
     },
     {
       id: 2,
@@ -95,29 +95,37 @@ const AdminDashboard = () => {
       seller: "Diana Miller",
       artwork: "Ocean Waves",
       amount: 320,
-      fee: 16.00,
+      fee: 16.0,
       date: "2024-01-14",
-      status: "pending"
-    }
-  ]
+      status: "pending",
+    },
+  ];
 
   const getUserStatusColor = (status) => {
     switch (status) {
-      case 'active': return 'green'
-      case 'pending': return 'yellow'
-      case 'suspended': return 'red'
-      default: return 'gray'
+      case "active":
+        return "green";
+      case "pending":
+        return "yellow";
+      case "suspended":
+        return "red";
+      default:
+        return "gray";
     }
-  }
+  };
 
   const getSystemStatusColor = (status) => {
     switch (status) {
-      case 'healthy': return 'green'
-      case 'warning': return 'yellow'
-      case 'error': return 'red'
-      default: return 'gray'
+      case "healthy":
+        return "green";
+      case "warning":
+        return "yellow";
+      case "error":
+        return "red";
+      default:
+        return "gray";
     }
-  }
+  };
 
   return (
     <Container maxW="container.xl" py={8}>
@@ -132,53 +140,127 @@ const AdminDashboard = () => {
         </Box>
 
         {/* Key Metrics */}
-        <Box display="grid" gridTemplateColumns={{ base: "repeat(2, 1fr)", md: "repeat(4, 1fr)" }} gap={6}>
-          <Box bg="white" p={4} borderRadius="lg" boxShadow="sm" border="1px" borderColor="gray.200" textAlign="center">
-            <Text fontSize="sm" color="gray.600">Total Users</Text>
-            <Text fontSize="2xl" fontWeight="bold" color="primary">{stats.totalUsers.toLocaleString()}</Text>
-            <Text fontSize="xs" color="green.500">+{stats.usersGrowth}% this month</Text>
+        <Box
+          display="grid"
+          gridTemplateColumns={{ base: "repeat(2, 1fr)", md: "repeat(4, 1fr)" }}
+          gap={6}
+        >
+          <Box
+            bg="white"
+            p={4}
+            borderRadius="lg"
+            boxShadow="sm"
+            border="1px"
+            borderColor="gray.200"
+            textAlign="center"
+          >
+            <Text fontSize="sm" color="gray.600">
+              Total Users
+            </Text>
+            <Text fontSize="2xl" fontWeight="bold" color="primary">
+              {stats.totalUsers.toLocaleString()}
+            </Text>
+            <Text fontSize="xs" color="green.500">
+              +{stats.usersGrowth}% this month
+            </Text>
           </Box>
-          <Box bg="white" p={4} borderRadius="lg" boxShadow="sm" border="1px" borderColor="gray.200" textAlign="center">
-            <Text fontSize="sm" color="gray.600">Active Auctions</Text>
-            <Text fontSize="2xl" fontWeight="bold" color="accent">{stats.activeAuctions}</Text>
-            <Text fontSize="xs" color="green.500">+{stats.auctionsGrowth}% this week</Text>
+          <Box
+            bg="white"
+            p={4}
+            borderRadius="lg"
+            boxShadow="sm"
+            border="1px"
+            borderColor="gray.200"
+            textAlign="center"
+          >
+            <Text fontSize="sm" color="gray.600">
+              Active Auctions
+            </Text>
+            <Text fontSize="2xl" fontWeight="bold" color="accent">
+              {stats.activeAuctions}
+            </Text>
+            <Text fontSize="xs" color="green.500">
+              +{stats.auctionsGrowth}% this week
+            </Text>
           </Box>
-          <Box bg="white" p={4} borderRadius="lg" boxShadow="sm" border="1px" borderColor="gray.200" textAlign="center">
-            <Text fontSize="sm" color="gray.600">Total Revenue</Text>
-            <Text fontSize="2xl" fontWeight="bold" color="primary">${stats.totalRevenue.toLocaleString()}</Text>
-            <Text fontSize="xs" color="green.500">+{stats.revenueGrowth}% this month</Text>
+          <Box
+            bg="white"
+            p={4}
+            borderRadius="lg"
+            boxShadow="sm"
+            border="1px"
+            borderColor="gray.200"
+            textAlign="center"
+          >
+            <Text fontSize="sm" color="gray.600">
+              Total Revenue
+            </Text>
+            <Text fontSize="2xl" fontWeight="bold" color="primary">
+              ${stats.totalRevenue.toLocaleString()}
+            </Text>
+            <Text fontSize="xs" color="green.500">
+              +{stats.revenueGrowth}% this month
+            </Text>
           </Box>
-          <Box bg="white" p={4} borderRadius="lg" boxShadow="sm" border="1px" borderColor="gray.200" textAlign="center">
-            <Text fontSize="sm" color="gray.600">Platform Fees</Text>
-            <Text fontSize="2xl" fontWeight="bold" color="accent">${stats.platformFees.toLocaleString()}</Text>
-            <Text fontSize="xs" color="gray.500">5% commission</Text>
+          <Box
+            bg="white"
+            p={4}
+            borderRadius="lg"
+            boxShadow="sm"
+            border="1px"
+            borderColor="gray.200"
+            textAlign="center"
+          >
+            <Text fontSize="sm" color="gray.600">
+              Platform Fees
+            </Text>
+            <Text fontSize="2xl" fontWeight="bold" color="accent">
+              ${stats.platformFees.toLocaleString()}
+            </Text>
+            <Text fontSize="xs" color="gray.500">
+              5% commission
+            </Text>
           </Box>
         </Box>
 
         {/* System Health */}
         <Box bg="white" p={6} borderRadius="lg" boxShadow="sm" border="1px" borderColor="gray.200">
-          <Heading size="md" color="text" mb={4}>System Health</Heading>
-          <Box display="grid" gridTemplateColumns={{ base: "repeat(2, 1fr)", md: "repeat(4, 1fr)" }} gap={4}>
+          <Heading size="md" color="text" mb={4}>
+            System Health
+          </Heading>
+          <Box
+            display="grid"
+            gridTemplateColumns={{ base: "repeat(2, 1fr)", md: "repeat(4, 1fr)" }}
+            gap={4}
+          >
             <VStack>
-              <Text fontSize="sm" color="gray.600">Server Status</Text>
+              <Text fontSize="sm" color="gray.600">
+                Server Status
+              </Text>
               <Badge colorScheme={getSystemStatusColor(systemHealth.serverStatus)}>
                 {systemHealth.serverStatus}
               </Badge>
             </VStack>
             <VStack>
-              <Text fontSize="sm" color="gray.600">Database</Text>
+              <Text fontSize="sm" color="gray.600">
+                Database
+              </Text>
               <Badge colorScheme={getSystemStatusColor(systemHealth.databaseStatus)}>
                 {systemHealth.databaseStatus}
               </Badge>
             </VStack>
             <VStack>
-              <Text fontSize="sm" color="gray.600">Payment System</Text>
+              <Text fontSize="sm" color="gray.600">
+                Payment System
+              </Text>
               <Badge colorScheme={getSystemStatusColor(systemHealth.paymentSystem)}>
                 {systemHealth.paymentSystem}
               </Badge>
             </VStack>
             <VStack>
-              <Text fontSize="sm" color="gray.600">Uptime</Text>
+              <Text fontSize="sm" color="gray.600">
+                Uptime
+              </Text>
               <Text fontWeight="bold">{systemHealth.uptime}%</Text>
               <Box w="60px" h="2px" bg="gray.200" borderRadius="full">
                 <Box w={`${systemHealth.uptime}%`} h="100%" bg="green.500" borderRadius="full" />
@@ -190,29 +272,35 @@ const AdminDashboard = () => {
         {/* Recent Users */}
         <Box bg="white" p={6} borderRadius="lg" boxShadow="sm" border="1px" borderColor="gray.200">
           <HStack justify="space-between" mb={4}>
-            <Heading size="md" color="text">Recent Users</Heading>
-            <Button size="sm" variant="outline">View All Users</Button>
+            <Heading size="md" color="text">
+              Recent Users
+            </Heading>
+            <Button size="sm" variant="outline">
+              View All Users
+            </Button>
           </HStack>
-          
+
           <VStack spacing={4} align="stretch">
             {recentUsers.map((user) => (
-              <Box key={user.id} bg="white" p={4} borderRadius="lg" boxShadow="sm" border="1px" borderColor="gray.200">
+              <Box
+                key={user.id}
+                bg="white"
+                p={4}
+                borderRadius="lg"
+                boxShadow="sm"
+                border="1px"
+                borderColor="gray.200"
+              >
                 <HStack spacing={4}>
-                  <Image
-                    src={user.avatar}
-                    alt={user.name}
-                    w="40px"
-                    h="40px"
-                    borderRadius="full"
-                  />
+                  <Image src={user.avatar} alt={user.name} w="40px" h="40px" borderRadius="full" />
                   <VStack align="start" flex={1} spacing={1}>
                     <Heading size="sm">{user.name}</Heading>
-                    <Text fontSize="sm" color="gray.600">{user.email}</Text>
+                    <Text fontSize="sm" color="gray.600">
+                      {user.email}
+                    </Text>
                     <HStack>
                       <Badge colorScheme="blue">{user.role}</Badge>
-                      <Badge colorScheme={getUserStatusColor(user.status)}>
-                        {user.status}
-                      </Badge>
+                      <Badge colorScheme={getUserStatusColor(user.status)}>{user.status}</Badge>
                     </HStack>
                     <Text fontSize="xs" color="gray.500">
                       Joined {new Date(user.joinDate).toLocaleDateString()}
@@ -234,15 +322,17 @@ const AdminDashboard = () => {
 
         {/* Flagged Content */}
         <Box bg="white" p={6} borderRadius="lg" boxShadow="sm" border="1px" borderColor="gray.200">
-          <Heading size="md" color="text" mb={4}>Flagged Auctions</Heading>
-          
+          <Heading size="md" color="text" mb={4}>
+            Flagged Auctions
+          </Heading>
+
           <VStack spacing={4} align="stretch">
             {flaggedAuctions.map((auction) => (
               <Box
                 key={auction.id}
-                bg={auction.severity === 'high' ? 'red.50' : 'orange.50'}
+                bg={auction.severity === "high" ? "red.50" : "orange.50"}
                 border="1px"
-                borderColor={auction.severity === 'high' ? 'red.200' : 'orange.200'}
+                borderColor={auction.severity === "high" ? "red.200" : "orange.200"}
                 borderRadius="md"
                 p={4}
               >
@@ -253,13 +343,19 @@ const AdminDashboard = () => {
                     <Text fontSize="sm">Current bid: ${auction.currentBid}</Text>
                   </VStack>
                   <VStack align="end" spacing={1}>
-                    <Badge colorScheme={auction.severity === 'high' ? 'red' : 'orange'}>
+                    <Badge colorScheme={auction.severity === "high" ? "red" : "orange"}>
                       {auction.severity} priority
                     </Badge>
-                    <Text fontSize="sm" color="gray.600">{auction.flagReason}</Text>
+                    <Text fontSize="sm" color="gray.600">
+                      {auction.flagReason}
+                    </Text>
                     <HStack>
-                      <Button size="xs" colorScheme="green">Approve</Button>
-                      <Button size="xs" colorScheme="red">Remove</Button>
+                      <Button size="xs" colorScheme="green">
+                        Approve
+                      </Button>
+                      <Button size="xs" colorScheme="red">
+                        Remove
+                      </Button>
                     </HStack>
                   </VStack>
                 </HStack>
@@ -270,17 +366,33 @@ const AdminDashboard = () => {
 
         {/* Transactions */}
         <Box bg="white" p={6} borderRadius="lg" boxShadow="sm" border="1px" borderColor="gray.200">
-          <Heading size="md" color="text" mb={4}>Recent Transactions</Heading>
-          
+          <Heading size="md" color="text" mb={4}>
+            Recent Transactions
+          </Heading>
+
           <VStack spacing={3} align="stretch">
-            <HStack justify="space-between" fontWeight="bold" fontSize="sm" color="gray.600" pb={2} borderBottom="1px" borderColor="gray.200">
+            <HStack
+              justify="space-between"
+              fontWeight="bold"
+              fontSize="sm"
+              color="gray.600"
+              pb={2}
+              borderBottom="1px"
+              borderColor="gray.200"
+            >
               <Text flex="1">Date</Text>
               <Text flex="2">Buyer</Text>
               <Text flex="2">Seller</Text>
               <Text flex="2">Artwork</Text>
-              <Text flex="1" textAlign="right">Amount</Text>
-              <Text flex="1" textAlign="right">Fee</Text>
-              <Text flex="1" textAlign="center">Status</Text>
+              <Text flex="1" textAlign="right">
+                Amount
+              </Text>
+              <Text flex="1" textAlign="right">
+                Fee
+              </Text>
+              <Text flex="1" textAlign="center">
+                Status
+              </Text>
             </HStack>
             {recentTransactions.map((transaction) => (
               <HStack key={transaction.id} justify="space-between" fontSize="sm">
@@ -288,10 +400,14 @@ const AdminDashboard = () => {
                 <Text flex="2">{transaction.buyer}</Text>
                 <Text flex="2">{transaction.seller}</Text>
                 <Text flex="2">{transaction.artwork}</Text>
-                <Text flex="1" textAlign="right">${transaction.amount}</Text>
-                <Text flex="1" textAlign="right">${transaction.fee}</Text>
+                <Text flex="1" textAlign="right">
+                  ${transaction.amount}
+                </Text>
+                <Text flex="1" textAlign="right">
+                  ${transaction.fee}
+                </Text>
                 <Box flex="1" textAlign="center">
-                  <Badge colorScheme={transaction.status === 'completed' ? 'green' : 'yellow'}>
+                  <Badge colorScheme={transaction.status === "completed" ? "green" : "yellow"}>
                     {transaction.status}
                   </Badge>
                 </Box>
@@ -302,8 +418,17 @@ const AdminDashboard = () => {
 
         {/* Analytics & Reports */}
         <Box display="grid" gridTemplateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={6}>
-          <Box bg="white" p={6} borderRadius="lg" boxShadow="sm" border="1px" borderColor="gray.200">
-            <Heading size="md" color="text" mb={4}>Platform Analytics</Heading>
+          <Box
+            bg="white"
+            p={6}
+            borderRadius="lg"
+            boxShadow="sm"
+            border="1px"
+            borderColor="gray.200"
+          >
+            <Heading size="md" color="text" mb={4}>
+              Platform Analytics
+            </Heading>
             <VStack spacing={4}>
               <HStack justify="space-between" w="full">
                 <Text>Daily active users</Text>
@@ -323,22 +448,48 @@ const AdminDashboard = () => {
               </HStack>
             </VStack>
           </Box>
-          
-          <Box bg="white" p={6} borderRadius="lg" boxShadow="sm" border="1px" borderColor="gray.200">
-            <Heading size="md" color="text" mb={4}>Export Reports</Heading>
+
+          <Box
+            bg="white"
+            p={6}
+            borderRadius="lg"
+            boxShadow="sm"
+            border="1px"
+            borderColor="gray.200"
+          >
+            <Heading size="md" color="text" mb={4}>
+              Export Reports
+            </Heading>
             <VStack spacing={3}>
-              <Button w="full" variant="outline">Download User Report</Button>
-              <Button w="full" variant="outline">Download Sales Report</Button>
-              <Button w="full" variant="outline">Download Financial Report</Button>
-              <Button w="full" variant="outline">Download System Logs</Button>
+              <Button w="full" variant="outline">
+                Download User Report
+              </Button>
+              <Button w="full" variant="outline">
+                Download Sales Report
+              </Button>
+              <Button w="full" variant="outline">
+                Download Financial Report
+              </Button>
+              <Button w="full" variant="outline">
+                Download System Logs
+              </Button>
             </VStack>
           </Box>
         </Box>
 
         {/* Platform Settings */}
         <Box display="grid" gridTemplateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={6}>
-          <Box bg="white" p={6} borderRadius="lg" boxShadow="sm" border="1px" borderColor="gray.200">
-            <Heading size="md" color="text" mb={4}>Platform Settings</Heading>
+          <Box
+            bg="white"
+            p={6}
+            borderRadius="lg"
+            boxShadow="sm"
+            border="1px"
+            borderColor="gray.200"
+          >
+            <Heading size="md" color="text" mb={4}>
+              Platform Settings
+            </Heading>
             <VStack spacing={4} align="stretch">
               <HStack justify="space-between">
                 <Text>Commission Rate</Text>
@@ -357,9 +508,18 @@ const AdminDashboard = () => {
               </Button>
             </VStack>
           </Box>
-          
-          <Box bg="white" p={6} borderRadius="lg" boxShadow="sm" border="1px" borderColor="gray.200">
-            <Heading size="md" color="text" mb={4}>System Actions</Heading>
+
+          <Box
+            bg="white"
+            p={6}
+            borderRadius="lg"
+            boxShadow="sm"
+            border="1px"
+            borderColor="gray.200"
+          >
+            <Heading size="md" color="text" mb={4}>
+              System Actions
+            </Heading>
             <VStack spacing={3}>
               <Button w="full" colorScheme="yellow">
                 Send Platform Notification
@@ -375,7 +535,7 @@ const AdminDashboard = () => {
         </Box>
       </VStack>
     </Container>
-  )
-}
+  );
+};
 
-export default AdminDashboard
+export default AdminDashboard;
