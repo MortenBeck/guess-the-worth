@@ -1,17 +1,17 @@
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
-from typing import Optional
+
 from database import get_db
+from models.user import User, UserRole
 from services.auth_service import AuthService
 from services.jwt_service import JWTService
-from models.user import User, UserRole
 
 security = HTTPBearer()
 
+
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db)
+    credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)
 ) -> User:
     """Get current authenticated user"""
     token = credentials.credentials
@@ -37,22 +37,24 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-async def get_current_active_user(
-    current_user: User = Depends(get_current_user)
-) -> User:
+
+async def get_current_active_user(current_user: User = Depends(get_current_user)) -> User:
     """Get current active user"""
     return current_user
 
+
 def require_role(*allowed_roles: UserRole):
     """Decorator to require specific roles"""
+
     def role_checker(current_user: User = Depends(get_current_active_user)) -> User:
         if current_user.role not in allowed_roles:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Insufficient permissions"
+                status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
             )
         return current_user
+
     return role_checker
+
 
 # Role-specific dependencies
 require_admin = require_role(UserRole.ADMIN)

@@ -1,6 +1,7 @@
-import os
+from typing import List, Optional
+
 from pydantic_settings import BaseSettings
-from typing import Optional, List
+
 
 class Settings(BaseSettings):
     database_url: str = "postgresql://postgres:password@localhost:5432/guess_the_worth_db"
@@ -39,6 +40,7 @@ class Settings(BaseSettings):
         super().__init__(**kwargs)
 
         if self.cors_origins:
-            self.allowed_origins = [origin.strip() for origin in self.cors_origins.split(',')]
+            self.allowed_origins = [origin.strip() for origin in self.cors_origins.split(",")]
+
 
 settings = Settings()

@@ -1,6 +1,6 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
-const useBiddingStore = create((set, get) => ({
+const useBiddingStore = create((set) => ({
   activeArtworks: new Map(),
   currentBids: new Map(),
   socketConnected: false,
@@ -55,7 +55,7 @@ const useBiddingStore = create((set, get) => ({
         const artwork = newActiveArtworks.get(artworkId);
         newActiveArtworks.set(artworkId, {
           ...artwork,
-          status: 'sold',
+          status: "sold",
         });
       }
       return { activeArtworks: newActiveArtworks };

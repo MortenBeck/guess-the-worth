@@ -1,11 +1,15 @@
-from pydantic import BaseModel
 from datetime import datetime
+
+from pydantic import BaseModel
+
 
 class BidBase(BaseModel):
     amount: float
 
+
 class BidCreate(BidBase):
     artwork_id: int
+
 
 class BidResponse(BidBase):
     id: int

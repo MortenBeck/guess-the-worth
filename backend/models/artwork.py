@@ -1,13 +1,17 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum
+import enum
+
+from sqlalchemy import Column, DateTime, Enum, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-import enum
+
 from .base import Base
+
 
 class ArtworkStatus(str, enum.Enum):
     ACTIVE = "active"
     SOLD = "sold"
     ARCHIVED = "archived"
+
 
 class Artwork(Base):
     __tablename__ = "artworks"
