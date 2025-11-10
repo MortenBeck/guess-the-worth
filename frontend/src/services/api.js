@@ -21,20 +21,31 @@ const createApiClient = () => {
       },
     };
 
-    const response = await fetch(url, fetchOptions);
+    try {
+      const response = await fetch(url, fetchOptions);
 
-    if (response.status === 401) {
-      localStorage.removeItem("access_token");
-      window.location.href = "/login";
-      throw new Error("Unauthorized");
+      if (response.status === 401) {
+        localStorage.removeItem("access_token");
+        window.location.href = "/login";
+        throw new Error("Unauthorized");
+      }
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return { data };
+    } catch (error) {
+      // Handle network errors (backend offline, no internet, etc.)
+      if (error instanceof TypeError && error.message === "Failed to fetch") {
+        throw new Error(
+          "Unable to connect to server. The service may be temporarily offline."
+        );
+      }
+      // Re-throw other errors
+      throw error;
     }
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return { data };
   };
 
   return {
