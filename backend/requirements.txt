@@ -13,6 +13,7 @@ python-multipart
 python-dotenv
 pydantic-settings
 pydantic[email]
+sentry-sdk[fastapi]
 
 # Testing
 pytest

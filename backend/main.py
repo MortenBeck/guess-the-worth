@@ -1,3 +1,6 @@
+import os
+
+import sentry_sdk
 import socketio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -6,6 +9,17 @@ from config.settings import settings
 from database import engine
 from models.base import Base
 from routers import artworks, auth, bids, health, users
+
+# Initialize Sentry
+sentry_dsn = os.getenv("SENTRY_DSN")
+if sentry_dsn:
+    sentry_sdk.init(
+        dsn=sentry_dsn,
+        traces_sample_rate=0.1,  # 10% of transactions for performance monitoring
+        profiles_sample_rate=0.1,  # 10% of transactions for profiling
+        send_default_pii=True,  # Send user IP and request data
+        environment=os.getenv("ENVIRONMENT", "production"),
+    )
 
 app = FastAPI(title="Guess The Worth API", version="1.0.0")
 

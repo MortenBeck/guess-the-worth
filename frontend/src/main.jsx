@@ -3,9 +3,25 @@ import { createRoot } from "react-dom/client";
 import { ChakraProvider, defaultSystem } from "@chakra-ui/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Auth0Provider } from "@auth0/auth0-react";
+import * as Sentry from "@sentry/react";
 import { config } from "./config/env";
 import "./index.css";
 import App from "./App.jsx";
+
+// Initialize Sentry
+if (config.SENTRY_DSN) {
+  Sentry.init({
+    dsn: config.SENTRY_DSN,
+    integrations: [
+      Sentry.browserTracingIntegration(),
+      Sentry.replayIntegration(),
+    ],
+    tracesSampleRate: 0.1, // 10% of transactions for performance monitoring
+    replaysSessionSampleRate: 0.1, // 10% session replays
+    replaysOnErrorSampleRate: 1.0, // 100% replays when errors occur
+    environment: import.meta.env.MODE,
+  });
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
