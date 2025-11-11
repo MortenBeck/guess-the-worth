@@ -12,10 +12,7 @@ import App from "./App.jsx";
 if (config.SENTRY_DSN) {
   Sentry.init({
     dsn: config.SENTRY_DSN,
-    integrations: [
-      Sentry.browserTracingIntegration(),
-      Sentry.replayIntegration(),
-    ],
+    integrations: [Sentry.browserTracingIntegration(), Sentry.replayIntegration()],
     tracesSampleRate: 0.1, // 10% of transactions for performance monitoring
     replaysSessionSampleRate: 0.1, // 10% session replays
     replaysOnErrorSampleRate: 1.0, // 100% replays when errors occur
