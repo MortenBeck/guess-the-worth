@@ -13,6 +13,9 @@ export const config = {
   // Stripe
   STRIPE_PUBLISHABLE_KEY: import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "",
 
+  // Sentry
+  SENTRY_DSN: import.meta.env.VITE_SENTRY_DSN || "",
+
   // App
   APP_NAME: "Guess The Worth",
   MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
