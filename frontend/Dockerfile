@@ -27,10 +27,10 @@ RUN npm ci --only=production
 
 # Copy built files and server from builder
 COPY --from=builder /app/dist ./dist
-COPY server.js ./
+COPY server.cjs ./
 
 # Expose port (Azure will override this with PORT env var)
 EXPOSE 8080
 
 # Start the Express server
-CMD ["node", "server.js"]
+CMD ["node", "server.cjs"]
