@@ -96,7 +96,7 @@ jobs:
           # Create a deployment directory with all needed files
           mkdir -p deploy
           cp -r dist deploy/
-          cp server.js deploy/
+          cp server.cjs deploy/
           cp package.json deploy/
           cp package-lock.json deploy/
           cd deploy
