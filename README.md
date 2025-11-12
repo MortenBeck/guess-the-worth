@@ -36,14 +36,14 @@ Create `.env` files in `backend/` and `frontend/` directories with:
 **Issue**: Hardcoded secrets in `backend/config/settings.py`
 
 **Implementation**:
-- [ ] Remove all hardcoded secrets from `settings.py`:
+- [x] Remove all hardcoded secrets from `settings.py`:
   - JWT secret key
   - Auth0 credentials (domain, client ID, client secret)
   - Stripe keys
-- [ ] Move all sensitive values to environment variables
-- [ ] Create `backend/.env.example` template
-- [ ] Update `docker-compose.yml` to pass environment variables to containers
-- [ ] Document all required environment variables
+- [x] Move all sensitive values to environment variables
+- [x] Create `backend/.env.example` template
+- [x] Update `docker-compose.yml` to pass environment variables to containers
+- [x] Document all required environment variables
 
 **Files**:
 - `backend/config/settings.py`
