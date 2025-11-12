@@ -15,6 +15,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - guess_the_worth
 
   backend:
     build: ./backend
@@ -61,18 +63,26 @@ services:
     volumes:
       - ./backend:/app
     command: uvicorn main:socket_app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - guess_the_worth
 
   frontend:
     build: ./frontend
     container_name: guess_the_worth_frontend
     ports:
       - "5173:5173"
+      - "8080:8080"
     volumes:
       - ./frontend:/app
       - /app/node_modules
     command: npm run dev -- --host 0.0.0.0
     depends_on:
       - backend
+    networks:
+      - guess_the_worth
 
 volumes:
   postgres_data:
+
+networks:
+  guess_the_worth:
