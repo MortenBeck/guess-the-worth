@@ -171,6 +171,13 @@ jobs:
           context: ./frontend
           file: ./frontend/Dockerfile
           push: ${{ github.ref == 'refs/heads/main' }}
+          build-args: |
+            VITE_API_BASE_URL=${{ secrets.AZURE_BACKEND_URL }}
+            VITE_SOCKET_URL=${{ secrets.AZURE_BACKEND_URL }}
+            VITE_AUTH0_DOMAIN=${{ secrets.VITE_AUTH0_DOMAIN }}
+            VITE_AUTH0_CLIENT_ID=${{ secrets.VITE_AUTH0_CLIENT_ID }}
+            VITE_AUTH0_AUDIENCE=${{ secrets.VITE_AUTH0_AUDIENCE }}
+            VITE_SENTRY_DSN=${{ secrets.VITE_SENTRY_DSN }}
           tags: |
             ghcr.io/${{ env.REPO_LOWERCASE }}/frontend:latest
             ghcr.io/${{ env.REPO_LOWERCASE }}/frontend:${{ github.sha }}
