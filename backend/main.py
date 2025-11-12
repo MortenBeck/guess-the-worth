@@ -5,7 +5,7 @@ import socketio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from config.settings import settings
+from config.settings import settings    #Loads .env file
 from database import engine
 from models.base import Base
 from routers import artworks, auth, bids, health, users
