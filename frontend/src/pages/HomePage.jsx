@@ -10,7 +10,8 @@ import {
   Badge,
 } from "@chakra-ui/react";
 import { useAuth0 } from "@auth0/auth0-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import useAuthStore from "../store/authStore";
 import { config } from "../config/env";
 
@@ -18,6 +19,19 @@ const HomePage = () => {
   const { loginWithRedirect, isAuthenticated } = useAuth0();
   const { user } = useAuthStore();
   const navigate = useNavigate();
+
+  const { state } = useLocation();
+  const { targetId } = state || {};
+  
+  useEffect(() => {
+    const el = document.querySelector(targetId);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+    } else {
+      window.scrollTo(0, 0)
+    }
+  }, [targetId]);
+
 
   const handleLogin = () => {
     loginWithRedirect();

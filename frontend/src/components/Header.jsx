@@ -9,31 +9,19 @@ const Header = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const publicNavItems = [
-    { label: "How It Works", path: "#how-it-works" },
-    { label: "Artworks", path: "/artworks" },
-    { label: "About", path: "#about" },
+    { label: "How It Works", path: ["/", { state: { targetId: "#how-it-works" } }] },
+    { label: "Artworks", path: ["/artworks", { state: { targetId: "" } }] },
+    { label: "About", path: ["/", { state: { targetId: "#about" } }] },
   ];
 
   const authenticatedNavItems = [
-    { label: "Home", path: "/" },
-    { label: "Artworks", path: "/artworks" },
-    { label: "Dashboard", path: "/dashboard" },
-    { label: "Sell Artwork", path: "/seller-dashboard" },
+    { label: "Home", path: ["/", { state: { targetId: "" } }] },
+    { label: "Artworks", path: ["/artworks", { state: { targetId: "" } }] },
+    { label: "Dashboard", path: ["/dashboard", { state: { targetId: "" } }] },
+    { label: "Sell Artwork", path: ["/seller-dashboard", { state: { targetId: "" } }] },
   ];
 
   const navItems = isAuthenticated ? authenticatedNavItems : publicNavItems;
-
-  const handleNavClick = (path) => {
-    if (path.startsWith("#")) {
-      // Handle anchor links - scroll to section
-      const element = document.querySelector(path);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth" });
-      }
-    } else {
-      navigate(path);
-    }
-  };
 
   return (
     <Box
@@ -66,7 +54,7 @@ const Header = () => {
             <HStack spacing={8}>
               {navItems.map((item) => (
                 <Text
-                  key={item.path}
+                  key={item.path[0]+item.path[1].state.targetId}
                   cursor="pointer"
                   color="#94a3b8"
                   fontSize="md"
@@ -77,7 +65,7 @@ const Header = () => {
                     transform: "translateY(-1px)",
                   }}
                   transition="all 0.2s"
-                  onClick={() => handleNavClick(item.path)}
+                  onClick={() => navigate(item.path[0], item.path[1])}
                 >
                   {item.label}
                 </Text>
