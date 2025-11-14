@@ -294,14 +294,14 @@ stripe listen --forward-to localhost:8000/api/payments/webhook
 **Issue**: Navbar links and buttons need fixes
 
 **Implementation** (`frontend/src/components/Header.jsx`):
-- [ ] Audit all navigation links
+- [x] Audit all navigation links
 - [ ] Fix dashboard button routing: `/dashboard`
 - [ ] Add conditional rendering based on user role:
   ```jsx
   {isSeller() && <Link to="/sell">Sell Artwork</Link>}
   {isAdmin() && <Link to="/admin">Admin Panel</Link>}
   ```
-- [ ] Fix "View All Activity" button to navigate to dashboard
+- [x] Fix "View All Activity" button to navigate to dashboard
 - [ ] Add active state styling for current page using `useLocation()`
 - [ ] Ensure mobile menu works responsively
 
