@@ -23,9 +23,9 @@ const ArtworkPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [])
-  
+    window.scrollTo(0, 0);
+  }, []);
+
   // Mock artwork data - replace with actual API call
   const artwork = {
     id: parseInt(id),

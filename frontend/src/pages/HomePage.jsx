@@ -22,16 +22,15 @@ const HomePage = () => {
 
   const { state } = useLocation();
   const { targetId } = state || {};
-  
+
   useEffect(() => {
     const el = document.querySelector(targetId);
     if (el) {
       el.scrollIntoView({ behavior: "smooth" });
     } else {
-      window.scrollTo(0, 0)
+      window.scrollTo(0, 0);
     }
   }, [targetId]);
-
 
   const handleLogin = () => {
     loginWithRedirect();

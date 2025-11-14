@@ -19,8 +19,8 @@ const SellerDashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [])
+    window.scrollTo(0, 0);
+  }, []);
 
   // Mock data - replace with actual API calls
   const stats = {

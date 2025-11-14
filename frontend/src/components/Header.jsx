@@ -54,7 +54,7 @@ const Header = () => {
             <HStack spacing={8}>
               {navItems.map((item) => (
                 <Text
-                  key={item.path[0]+item.path[1].state.targetId}
+                  key={item.path[0] + item.path[1].state.targetId}
                   cursor="pointer"
                   color="#94a3b8"
                   fontSize="md"

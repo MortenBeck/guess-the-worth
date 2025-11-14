@@ -20,8 +20,8 @@ const ArtworksPage = () => {
   const [filterCategory, setFilterCategory] = useState("all");
 
   useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [])
+    window.scrollTo(0, 0);
+  }, []);
 
   // Mock artworks data - replace with actual API call
   const artworks = [

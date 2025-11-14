@@ -100,7 +100,13 @@ const ActivityFeed = () => {
             </VStack>
           </Box>
 
-          <Text color="#94a3b8" fontSize="sm" textAlign="center" cursor="pointer" onClick={() => navigate("/dashboard")}>
+          <Text
+            color="#94a3b8"
+            fontSize="sm"
+            textAlign="center"
+            cursor="pointer"
+            onClick={() => navigate("/dashboard")}
+          >
             View all activity in your dashboard
           </Text>
         </VStack>

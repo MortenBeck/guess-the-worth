@@ -16,10 +16,9 @@ const EditIcon = () => <span>✏️</span>;
 import placeholderImg from "../assets/placeholder.jpg";
 
 const AdminDashboard = () => {
-
   useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [])
+    window.scrollTo(0, 0);
+  }, []);
 
   // Mock data - replace with actual API calls
   const stats = {
