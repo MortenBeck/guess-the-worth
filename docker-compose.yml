@@ -74,7 +74,7 @@ services:
       - "8080:8080"
     volumes:
       - ./frontend:/app
-      - /app/node_modules
+      - /frontend/node_modules
     command: npm run dev -- --host 0.0.0.0
     depends_on:
       - backend
