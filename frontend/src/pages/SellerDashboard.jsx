@@ -10,12 +10,17 @@ import {
   Badge,
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 // Simple custom icon
 const AddIcon = () => <span>➕</span>;
 import placeholderImg from "../assets/placeholder.jpg";
 
 const SellerDashboard = () => {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
 
   // Mock data - replace with actual API calls
   const stats = {

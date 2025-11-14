@@ -12,10 +12,15 @@ import {
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../store/authStore";
 import placeholderImg from "../assets/placeholder.jpg";
+import { useEffect } from "react";
 
 const UserDashboard = () => {
   const { user } = useAuthStore();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
 
   // Mock data
   const stats = {

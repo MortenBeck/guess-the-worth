@@ -9,12 +9,18 @@ import {
   Image,
   Badge,
 } from "@chakra-ui/react";
+import { useEffect } from "react";
 // Simple custom icons
 const ViewIcon = () => <span>👁️</span>;
 const EditIcon = () => <span>✏️</span>;
 import placeholderImg from "../assets/placeholder.jpg";
 
 const AdminDashboard = () => {
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
+
   // Mock data - replace with actual API calls
   const stats = {
     totalUsers: 1245,

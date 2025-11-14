@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   Container,
@@ -18,6 +18,10 @@ const ArtworksPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("newest");
   const [filterCategory, setFilterCategory] = useState("all");
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
 
   // Mock artworks data - replace with actual API call
   const artworks = [

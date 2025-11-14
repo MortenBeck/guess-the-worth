@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   Container,
@@ -22,6 +22,10 @@ const ArtworkPage = () => {
   const [bidAmount, setBidAmount] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
+  
   // Mock artwork data - replace with actual API call
   const artwork = {
     id: parseInt(id),
