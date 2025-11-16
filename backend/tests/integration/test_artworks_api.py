@@ -4,6 +4,7 @@ Tests /api/artworks routes with authentication and database.
 """
 
 import pytest
+
 from models.artwork import ArtworkStatus
 
 
@@ -124,9 +125,24 @@ class TestListArtworks:
         """Test listing includes artworks with different statuses."""
         from models.artwork import Artwork
 
-        active = Artwork(seller_id=seller_user.id, title="Active", secret_threshold=100.0, status=ArtworkStatus.ACTIVE)
-        sold = Artwork(seller_id=seller_user.id, title="Sold", secret_threshold=100.0, status=ArtworkStatus.SOLD)
-        archived = Artwork(seller_id=seller_user.id, title="Archived", secret_threshold=100.0, status=ArtworkStatus.ARCHIVED)
+        active = Artwork(
+            seller_id=seller_user.id,
+            title="Active",
+            secret_threshold=100.0,
+            status=ArtworkStatus.ACTIVE,
+        )
+        sold = Artwork(
+            seller_id=seller_user.id,
+            title="Sold",
+            secret_threshold=100.0,
+            status=ArtworkStatus.SOLD,
+        )
+        archived = Artwork(
+            seller_id=seller_user.id,
+            title="Archived",
+            secret_threshold=100.0,
+            status=ArtworkStatus.ARCHIVED,
+        )
 
         db_session.add_all([active, sold, archived])
         db_session.commit()
@@ -186,12 +202,18 @@ class TestGetSingleArtwork:
 
         # Place some bids
         bid = Bid(artwork_id=artwork.id, bidder_id=buyer_user.id, amount=150.0)
-        client.app.dependency_overrides[client.app.dependency_overrides.keys().__iter__().__next__()]().add(bid)
-        client.app.dependency_overrides[client.app.dependency_overrides.keys().__iter__().__next__()]().commit()
+        client.app.dependency_overrides[
+            client.app.dependency_overrides.keys().__iter__().__next__()
+        ]().add(bid)
+        client.app.dependency_overrides[
+            client.app.dependency_overrides.keys().__iter__().__next__()
+        ]().commit()
 
         # Update artwork's current_highest_bid
         artwork.current_highest_bid = 150.0
-        client.app.dependency_overrides[client.app.dependency_overrides.keys().__iter__().__next__()]().commit()
+        client.app.dependency_overrides[
+            client.app.dependency_overrides.keys().__iter__().__next__()
+        ]().commit()
 
         response = client.get(f"/api/artworks/{artwork.id}")
 
@@ -208,17 +230,14 @@ class TestCreateArtwork:
         payload = {
             "title": "New Masterpiece",
             "description": "A beautiful creation",
-            "secret_threshold": 500.0
+            "secret_threshold": 500.0,
         }
 
         # Note: In real implementation, this would require authentication
         # For now, we'll need to pass seller_id somehow (or use auth headers)
         # This test may need adjustment based on actual API implementation
 
-        response = client.post(
-            f"/api/artworks?seller_id={seller_user.id}",
-            json=payload
-        )
+        response = client.post(f"/api/artworks?seller_id={seller_user.id}", json=payload)
 
         # If endpoint requires auth, use this instead:
         # headers = create_auth_header(seller_token)
@@ -234,15 +253,9 @@ class TestCreateArtwork:
 
     def test_create_artwork_without_description(self, client, seller_user):
         """Test creating artwork without optional description."""
-        payload = {
-            "title": "Minimal Art",
-            "secret_threshold": 200.0
-        }
+        payload = {"title": "Minimal Art", "secret_threshold": 200.0}
 
-        response = client.post(
-            f"/api/artworks?seller_id={seller_user.id}",
-            json=payload
-        )
+        response = client.post(f"/api/artworks?seller_id={seller_user.id}", json=payload)
 
         if response.status_code == 200:
             data = response.json()
@@ -253,43 +266,27 @@ class TestCreateArtwork:
         """Test creating artwork with missing required fields."""
         # Missing title
         response = client.post(
-            f"/api/artworks?seller_id={seller_user.id}",
-            json={"secret_threshold": 100.0}
+            f"/api/artworks?seller_id={seller_user.id}", json={"secret_threshold": 100.0}
         )
         assert response.status_code == 422
 
         # Missing secret_threshold
-        response = client.post(
-            f"/api/artworks?seller_id={seller_user.id}",
-            json={"title": "Test"}
-        )
+        response = client.post(f"/api/artworks?seller_id={seller_user.id}", json={"title": "Test"})
         assert response.status_code == 422
 
     def test_create_artwork_invalid_seller(self, client):
         """Test creating artwork with non-existent seller."""
-        payload = {
-            "title": "Invalid Seller Art",
-            "secret_threshold": 100.0
-        }
+        payload = {"title": "Invalid Seller Art", "secret_threshold": 100.0}
 
-        response = client.post(
-            "/api/artworks?seller_id=99999",
-            json=payload
-        )
+        response = client.post("/api/artworks?seller_id=99999", json=payload)
 
         assert response.status_code in [400, 404]
 
     def test_create_artwork_negative_threshold(self, client, seller_user):
         """Test creating artwork with negative threshold."""
-        payload = {
-            "title": "Negative Threshold",
-            "secret_threshold": -100.0
-        }
+        payload = {"title": "Negative Threshold", "secret_threshold": -100.0}
 
-        response = client.post(
-            f"/api/artworks?seller_id={seller_user.id}",
-            json=payload
-        )
+        response = client.post(f"/api/artworks?seller_id={seller_user.id}", json=payload)
 
         # Schema allows this, but business logic may reject it
         # Adjust based on actual requirements
@@ -297,15 +294,9 @@ class TestCreateArtwork:
 
     def test_create_artwork_zero_threshold(self, client, seller_user):
         """Test creating artwork with zero threshold."""
-        payload = {
-            "title": "Free Art",
-            "secret_threshold": 0.0
-        }
+        payload = {"title": "Free Art", "secret_threshold": 0.0}
 
-        response = client.post(
-            f"/api/artworks?seller_id={seller_user.id}",
-            json=payload
-        )
+        response = client.post(f"/api/artworks?seller_id={seller_user.id}", json=payload)
 
         if response.status_code == 200:
             data = response.json()
@@ -320,7 +311,7 @@ class TestUploadArtworkImage:
         # This is a stub in current implementation
         response = client.post(
             f"/api/artworks/{artwork.id}/upload-image",
-            files={"file": ("test.jpg", b"fake image data", "image/jpeg")}
+            files={"file": ("test.jpg", b"fake image data", "image/jpeg")},
         )
 
         # Endpoint exists but may not be fully implemented
@@ -330,7 +321,7 @@ class TestUploadArtworkImage:
         """Test uploading image to non-existent artwork."""
         response = client.post(
             "/api/artworks/99999/upload-image",
-            files={"file": ("test.jpg", b"fake image data", "image/jpeg")}
+            files={"file": ("test.jpg", b"fake image data", "image/jpeg")},
         )
 
         assert response.status_code in [404, 501]
@@ -343,8 +334,18 @@ class TestArtworkFiltering:
         """Test filtering artworks by status (if implemented)."""
         from models.artwork import Artwork
 
-        active = Artwork(seller_id=seller_user.id, title="Active", secret_threshold=100.0, status=ArtworkStatus.ACTIVE)
-        sold = Artwork(seller_id=seller_user.id, title="Sold", secret_threshold=100.0, status=ArtworkStatus.SOLD)
+        active = Artwork(
+            seller_id=seller_user.id,
+            title="Active",
+            secret_threshold=100.0,
+            status=ArtworkStatus.ACTIVE,
+        )
+        sold = Artwork(
+            seller_id=seller_user.id,
+            title="Sold",
+            secret_threshold=100.0,
+            status=ArtworkStatus.SOLD,
+        )
 
         db_session.add_all([active, sold])
         db_session.commit()
@@ -370,7 +371,7 @@ class TestArtworkFiltering:
             auth0_sub="auth0|seller2",
             email="seller2@test.com",
             name="Seller 2",
-            role=UserRole.SELLER
+            role=UserRole.SELLER,
         )
         db_session.add(another_seller)
         db_session.commit()
@@ -407,15 +408,9 @@ class TestArtworkEdgeCases:
     def test_artwork_with_very_long_title(self, client, seller_user):
         """Test creating artwork with very long title."""
         long_title = "A" * 1000
-        payload = {
-            "title": long_title,
-            "secret_threshold": 100.0
-        }
+        payload = {"title": long_title, "secret_threshold": 100.0}
 
-        response = client.post(
-            f"/api/artworks?seller_id={seller_user.id}",
-            json=payload
-        )
+        response = client.post(f"/api/artworks?seller_id={seller_user.id}", json=payload)
 
         # Should either succeed or fail with validation
         assert response.status_code in [200, 422]
@@ -425,13 +420,10 @@ class TestArtworkEdgeCases:
         payload = {
             "title": "艺术品 🎨",
             "description": "Une belle œuvre d'art",
-            "secret_threshold": 100.0
+            "secret_threshold": 100.0,
         }
 
-        response = client.post(
-            f"/api/artworks?seller_id={seller_user.id}",
-            json=payload
-        )
+        response = client.post(f"/api/artworks?seller_id={seller_user.id}", json=payload)
 
         if response.status_code == 200:
             data = response.json()
@@ -443,13 +435,10 @@ class TestArtworkEdgeCases:
         payload = {
             "title": "Test Art",
             "description": "<script>alert('xss')</script>",
-            "secret_threshold": 100.0
+            "secret_threshold": 100.0,
         }
 
-        response = client.post(
-            f"/api/artworks?seller_id={seller_user.id}",
-            json=payload
-        )
+        response = client.post(f"/api/artworks?seller_id={seller_user.id}", json=payload)
 
         if response.status_code == 200:
             data = response.json()

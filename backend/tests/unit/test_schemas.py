@@ -3,16 +3,17 @@ Unit tests for Pydantic schemas.
 Tests validation logic, default values, and field constraints.
 """
 
-import pytest
-from pydantic import ValidationError
 from datetime import datetime
 
-from schemas.user import UserCreate, UserUpdate, UserResponse
-from schemas.artwork import ArtworkCreate, ArtworkUpdate, ArtworkResponse, ArtworkWithSecretResponse
-from schemas.bid import BidCreate, BidResponse
-from schemas.auth import TokenResponse, AuthUser
-from models.user import UserRole
+import pytest
+from pydantic import ValidationError
+
 from models.artwork import ArtworkStatus
+from models.user import UserRole
+from schemas.artwork import ArtworkCreate, ArtworkResponse, ArtworkUpdate, ArtworkWithSecretResponse
+from schemas.auth import AuthUser, TokenResponse
+from schemas.bid import BidCreate, BidResponse
+from schemas.user import UserCreate, UserResponse, UserUpdate
 
 
 class TestUserSchemas:
@@ -24,7 +25,7 @@ class TestUserSchemas:
             "email": "test@example.com",
             "name": "Test User",
             "auth0_sub": "auth0|123456",
-            "role": UserRole.BUYER
+            "role": UserRole.BUYER,
         }
         user = UserCreate(**user_data)
         assert user.email == "test@example.com"
@@ -37,7 +38,7 @@ class TestUserSchemas:
         user_data = {
             "email": "buyer@example.com",
             "name": "Default Buyer",
-            "auth0_sub": "auth0|default"
+            "auth0_sub": "auth0|default",
         }
         user = UserCreate(**user_data)
         assert user.role == UserRole.BUYER
@@ -45,11 +46,7 @@ class TestUserSchemas:
     def test_user_create_invalid_email(self):
         """Test UserCreate rejects invalid email format."""
         with pytest.raises(ValidationError) as exc_info:
-            UserCreate(
-                email="not-an-email",
-                name="Test User",
-                auth0_sub="auth0|123"
-            )
+            UserCreate(email="not-an-email", name="Test User", auth0_sub="auth0|123")
         assert "email" in str(exc_info.value).lower()
 
     def test_user_create_missing_required_fields(self):
@@ -86,7 +83,7 @@ class TestUserSchemas:
             "email": "test@example.com",
             "name": "Test User",
             "role": UserRole.BUYER,
-            "created_at": datetime.now()
+            "created_at": datetime.now(),
         }
         response = UserResponse(**response_data)
         assert response.id == 1
@@ -105,7 +102,7 @@ class TestArtworkSchemas:
         artwork_data = {
             "title": "Beautiful Painting",
             "description": "A stunning masterpiece",
-            "secret_threshold": 500.0
+            "secret_threshold": 500.0,
         }
         artwork = ArtworkCreate(**artwork_data)
         assert artwork.title == "Beautiful Painting"
@@ -114,10 +111,7 @@ class TestArtworkSchemas:
 
     def test_artwork_create_without_description(self):
         """Test ArtworkCreate with optional description."""
-        artwork_data = {
-            "title": "Simple Art",
-            "secret_threshold": 100.0
-        }
+        artwork_data = {"title": "Simple Art", "secret_threshold": 100.0}
         artwork = ArtworkCreate(**artwork_data)
         assert artwork.title == "Simple Art"
         assert artwork.description is None
@@ -133,10 +127,7 @@ class TestArtworkSchemas:
     def test_artwork_create_negative_threshold(self):
         """Test ArtworkCreate allows negative threshold (business rule)."""
         # Note: Current schema doesn't enforce positive threshold
-        artwork = ArtworkCreate(
-            title="Free Art",
-            secret_threshold=-10.0
-        )
+        artwork = ArtworkCreate(title="Free Art", secret_threshold=-10.0)
         assert artwork.secret_threshold == -10.0
 
     def test_artwork_update_partial(self):
@@ -160,7 +151,7 @@ class TestArtworkSchemas:
             "current_highest_bid": 75.0,
             "image_url": "https://example.com/art.jpg",
             "status": ArtworkStatus.ACTIVE,
-            "created_at": datetime.now()
+            "created_at": datetime.now(),
         }
         response = ArtworkResponse(**response_data)
         assert response.id == 1
@@ -181,7 +172,7 @@ class TestArtworkSchemas:
             "current_highest_bid": 75.0,
             "image_url": "https://example.com/art.jpg",
             "status": ArtworkStatus.ACTIVE,
-            "created_at": datetime.now()
+            "created_at": datetime.now(),
         }
         response = ArtworkWithSecretResponse(**response_data)
         assert response.secret_threshold == 100.0
@@ -193,10 +184,7 @@ class TestBidSchemas:
 
     def test_bid_create_valid(self):
         """Test BidCreate with valid data."""
-        bid_data = {
-            "artwork_id": 1,
-            "amount": 150.0
-        }
+        bid_data = {"artwork_id": 1, "amount": 150.0}
         bid = BidCreate(**bid_data)
         assert bid.artwork_id == 1
         assert bid.amount == 150.0
@@ -231,7 +219,7 @@ class TestBidSchemas:
             "bidder_id": 10,
             "amount": 200.0,
             "bid_time": datetime.now(),
-            "is_winning": True
+            "is_winning": True,
         }
         response = BidResponse(**response_data)
         assert response.id == 1
@@ -250,7 +238,7 @@ class TestAuthSchemas:
         token_data = {
             "access_token": "eyJ0eXAiOiJKV1QiLCJhbGc...",
             "token_type": "bearer",
-            "expires_in": 3600
+            "expires_in": 3600,
         }
         token = TokenResponse(**token_data)
         assert token.access_token.startswith("eyJ")
@@ -265,7 +253,7 @@ class TestAuthSchemas:
             "name": "Auth User",
             "picture": "https://example.com/pic.jpg",
             "email_verified": True,
-            "roles": ["seller", "admin"]
+            "roles": ["seller", "admin"],
         }
         user = AuthUser(**auth_data)
         assert user.sub == "auth0|abc123"
@@ -280,7 +268,7 @@ class TestAuthSchemas:
             "name": "No Role User",
             "picture": "https://example.com/pic.jpg",
             "email_verified": False,
-            "roles": []
+            "roles": [],
         }
         user = AuthUser(**auth_data)
         assert user.roles == []
@@ -292,7 +280,7 @@ class TestAuthSchemas:
             "sub": "auth0|minimal",
             "email": "minimal@example.com",
             "name": "Minimal User",
-            "email_verified": True
+            "email_verified": True,
         }
         # Should work if picture and roles have defaults
         try:
@@ -319,20 +307,12 @@ class TestSchemaEdgeCases:
 
     def test_unicode_in_names(self):
         """Test schemas handle unicode characters."""
-        user = UserCreate(
-            email="test@example.com",
-            name="用户名 🎨",
-            auth0_sub="auth0|unicode"
-        )
+        user = UserCreate(email="test@example.com", name="用户名 🎨", auth0_sub="auth0|unicode")
         assert "用户名" in user.name
         assert "🎨" in user.name
 
     def test_special_characters_in_description(self):
         """Test artwork description with special characters."""
         description = "Art with <script>alert('xss')</script> & special chars"
-        artwork = ArtworkCreate(
-            title="Test",
-            description=description,
-            secret_threshold=50.0
-        )
+        artwork = ArtworkCreate(title="Test", description=description, secret_threshold=50.0)
         assert artwork.description == description

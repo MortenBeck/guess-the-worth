@@ -3,8 +3,10 @@ End-to-end tests for complete user flows.
 Tests full workflows from registration through bidding to purchase.
 """
 
-import pytest
 from unittest.mock import patch
+
+import pytest
+
 from models.artwork import ArtworkStatus
 from models.user import UserRole
 
@@ -13,7 +15,9 @@ class TestCompleteUserFlow:
     """Test complete user journey from registration to purchase."""
 
     @patch("services.auth_service.verify_auth0_token")
-    def test_buyer_registration_to_winning_bid_flow(self, mock_verify, client, db_session, mock_auth0_response):
+    def test_buyer_registration_to_winning_bid_flow(
+        self, mock_verify, client, db_session, mock_auth0_response
+    ):
         """
         Complete flow:
         1. Buyer registers
@@ -28,7 +32,7 @@ class TestCompleteUserFlow:
             "email": "buyer@e2e.com",
             "name": "E2E Buyer",
             "auth0_sub": "auth0|e2e_buyer",
-            "role": "BUYER"
+            "role": "BUYER",
         }
         buyer_response = client.post("/api/auth/register", json=buyer_payload)
         assert buyer_response.status_code == 200
@@ -40,7 +44,7 @@ class TestCompleteUserFlow:
             "email": "seller@e2e.com",
             "name": "E2E Seller",
             "auth0_sub": "auth0|e2e_seller",
-            "role": "SELLER"
+            "role": "SELLER",
         }
         seller_response = client.post("/api/auth/register", json=seller_payload)
         assert seller_response.status_code == 200
@@ -51,12 +55,9 @@ class TestCompleteUserFlow:
         artwork_payload = {
             "title": "E2E Masterpiece",
             "description": "Beautiful test artwork",
-            "secret_threshold": 500.0
+            "secret_threshold": 500.0,
         }
-        artwork_response = client.post(
-            f"/api/artworks?seller_id={seller_id}",
-            json=artwork_payload
-        )
+        artwork_response = client.post(f"/api/artworks?seller_id={seller_id}", json=artwork_payload)
         assert artwork_response.status_code == 200
         artwork_data = artwork_response.json()
         artwork_id = artwork_data["id"]
@@ -64,13 +65,9 @@ class TestCompleteUserFlow:
         assert artwork_data["current_highest_bid"] == 0.0
 
         # Step 4: Buyer places losing bid
-        losing_bid_payload = {
-            "artwork_id": artwork_id,
-            "amount": 300.0  # Below threshold
-        }
+        losing_bid_payload = {"artwork_id": artwork_id, "amount": 300.0}  # Below threshold
         losing_bid_response = client.post(
-            f"/api/bids?bidder_id={buyer_id}",
-            json=losing_bid_payload
+            f"/api/bids?bidder_id={buyer_id}", json=losing_bid_payload
         )
         assert losing_bid_response.status_code == 200
         losing_bid_data = losing_bid_response.json()
@@ -82,13 +79,9 @@ class TestCompleteUserFlow:
         assert artwork_check.json()["status"] == "ACTIVE"
 
         # Step 5: Buyer places winning bid
-        winning_bid_payload = {
-            "artwork_id": artwork_id,
-            "amount": 500.0  # At threshold
-        }
+        winning_bid_payload = {"artwork_id": artwork_id, "amount": 500.0}  # At threshold
         winning_bid_response = client.post(
-            f"/api/bids?bidder_id={buyer_id}",
-            json=winning_bid_payload
+            f"/api/bids?bidder_id={buyer_id}", json=winning_bid_payload
         )
         assert winning_bid_response.status_code == 200
         winning_bid_data = winning_bid_response.json()
@@ -125,20 +118,14 @@ class TestMultipleUsersCompetingFlow:
             "email": "seller@compete.com",
             "name": "Competition Seller",
             "auth0_sub": "auth0|compete_seller",
-            "role": "SELLER"
+            "role": "SELLER",
         }
         seller_response = client.post("/api/auth/register", json=seller_payload)
         seller_id = seller_response.json()["id"]
 
         # Create artwork
-        artwork_payload = {
-            "title": "Competitive Art",
-            "secret_threshold": 1000.0
-        }
-        artwork_response = client.post(
-            f"/api/artworks?seller_id={seller_id}",
-            json=artwork_payload
-        )
+        artwork_payload = {"title": "Competitive Art", "secret_threshold": 1000.0}
+        artwork_response = client.post(f"/api/artworks?seller_id={seller_id}", json=artwork_payload)
         artwork_id = artwork_response.json()["id"]
 
         # Step 2: Register 3 buyers
@@ -148,7 +135,7 @@ class TestMultipleUsersCompetingFlow:
                 "email": f"buyer{i}@compete.com",
                 "name": f"Buyer {i}",
                 "auth0_sub": f"auth0|compete_buyer{i}",
-                "role": "BUYER"
+                "role": "BUYER",
             }
             response = client.post("/api/auth/register", json=buyer_payload)
             buyers.append(response.json()["id"])
@@ -163,8 +150,7 @@ class TestMultipleUsersCompetingFlow:
 
         for buyer_id, amount in bid_amounts:
             bid_response = client.post(
-                f"/api/bids?bidder_id={buyer_id}",
-                json={"artwork_id": artwork_id, "amount": amount}
+                f"/api/bids?bidder_id={buyer_id}", json={"artwork_id": artwork_id, "amount": amount}
             )
             assert bid_response.status_code == 200
 
@@ -175,8 +161,7 @@ class TestMultipleUsersCompetingFlow:
 
         # Step 4: Buyer 3 places winning bid
         winning_response = client.post(
-            f"/api/bids?bidder_id={buyers[2]}",
-            json={"artwork_id": artwork_id, "amount": 1000.0}
+            f"/api/bids?bidder_id={buyers[2]}", json={"artwork_id": artwork_id, "amount": 1000.0}
         )
         assert winning_response.status_code == 200
         assert winning_response.json()["is_winning"] is True
@@ -187,8 +172,7 @@ class TestMultipleUsersCompetingFlow:
 
         # Verify Buyer 1 and Buyer 2 cannot bid anymore
         late_bid = client.post(
-            f"/api/bids?bidder_id={buyers[0]}",
-            json={"artwork_id": artwork_id, "amount": 1500.0}
+            f"/api/bids?bidder_id={buyers[0]}", json={"artwork_id": artwork_id, "amount": 1500.0}
         )
         assert late_bid.status_code == 400
 
@@ -208,7 +192,7 @@ class TestSellerMultipleArtworksFlow:
             "email": "multi@seller.com",
             "name": "Multi Seller",
             "auth0_sub": "auth0|multi_seller",
-            "role": "SELLER"
+            "role": "SELLER",
         }
         seller_response = client.post("/api/auth/register", json=seller_payload)
         seller_id = seller_response.json()["id"]
@@ -218,7 +202,7 @@ class TestSellerMultipleArtworksFlow:
             "email": "multi@buyer.com",
             "name": "Multi Buyer",
             "auth0_sub": "auth0|multi_buyer",
-            "role": "BUYER"
+            "role": "BUYER",
         }
         buyer_response = client.post("/api/auth/register", json=buyer_payload)
         buyer_id = buyer_response.json()["id"]
@@ -226,26 +210,20 @@ class TestSellerMultipleArtworksFlow:
         # Create 3 artworks
         artworks = []
         for i in range(1, 4):
-            artwork_payload = {
-                "title": f"Artwork {i}",
-                "secret_threshold": 100.0 * i
-            }
-            response = client.post(
-                f"/api/artworks?seller_id={seller_id}",
-                json=artwork_payload
-            )
+            artwork_payload = {"title": f"Artwork {i}", "secret_threshold": 100.0 * i}
+            response = client.post(f"/api/artworks?seller_id={seller_id}", json=artwork_payload)
             artworks.append(response.json())
 
         # Buy first artwork (threshold = 100)
         client.post(
             f"/api/bids?bidder_id={buyer_id}",
-            json={"artwork_id": artworks[0]["id"], "amount": 100.0}
+            json={"artwork_id": artworks[0]["id"], "amount": 100.0},
         )
 
         # Bid on second but don't reach threshold (threshold = 200)
         client.post(
             f"/api/bids?bidder_id={buyer_id}",
-            json={"artwork_id": artworks[1]["id"], "amount": 150.0}
+            json={"artwork_id": artworks[1]["id"], "amount": 150.0},
         )
 
         # Don't bid on third
@@ -276,7 +254,7 @@ class TestErrorRecoveryFlow:
             "email": "error@seller.com",
             "name": "Error Seller",
             "auth0_sub": "auth0|error_seller",
-            "role": "SELLER"
+            "role": "SELLER",
         }
         seller_response = client.post("/api/auth/register", json=seller_payload)
         seller_id = seller_response.json()["id"]
@@ -285,32 +263,24 @@ class TestErrorRecoveryFlow:
             "email": "error@buyer.com",
             "name": "Error Buyer",
             "auth0_sub": "auth0|error_buyer",
-            "role": "BUYER"
+            "role": "BUYER",
         }
         buyer_response = client.post("/api/auth/register", json=buyer_payload)
         buyer_id = buyer_response.json()["id"]
 
-        artwork_payload = {
-            "title": "Error Test Art",
-            "secret_threshold": 100.0
-        }
-        artwork_response = client.post(
-            f"/api/artworks?seller_id={seller_id}",
-            json=artwork_payload
-        )
+        artwork_payload = {"title": "Error Test Art", "secret_threshold": 100.0}
+        artwork_response = client.post(f"/api/artworks?seller_id={seller_id}", json=artwork_payload)
         artwork_id = artwork_response.json()["id"]
 
         # Step 1: Try invalid bid (negative amount)
         invalid_bid = client.post(
-            f"/api/bids?bidder_id={buyer_id}",
-            json={"artwork_id": artwork_id, "amount": -50.0}
+            f"/api/bids?bidder_id={buyer_id}", json={"artwork_id": artwork_id, "amount": -50.0}
         )
         assert invalid_bid.status_code in [400, 422]
 
         # Step 2: Try valid bid
         valid_bid = client.post(
-            f"/api/bids?bidder_id={buyer_id}",
-            json={"artwork_id": artwork_id, "amount": 75.0}
+            f"/api/bids?bidder_id={buyer_id}", json={"artwork_id": artwork_id, "amount": 75.0}
         )
         assert valid_bid.status_code == 200
 
@@ -330,7 +300,7 @@ class TestErrorRecoveryFlow:
             "email": "duplicate@test.com",
             "name": "Duplicate User",
             "auth0_sub": "auth0|duplicate",
-            "role": "BUYER"
+            "role": "BUYER",
         }
         first_response = client.post("/api/auth/register", json=user_payload)
         assert first_response.status_code == 200
@@ -363,7 +333,7 @@ class TestCompleteMarketplaceFlow:
                 "email": f"market_seller{i}@test.com",
                 "name": f"Market Seller {i}",
                 "auth0_sub": f"auth0|market_seller{i}",
-                "role": "SELLER"
+                "role": "SELLER",
             }
             response = client.post("/api/auth/register", json=payload)
             sellers.append(response.json()["id"])
@@ -374,7 +344,7 @@ class TestCompleteMarketplaceFlow:
                 "email": f"market_buyer{i}@test.com",
                 "name": f"Market Buyer {i}",
                 "auth0_sub": f"auth0|market_buyer{i}",
-                "role": "BUYER"
+                "role": "BUYER",
             }
             response = client.post("/api/auth/register", json=payload)
             buyers.append(response.json()["id"])
@@ -385,35 +355,32 @@ class TestCompleteMarketplaceFlow:
             for j in range(1, 3):
                 payload = {
                     "title": f"Market Art S{sellers.index(seller_id)+1}-A{j}",
-                    "secret_threshold": 100.0 * j
+                    "secret_threshold": 100.0 * j,
                 }
-                response = client.post(
-                    f"/api/artworks?seller_id={seller_id}",
-                    json=payload
-                )
+                response = client.post(f"/api/artworks?seller_id={seller_id}", json=payload)
                 artworks.append(response.json())
 
         # Buyers bid on various artworks
         # Buyer 1 wins artwork 1
         client.post(
             f"/api/bids?bidder_id={buyers[0]}",
-            json={"artwork_id": artworks[0]["id"], "amount": 100.0}
+            json={"artwork_id": artworks[0]["id"], "amount": 100.0},
         )
 
         # Buyer 2 and 3 compete on artwork 2
         client.post(
             f"/api/bids?bidder_id={buyers[1]}",
-            json={"artwork_id": artworks[1]["id"], "amount": 150.0}
+            json={"artwork_id": artworks[1]["id"], "amount": 150.0},
         )
         client.post(
             f"/api/bids?bidder_id={buyers[2]}",
-            json={"artwork_id": artworks[1]["id"], "amount": 200.0}
+            json={"artwork_id": artworks[1]["id"], "amount": 200.0},
         )
 
         # Buyer 3 bids on artwork 3 but doesn't win
         client.post(
             f"/api/bids?bidder_id={buyers[2]}",
-            json={"artwork_id": artworks[2]["id"], "amount": 50.0}
+            json={"artwork_id": artworks[2]["id"], "amount": 50.0},
         )
 
         # Verify marketplace state
@@ -442,29 +409,35 @@ class TestEdgeCaseFlows:
         Flow: Buyer immediately purchases by bidding at threshold.
         """
         # Setup
-        seller = client.post("/api/auth/register", json={
-            "email": "instant@seller.com",
-            "name": "Instant Seller",
-            "auth0_sub": "auth0|instant_seller",
-            "role": "SELLER"
-        }).json()
+        seller = client.post(
+            "/api/auth/register",
+            json={
+                "email": "instant@seller.com",
+                "name": "Instant Seller",
+                "auth0_sub": "auth0|instant_seller",
+                "role": "SELLER",
+            },
+        ).json()
 
-        buyer = client.post("/api/auth/register", json={
-            "email": "instant@buyer.com",
-            "name": "Instant Buyer",
-            "auth0_sub": "auth0|instant_buyer",
-            "role": "BUYER"
-        }).json()
+        buyer = client.post(
+            "/api/auth/register",
+            json={
+                "email": "instant@buyer.com",
+                "name": "Instant Buyer",
+                "auth0_sub": "auth0|instant_buyer",
+                "role": "BUYER",
+            },
+        ).json()
 
         artwork = client.post(
             f"/api/artworks?seller_id={seller['id']}",
-            json={"title": "Instant Buy", "secret_threshold": 250.0}
+            json={"title": "Instant Buy", "secret_threshold": 250.0},
         ).json()
 
         # Immediate purchase
         bid = client.post(
             f"/api/bids?bidder_id={buyer['id']}",
-            json={"artwork_id": artwork["id"], "amount": 250.0}
+            json={"artwork_id": artwork["id"], "amount": 250.0},
         )
 
         assert bid.status_code == 200
@@ -479,24 +452,30 @@ class TestEdgeCaseFlows:
         """
         Flow: Artwork with threshold of 0 (free or any bid wins).
         """
-        seller = client.post("/api/auth/register", json={
-            "email": "free@seller.com",
-            "name": "Free Seller",
-            "auth0_sub": "auth0|free_seller",
-            "role": "SELLER"
-        }).json()
+        seller = client.post(
+            "/api/auth/register",
+            json={
+                "email": "free@seller.com",
+                "name": "Free Seller",
+                "auth0_sub": "auth0|free_seller",
+                "role": "SELLER",
+            },
+        ).json()
 
-        buyer = client.post("/api/auth/register", json={
-            "email": "free@buyer.com",
-            "name": "Free Buyer",
-            "auth0_sub": "auth0|free_buyer",
-            "role": "BUYER"
-        }).json()
+        buyer = client.post(
+            "/api/auth/register",
+            json={
+                "email": "free@buyer.com",
+                "name": "Free Buyer",
+                "auth0_sub": "auth0|free_buyer",
+                "role": "BUYER",
+            },
+        ).json()
 
         # Create free artwork
         artwork = client.post(
             f"/api/artworks?seller_id={seller['id']}",
-            json={"title": "Free Art", "secret_threshold": 0.0}
+            json={"title": "Free Art", "secret_threshold": 0.0},
         )
 
         if artwork.status_code == 200:
@@ -505,7 +484,7 @@ class TestEdgeCaseFlows:
             # Any bid should win
             bid = client.post(
                 f"/api/bids?bidder_id={buyer['id']}",
-                json={"artwork_id": artwork_id, "amount": 0.01}
+                json={"artwork_id": artwork_id, "amount": 0.01},
             )
 
             if bid.status_code == 200:

@@ -3,19 +3,19 @@ Unit tests for authentication services.
 Tests Auth0 integration, JWT operations, and role mapping.
 """
 
-import pytest
-from unittest.mock import patch, Mock
 from datetime import datetime, timedelta
-import jwt as pyjwt
-from jose import jwt
-from jose.exceptions import JWTError, ExpiredSignatureError
+from unittest.mock import Mock, patch
 
-from services.auth_service import AuthService
-)
-from services.jwt_service import JWTService
+import jwt as pyjwt
+import pytest
+from jose import jwt
+from jose.exceptions import ExpiredSignatureError, JWTError
+from settings import Settings
+
 from models.user import User, UserRole
 from schemas.auth import AuthUser
-from settings import Settings
+from services.auth_service import AuthService
+from services.jwt_service import JWTService
 
 
 class TestAuth0Service:
@@ -33,7 +33,7 @@ class TestAuth0Service:
             "name": "Test User",
             "picture": "https://example.com/pic.jpg",
             "email_verified": True,
-            "https://guesstheworth.com/roles": ["buyer"]
+            "https://guesstheworth.com/roles": ["buyer"],
         }
         mock_get.return_value = mock_response
 
@@ -74,7 +74,7 @@ class TestAuth0Service:
             "email": "noroles@example.com",
             "name": "No Roles User",
             "picture": "https://example.com/pic.jpg",
-            "email_verified": True
+            "email_verified": True,
         }
         mock_get.return_value = mock_response
 
@@ -95,7 +95,9 @@ class TestAuth0Service:
     def test_map_auth0_role_to_user_role_admin(self):
         """Test mapping Auth0 admin role (highest priority)."""
         assert AuthService.map_auth0_role_to_user_role(["admin"]) == UserRole.ADMIN
-        assert AuthService.map_auth0_role_to_user_role(["buyer", "seller", "admin"]) == UserRole.ADMIN
+        assert (
+            AuthService.map_auth0_role_to_user_role(["buyer", "seller", "admin"]) == UserRole.ADMIN
+        )
         assert AuthService.map_auth0_role_to_user_role(["admin", "seller"]) == UserRole.ADMIN
 
     def test_map_auth0_role_to_user_role_case_insensitive(self):
@@ -129,7 +131,7 @@ class TestAuth0Service:
             name="New User",
             picture="https://example.com/pic.jpg",
             email_verified=True,
-            roles=["seller"]
+            roles=["seller"],
         )
 
         user = AuthService.get_or_create_user(db_session, auth_user)
@@ -152,7 +154,7 @@ class TestAuth0Service:
             name=buyer_user.name,
             picture="https://example.com/pic.jpg",
             email_verified=True,
-            roles=["buyer"]
+            roles=["buyer"],
         )
 
         user = AuthService.get_or_create_user(db_session, auth_user)
@@ -168,7 +170,7 @@ class TestAuth0Service:
             name=buyer_user.name,
             picture="https://example.com/pic.jpg",
             email_verified=True,
-            roles=["admin"]  # Changed from buyer to admin
+            roles=["admin"],  # Changed from buyer to admin
         )
 
         user = AuthService.get_or_create_user(db_session, auth_user)
@@ -216,11 +218,7 @@ class TestJWTService:
 
     def test_create_access_token_additional_claims(self):
         """Test creating JWT token with additional claims."""
-        data = {
-            "sub": "auth0|test123",
-            "role": "seller",
-            "custom_claim": "custom_value"
-        }
+        data = {"sub": "auth0|test123", "role": "seller", "custom_claim": "custom_value"}
         token = JWTService.create_access_token(data)
 
         settings = Settings()
@@ -304,7 +302,7 @@ class TestAuthIntegration:
             "name": "Integration User",
             "picture": "https://example.com/pic.jpg",
             "email_verified": True,
-            "https://guesstheworth.com/roles": ["seller"]
+            "https://guesstheworth.com/roles": ["seller"],
         }
         mock_get.return_value = mock_response
 
@@ -329,7 +327,7 @@ class TestAuthIntegration:
         token_data = {
             "sub": seller_user.auth0_sub,
             "role": seller_user.role.value,
-            "email": seller_user.email
+            "email": seller_user.email,
         }
         token = JWTService.create_access_token(token_data)
 
@@ -355,7 +353,7 @@ class TestAuthIntegration:
             "name": "Promoted User",
             "picture": "https://example.com/pic.jpg",
             "email_verified": True,
-            "https://guesstheworth.com/roles": ["buyer"]
+            "https://guesstheworth.com/roles": ["buyer"],
         }
         mock_get.return_value = mock_response
 

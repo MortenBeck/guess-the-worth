@@ -4,6 +4,7 @@ Tests /api/users routes with pagination and access control.
 """
 
 import pytest
+
 from models.user import UserRole
 
 
@@ -52,7 +53,7 @@ class TestListUsers:
                 auth0_sub=f"auth0|user{i}",
                 email=f"user{i}@test.com",
                 name=f"User {i}",
-                role=UserRole.BUYER
+                role=UserRole.BUYER,
             )
             for i in range(15)
         ]
@@ -74,7 +75,7 @@ class TestListUsers:
                 auth0_sub=f"auth0|skip{i}",
                 email=f"skip{i}@test.com",
                 name=f"Skip {i}",
-                role=UserRole.BUYER
+                role=UserRole.BUYER,
             )
             for i in range(10)
         ]
@@ -96,7 +97,7 @@ class TestListUsers:
                 auth0_sub=f"auth0|limit{i}",
                 email=f"limit{i}@test.com",
                 name=f"Limit {i}",
-                role=UserRole.BUYER
+                role=UserRole.BUYER,
             )
             for i in range(10)
         ]
@@ -118,7 +119,7 @@ class TestListUsers:
                 auth0_sub=f"auth0|both{i}",
                 email=f"both{i}@test.com",
                 name=f"Both {i}",
-                role=UserRole.BUYER
+                role=UserRole.BUYER,
             )
             for i in range(20)
         ]
@@ -275,11 +276,7 @@ class TestUserRelationships:
         from models.artwork import Artwork
 
         # Create artworks for seller
-        artwork = Artwork(
-            seller_id=seller_user.id,
-            title="Seller's Art",
-            secret_threshold=100.0
-        )
+        artwork = Artwork(seller_id=seller_user.id, title="Seller's Art", secret_threshold=100.0)
         db_session.add(artwork)
         db_session.commit()
 
@@ -293,11 +290,7 @@ class TestUserRelationships:
         from models.bid import Bid
 
         # Create bid for buyer
-        bid = Bid(
-            artwork_id=artwork.id,
-            bidder_id=buyer_user.id,
-            amount=50.0
-        )
+        bid = Bid(artwork_id=artwork.id, bidder_id=buyer_user.id, amount=50.0)
         db_session.add(bid)
         db_session.commit()
 
@@ -353,7 +346,7 @@ class TestUserEdgeCases:
             auth0_sub="auth0|special",
             email="special@test.com",
             name="用户 with émojis 🎨",
-            role=UserRole.BUYER
+            role=UserRole.BUYER,
         )
         db_session.add(user)
         db_session.commit()
@@ -374,7 +367,7 @@ class TestUserEdgeCases:
             auth0_sub="auth0|longname",
             email="longname@test.com",
             name=long_name,
-            role=UserRole.BUYER
+            role=UserRole.BUYER,
         )
         db_session.add(user)
         db_session.commit()
@@ -395,20 +388,12 @@ class TestUserStatistics:
         from models.bid import Bid
 
         # Create artworks for seller
-        artwork = Artwork(
-            seller_id=seller_user.id,
-            title="Stats Art",
-            secret_threshold=100.0
-        )
+        artwork = Artwork(seller_id=seller_user.id, title="Stats Art", secret_threshold=100.0)
         db_session.add(artwork)
         db_session.commit()
 
         # Create bids for buyer
-        bid = Bid(
-            artwork_id=artwork.id,
-            bidder_id=buyer_user.id,
-            amount=50.0
-        )
+        bid = Bid(artwork_id=artwork.id, bidder_id=buyer_user.id, amount=50.0)
         db_session.add(bid)
         db_session.commit()
 

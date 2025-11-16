@@ -3,13 +3,14 @@ Unit tests for SQLAlchemy database models.
 Tests model creation, relationships, constraints, and enums.
 """
 
-import pytest
-from sqlalchemy.exc import IntegrityError
 from datetime import datetime
 
-from models.user import User, UserRole
+import pytest
+from sqlalchemy.exc import IntegrityError
+
 from models.artwork import Artwork, ArtworkStatus
 from models.bid import Bid
+from models.user import User, UserRole
 
 
 class TestUserModel:
@@ -21,7 +22,7 @@ class TestUserModel:
             auth0_sub="auth0|test123",
             email="test@example.com",
             name="Test User",
-            role=UserRole.BUYER
+            role=UserRole.BUYER,
         )
         db_session.add(user)
         db_session.commit()
@@ -36,11 +37,7 @@ class TestUserModel:
 
     def test_user_default_role(self, db_session):
         """Test user defaults to BUYER role."""
-        user = User(
-            auth0_sub="auth0|default",
-            email="default@example.com",
-            name="Default User"
-        )
+        user = User(auth0_sub="auth0|default", email="default@example.com", name="Default User")
         db_session.add(user)
         db_session.commit()
         db_session.refresh(user)
@@ -49,16 +46,8 @@ class TestUserModel:
 
     def test_user_unique_auth0_sub(self, db_session):
         """Test auth0_sub must be unique."""
-        user1 = User(
-            auth0_sub="auth0|duplicate",
-            email="user1@example.com",
-            name="User 1"
-        )
-        user2 = User(
-            auth0_sub="auth0|duplicate",
-            email="user2@example.com",
-            name="User 2"
-        )
+        user1 = User(auth0_sub="auth0|duplicate", email="user1@example.com", name="User 1")
+        user2 = User(auth0_sub="auth0|duplicate", email="user2@example.com", name="User 2")
         db_session.add(user1)
         db_session.commit()
 
@@ -68,16 +57,8 @@ class TestUserModel:
 
     def test_user_unique_email(self, db_session):
         """Test email must be unique."""
-        user1 = User(
-            auth0_sub="auth0|user1",
-            email="duplicate@example.com",
-            name="User 1"
-        )
-        user2 = User(
-            auth0_sub="auth0|user2",
-            email="duplicate@example.com",
-            name="User 2"
-        )
+        user1 = User(auth0_sub="auth0|user1", email="duplicate@example.com", name="User 1")
+        user2 = User(auth0_sub="auth0|user2", email="duplicate@example.com", name="User 2")
         db_session.add(user1)
         db_session.commit()
 
@@ -87,9 +68,15 @@ class TestUserModel:
 
     def test_user_role_enum(self, db_session):
         """Test all UserRole enum values."""
-        buyer = User(auth0_sub="auth0|buyer", email="buyer@test.com", name="Buyer", role=UserRole.BUYER)
-        seller = User(auth0_sub="auth0|seller", email="seller@test.com", name="Seller", role=UserRole.SELLER)
-        admin = User(auth0_sub="auth0|admin", email="admin@test.com", name="Admin", role=UserRole.ADMIN)
+        buyer = User(
+            auth0_sub="auth0|buyer", email="buyer@test.com", name="Buyer", role=UserRole.BUYER
+        )
+        seller = User(
+            auth0_sub="auth0|seller", email="seller@test.com", name="Seller", role=UserRole.SELLER
+        )
+        admin = User(
+            auth0_sub="auth0|admin", email="admin@test.com", name="Admin", role=UserRole.ADMIN
+        )
 
         db_session.add_all([buyer, seller, admin])
         db_session.commit()
@@ -100,16 +87,8 @@ class TestUserModel:
 
     def test_user_artworks_relationship(self, db_session, seller_user):
         """Test User.artworks relationship."""
-        artwork1 = Artwork(
-            seller_id=seller_user.id,
-            title="Art 1",
-            secret_threshold=100.0
-        )
-        artwork2 = Artwork(
-            seller_id=seller_user.id,
-            title="Art 2",
-            secret_threshold=200.0
-        )
+        artwork1 = Artwork(seller_id=seller_user.id, title="Art 1", secret_threshold=100.0)
+        artwork2 = Artwork(seller_id=seller_user.id, title="Art 2", secret_threshold=200.0)
         db_session.add_all([artwork1, artwork2])
         db_session.commit()
 
@@ -142,7 +121,7 @@ class TestArtworkModel:
             description="A stunning piece",
             secret_threshold=500.0,
             current_highest_bid=0.0,
-            status=ArtworkStatus.ACTIVE
+            status=ArtworkStatus.ACTIVE,
         )
         db_session.add(artwork)
         db_session.commit()
@@ -158,11 +137,7 @@ class TestArtworkModel:
 
     def test_artwork_default_values(self, db_session, seller_user):
         """Test artwork defaults (current_highest_bid=0, status=ACTIVE)."""
-        artwork = Artwork(
-            seller_id=seller_user.id,
-            title="Default Art",
-            secret_threshold=100.0
-        )
+        artwork = Artwork(seller_id=seller_user.id, title="Default Art", secret_threshold=100.0)
         db_session.add(artwork)
         db_session.commit()
         db_session.refresh(artwork)
@@ -172,11 +147,7 @@ class TestArtworkModel:
 
     def test_artwork_optional_fields(self, db_session, seller_user):
         """Test artwork with optional description and image_url."""
-        artwork = Artwork(
-            seller_id=seller_user.id,
-            title="Minimal Art",
-            secret_threshold=50.0
-        )
+        artwork = Artwork(seller_id=seller_user.id, title="Minimal Art", secret_threshold=50.0)
         db_session.add(artwork)
         db_session.commit()
         db_session.refresh(artwork)
@@ -186,9 +157,24 @@ class TestArtworkModel:
 
     def test_artwork_status_enum(self, db_session, seller_user):
         """Test all ArtworkStatus enum values."""
-        active = Artwork(seller_id=seller_user.id, title="Active", secret_threshold=100.0, status=ArtworkStatus.ACTIVE)
-        sold = Artwork(seller_id=seller_user.id, title="Sold", secret_threshold=100.0, status=ArtworkStatus.SOLD)
-        archived = Artwork(seller_id=seller_user.id, title="Archived", secret_threshold=100.0, status=ArtworkStatus.ARCHIVED)
+        active = Artwork(
+            seller_id=seller_user.id,
+            title="Active",
+            secret_threshold=100.0,
+            status=ArtworkStatus.ACTIVE,
+        )
+        sold = Artwork(
+            seller_id=seller_user.id,
+            title="Sold",
+            secret_threshold=100.0,
+            status=ArtworkStatus.SOLD,
+        )
+        archived = Artwork(
+            seller_id=seller_user.id,
+            title="Archived",
+            secret_threshold=100.0,
+            status=ArtworkStatus.ARCHIVED,
+        )
 
         db_session.add_all([active, sold, archived])
         db_session.commit()
@@ -199,11 +185,7 @@ class TestArtworkModel:
 
     def test_artwork_seller_relationship(self, db_session, seller_user):
         """Test Artwork.seller relationship."""
-        artwork = Artwork(
-            seller_id=seller_user.id,
-            title="Test Art",
-            secret_threshold=100.0
-        )
+        artwork = Artwork(seller_id=seller_user.id, title="Test Art", secret_threshold=100.0)
         db_session.add(artwork)
         db_session.commit()
         db_session.refresh(artwork)
@@ -227,9 +209,7 @@ class TestArtworkModel:
     def test_artwork_foreign_key_constraint(self, db_session):
         """Test artwork requires valid seller_id."""
         artwork = Artwork(
-            seller_id=99999,  # Non-existent user
-            title="Invalid Seller",
-            secret_threshold=100.0
+            seller_id=99999, title="Invalid Seller", secret_threshold=100.0  # Non-existent user
         )
         db_session.add(artwork)
         with pytest.raises(IntegrityError):
@@ -258,12 +238,7 @@ class TestBidModel:
 
     def test_create_bid(self, db_session, artwork, buyer_user):
         """Test creating a basic bid."""
-        bid = Bid(
-            artwork_id=artwork.id,
-            bidder_id=buyer_user.id,
-            amount=150.0,
-            is_winning=False
-        )
+        bid = Bid(artwork_id=artwork.id, bidder_id=buyer_user.id, amount=150.0, is_winning=False)
         db_session.add(bid)
         db_session.commit()
         db_session.refresh(bid)
@@ -277,11 +252,7 @@ class TestBidModel:
 
     def test_bid_default_is_winning(self, db_session, artwork, buyer_user):
         """Test bid defaults is_winning to False."""
-        bid = Bid(
-            artwork_id=artwork.id,
-            bidder_id=buyer_user.id,
-            amount=100.0
-        )
+        bid = Bid(artwork_id=artwork.id, bidder_id=buyer_user.id, amount=100.0)
         db_session.add(bid)
         db_session.commit()
         db_session.refresh(bid)
@@ -290,11 +261,7 @@ class TestBidModel:
 
     def test_bid_artwork_relationship(self, db_session, artwork, buyer_user):
         """Test Bid.artwork relationship."""
-        bid = Bid(
-            artwork_id=artwork.id,
-            bidder_id=buyer_user.id,
-            amount=100.0
-        )
+        bid = Bid(artwork_id=artwork.id, bidder_id=buyer_user.id, amount=100.0)
         db_session.add(bid)
         db_session.commit()
         db_session.refresh(bid)
@@ -305,11 +272,7 @@ class TestBidModel:
 
     def test_bid_bidder_relationship(self, db_session, artwork, buyer_user):
         """Test Bid.bidder relationship."""
-        bid = Bid(
-            artwork_id=artwork.id,
-            bidder_id=buyer_user.id,
-            amount=100.0
-        )
+        bid = Bid(artwork_id=artwork.id, bidder_id=buyer_user.id, amount=100.0)
         db_session.add(bid)
         db_session.commit()
         db_session.refresh(bid)
@@ -320,22 +283,14 @@ class TestBidModel:
 
     def test_bid_foreign_key_artwork(self, db_session, buyer_user):
         """Test bid requires valid artwork_id."""
-        bid = Bid(
-            artwork_id=99999,  # Non-existent artwork
-            bidder_id=buyer_user.id,
-            amount=100.0
-        )
+        bid = Bid(artwork_id=99999, bidder_id=buyer_user.id, amount=100.0)  # Non-existent artwork
         db_session.add(bid)
         with pytest.raises(IntegrityError):
             db_session.commit()
 
     def test_bid_foreign_key_bidder(self, db_session, artwork):
         """Test bid requires valid bidder_id."""
-        bid = Bid(
-            artwork_id=artwork.id,
-            bidder_id=99999,  # Non-existent user
-            amount=100.0
-        )
+        bid = Bid(artwork_id=artwork.id, bidder_id=99999, amount=100.0)  # Non-existent user
         db_session.add(bid)
         with pytest.raises(IntegrityError):
             db_session.commit()
@@ -346,10 +301,7 @@ class TestBidModel:
 
         # Create another buyer
         another_buyer = User(
-            auth0_sub="auth0|buyer2",
-            email="buyer2@test.com",
-            name="Buyer 2",
-            role=UserRole.BUYER
+            auth0_sub="auth0|buyer2", email="buyer2@test.com", name="Buyer 2", role=UserRole.BUYER
         )
         db_session.add(another_buyer)
         db_session.commit()
@@ -381,20 +333,12 @@ class TestModelRelationships:
     def test_user_deletion_cascades(self, db_session, seller_user, buyer_user):
         """Test deleting user cascades to artworks and bids."""
         # Create artwork by seller
-        artwork = Artwork(
-            seller_id=seller_user.id,
-            title="To Be Deleted",
-            secret_threshold=100.0
-        )
+        artwork = Artwork(seller_id=seller_user.id, title="To Be Deleted", secret_threshold=100.0)
         db_session.add(artwork)
         db_session.commit()
 
         # Create bid by buyer
-        bid = Bid(
-            artwork_id=artwork.id,
-            bidder_id=buyer_user.id,
-            amount=50.0
-        )
+        bid = Bid(artwork_id=artwork.id, bidder_id=buyer_user.id, amount=50.0)
         db_session.add(bid)
         db_session.commit()
 
@@ -420,11 +364,7 @@ class TestModelRelationships:
 
     def test_artwork_with_multiple_relationships(self, db_session, seller_user):
         """Test artwork with multiple bids from multiple users."""
-        artwork = Artwork(
-            seller_id=seller_user.id,
-            title="Popular Art",
-            secret_threshold=100.0
-        )
+        artwork = Artwork(seller_id=seller_user.id, title="Popular Art", secret_threshold=100.0)
         db_session.add(artwork)
         db_session.commit()
 
@@ -435,7 +375,7 @@ class TestModelRelationships:
                 auth0_sub=f"auth0|buyer{i}",
                 email=f"buyer{i}@test.com",
                 name=f"Buyer {i}",
-                role=UserRole.BUYER
+                role=UserRole.BUYER,
             )
             buyers.append(buyer)
 

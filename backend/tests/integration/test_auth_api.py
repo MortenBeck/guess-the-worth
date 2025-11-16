@@ -3,8 +3,9 @@ Integration tests for authentication API endpoints.
 Tests /api/auth routes with database and Auth0 mocking.
 """
 
-import pytest
 from unittest.mock import patch
+
+import pytest
 from fastapi.testclient import TestClient
 
 from models.user import UserRole
@@ -19,7 +20,7 @@ class TestAuthRegistration:
             "email": "newuser@example.com",
             "name": "New User",
             "auth0_sub": "auth0|newuser123",
-            "role": "BUYER"
+            "role": "BUYER",
         }
 
         response = client.post("/api/auth/register", json=payload)
@@ -39,7 +40,7 @@ class TestAuthRegistration:
             "email": "different@example.com",
             "name": "Different Name",
             "auth0_sub": buyer_user.auth0_sub,  # Duplicate
-            "role": "BUYER"
+            "role": "BUYER",
         }
 
         response = client.post("/api/auth/register", json=payload)
@@ -53,7 +54,7 @@ class TestAuthRegistration:
             "email": buyer_user.email,  # Duplicate
             "name": "Different Name",
             "auth0_sub": "auth0|different123",
-            "role": "BUYER"
+            "role": "BUYER",
         }
 
         response = client.post("/api/auth/register", json=payload)
@@ -67,7 +68,7 @@ class TestAuthRegistration:
             "email": "not-an-email",
             "name": "Test User",
             "auth0_sub": "auth0|test123",
-            "role": "BUYER"
+            "role": "BUYER",
         }
 
         response = client.post("/api/auth/register", json=payload)
@@ -77,17 +78,15 @@ class TestAuthRegistration:
     def test_register_missing_required_fields(self, client):
         """Test registration with missing required fields."""
         # Missing name
-        response = client.post("/api/auth/register", json={
-            "email": "test@example.com",
-            "auth0_sub": "auth0|test"
-        })
+        response = client.post(
+            "/api/auth/register", json={"email": "test@example.com", "auth0_sub": "auth0|test"}
+        )
         assert response.status_code == 422
 
         # Missing auth0_sub
-        response = client.post("/api/auth/register", json={
-            "email": "test@example.com",
-            "name": "Test User"
-        })
+        response = client.post(
+            "/api/auth/register", json={"email": "test@example.com", "name": "Test User"}
+        )
         assert response.status_code == 422
 
     def test_register_with_seller_role(self, client):
@@ -96,7 +95,7 @@ class TestAuthRegistration:
             "email": "seller@example.com",
             "name": "Seller User",
             "auth0_sub": "auth0|seller123",
-            "role": "SELLER"
+            "role": "SELLER",
         }
 
         response = client.post("/api/auth/register", json=payload)
@@ -111,7 +110,7 @@ class TestAuthRegistration:
             "email": "admin@example.com",
             "name": "Admin User",
             "auth0_sub": "auth0|admin123",
-            "role": "ADMIN"
+            "role": "ADMIN",
         }
 
         response = client.post("/api/auth/register", json=payload)
@@ -125,7 +124,7 @@ class TestAuthRegistration:
         payload = {
             "email": "default@example.com",
             "name": "Default User",
-            "auth0_sub": "auth0|default123"
+            "auth0_sub": "auth0|default123",
         }
 
         response = client.post("/api/auth/register", json=payload)
@@ -219,12 +218,12 @@ class TestAuthWithJWT:
     def test_protected_endpoint_expired_token(self, mock_verify, client):
         """Test accessing protected endpoint with expired JWT token."""
         from datetime import timedelta
+
         from services.jwt_service import JWTService
 
         # Create already-expired token
         expired_token = JWTService.create_access_token(
-            data={"sub": "auth0|test"},
-            expires_delta=timedelta(seconds=-1)
+            data={"sub": "auth0|test"}, expires_delta=timedelta(seconds=-1)
         )
 
         mock_verify.side_effect = Exception("Auth0 not available")
@@ -239,20 +238,22 @@ class TestAuthWithAuth0:
     """Test authentication using Auth0 tokens."""
 
     @patch("services.auth_service.verify_auth0_token")
-    def test_auth0_token_creates_user_on_first_login(self, mock_verify, client, db_session, mock_auth0_response):
+    def test_auth0_token_creates_user_on_first_login(
+        self, mock_verify, client, db_session, mock_auth0_response
+    ):
         """Test Auth0 token creates user on first login."""
         # Mock Auth0 response for new user
         new_user_data = mock_auth0_response(
             sub="auth0|firstlogin",
             email="firstlogin@example.com",
             name="First Login User",
-            roles=["buyer"]
+            roles=["buyer"],
         )
         mock_verify.return_value = new_user_data
 
         # Make request to protected endpoint
         headers = {"Authorization": "Bearer auth0_token"}
-        response = client.get(f"/api/auth/me?auth0_sub=auth0|firstlogin")
+        response = client.get("/api/auth/me?auth0_sub=auth0|firstlogin")
 
         # User should be created automatically
         assert response.status_code == 200
@@ -268,7 +269,7 @@ class TestAuthWithAuth0:
             sub=buyer_user.auth0_sub,
             email=buyer_user.email,
             name=buyer_user.name,
-            roles=["admin"]  # Changed from buyer to admin
+            roles=["admin"],  # Changed from buyer to admin
         )
         mock_verify.return_value = updated_user_data
 
@@ -277,7 +278,13 @@ class TestAuthWithAuth0:
         # Trigger authentication (could be any protected endpoint)
         # For this test, we'll just verify the get_or_create_user logic
         from services.auth_service import get_or_create_user
-        user = get_or_create_user(client.app.dependency_overrides[client.app.dependency_overrides.keys().__iter__().__next__()](), updated_user_data)
+
+        user = get_or_create_user(
+            client.app.dependency_overrides[
+                client.app.dependency_overrides.keys().__iter__().__next__()
+            ](),
+            updated_user_data,
+        )
 
         assert user.id == buyer_user.id
         assert user.role == UserRole.ADMIN
@@ -292,7 +299,7 @@ class TestAuthEdgeCases:
             "email": "special@example.com",
             "name": "User with émojis 🎨 and spëcial çhars",
             "auth0_sub": "auth0|special123",
-            "role": "BUYER"
+            "role": "BUYER",
         }
 
         response = client.post("/api/auth/register", json=payload)
@@ -309,7 +316,7 @@ class TestAuthEdgeCases:
             "email": "longname@example.com",
             "name": long_name,
             "auth0_sub": "auth0|longname123",
-            "role": "BUYER"
+            "role": "BUYER",
         }
 
         response = client.post("/api/auth/register", json=payload)
@@ -323,7 +330,7 @@ class TestAuthEdgeCases:
             "email": "concurrent@example.com",
             "name": "Concurrent User",
             "auth0_sub": "auth0|concurrent123",
-            "role": "BUYER"
+            "role": "BUYER",
         }
 
         # Simulate concurrent requests
