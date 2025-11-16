@@ -222,7 +222,6 @@ class TestArtworkModel:
         db_session.commit()
 
         bid_id = bid.id
-        artwork_id = artwork.id
 
         # Delete artwork
         db_session.delete(artwork)
@@ -342,7 +341,6 @@ class TestModelRelationships:
         db_session.add(bid)
         db_session.commit()
 
-        seller_id = seller_user.id
         buyer_id = buyer_user.id
         artwork_id = artwork.id
         bid_id = bid.id

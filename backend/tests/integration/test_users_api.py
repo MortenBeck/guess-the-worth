@@ -3,8 +3,6 @@ Integration tests for users API endpoints.
 Tests /api/users routes with pagination and access control.
 """
 
-import pytest
-
 from models.user import UserRole
 
 

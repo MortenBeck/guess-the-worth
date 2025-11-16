@@ -6,13 +6,12 @@ Tests Auth0 integration, JWT operations, and role mapping.
 from datetime import datetime, timedelta
 from unittest.mock import Mock, patch
 
-import jwt as pyjwt
 import pytest
 from jose import jwt
 from jose.exceptions import ExpiredSignatureError, JWTError
 from settings import Settings
 
-from models.user import User, UserRole
+from models.user import UserRole
 from schemas.auth import AuthUser
 from services.auth_service import AuthService
 from services.jwt_service import JWTService
@@ -239,7 +238,6 @@ class TestJWTService:
     def test_verify_token_invalid_signature(self):
         """Test verifying token with invalid signature."""
         # Create token with wrong secret
-        settings = Settings()
         data = {"sub": "auth0|test123"}
         to_encode = data.copy()
         expire = datetime.utcnow() + timedelta(hours=1)

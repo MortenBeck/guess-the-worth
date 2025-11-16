@@ -5,9 +5,6 @@ Tests /api/auth routes with database and Auth0 mocking.
 
 from unittest.mock import patch
 
-import pytest
-from fastapi.testclient import TestClient
-
 from models.user import UserRole
 
 
@@ -252,7 +249,6 @@ class TestAuthWithAuth0:
         mock_verify.return_value = new_user_data
 
         # Make request to protected endpoint
-        headers = {"Authorization": "Bearer auth0_token"}
         response = client.get("/api/auth/me?auth0_sub=auth0|firstlogin")
 
         # User should be created automatically
@@ -272,8 +268,6 @@ class TestAuthWithAuth0:
             roles=["admin"],  # Changed from buyer to admin
         )
         mock_verify.return_value = updated_user_data
-
-        headers = {"Authorization": "Bearer auth0_token"}
 
         # Trigger authentication (could be any protected endpoint)
         # For this test, we'll just verify the get_or_create_user logic

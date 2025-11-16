@@ -3,8 +3,6 @@ Integration tests for bids API endpoints.
 Tests /api/bids routes with critical threshold logic and bid validation.
 """
 
-import pytest
-
 from models.artwork import ArtworkStatus
 
 

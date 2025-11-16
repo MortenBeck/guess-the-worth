@@ -3,8 +3,6 @@ Integration tests for artworks API endpoints.
 Tests /api/artworks routes with authentication and database.
 """
 
-import pytest
-
 from models.artwork import ArtworkStatus
 
 

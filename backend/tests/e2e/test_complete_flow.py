@@ -5,11 +5,6 @@ Tests full workflows from registration through bidding to purchase.
 
 from unittest.mock import patch
 
-import pytest
-
-from models.artwork import ArtworkStatus
-from models.user import UserRole
-
 
 class TestCompleteUserFlow:
     """Test complete user journey from registration to purchase."""
