@@ -1,0 +1,432 @@
+/**
+ * Unit tests for API service functions
+ * Tests API client, artwork service, bid service, user service, and stats service
+ */
+
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { artworkService, bidService, userService, statsService } from "../../services/api";
+
+// Mock fetch
+global.fetch = vi.fn();
+
+// Mock localStorage
+const localStorageMock = (() => {
+  let store = {};
+  return {
+    getItem: (key) => store[key] || null,
+    setItem: (key, value) => {
+      store[key] = value.toString();
+    },
+    removeItem: (key) => {
+      delete store[key];
+    },
+    clear: () => {
+      store = {};
+    },
+  };
+})();
+
+global.localStorage = localStorageMock;
+
+describe("API Services", () => {
+  beforeEach(() => {
+    fetch.mockClear();
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  describe("artworkService", () => {
+    describe("getAll", () => {
+      it("should fetch all artworks", async () => {
+        const mockArtworks = [
+          { id: 1, title: "Artwork 1", price: 100 },
+          { id: 2, title: "Artwork 2", price: 200 },
+        ];
+
+        fetch.mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => mockArtworks,
+        });
+
+        const result = await artworkService.getAll();
+
+        expect(fetch).toHaveBeenCalledTimes(1);
+        expect(result.data).toEqual(mockArtworks);
+      });
+
+      it("should handle pagination parameters", async () => {
+        fetch.mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => [],
+        });
+
+        await artworkService.getAll({ skip: 10, limit: 5 });
+
+        expect(fetch).toHaveBeenCalledWith(
+          expect.stringContaining("skip=10"),
+          expect.any(Object)
+        );
+        expect(fetch).toHaveBeenCalledWith(
+          expect.stringContaining("limit=5"),
+          expect.any(Object)
+        );
+      });
+
+      it("should include authorization header when token exists", async () => {
+        localStorage.setItem("access_token", "test-token-123");
+
+        fetch.mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => [],
+        });
+
+        await artworkService.getAll();
+
+        expect(fetch).toHaveBeenCalledWith(
+          expect.any(String),
+          expect.objectContaining({
+            headers: expect.objectContaining({
+              Authorization: "Bearer test-token-123",
+            }),
+          })
+        );
+      });
+    });
+
+    describe("getById", () => {
+      it("should fetch single artwork by ID", async () => {
+        const mockArtwork = { id: 1, title: "Artwork 1", price: 100 };
+
+        fetch.mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => mockArtwork,
+        });
+
+        const result = await artworkService.getById(1);
+
+        expect(fetch).toHaveBeenCalledTimes(1);
+        expect(fetch).toHaveBeenCalledWith(
+          expect.stringContaining("/artworks/1"),
+          expect.any(Object)
+        );
+        expect(result.data).toEqual(mockArtwork);
+      });
+    });
+
+    describe("getFeatured", () => {
+      it("should fetch first 6 artworks as featured", async () => {
+        const mockArtworks = Array.from({ length: 6 }, (_, i) => ({
+          id: i + 1,
+          title: `Artwork ${i + 1}`,
+        }));
+
+        fetch.mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => mockArtworks,
+        });
+
+        const result = await artworkService.getFeatured();
+
+        expect(fetch).toHaveBeenCalledWith(
+          expect.stringContaining("limit=6"),
+          expect.any(Object)
+        );
+        expect(result.data.length).toBe(6);
+      });
+    });
+
+    describe("create", () => {
+      it("should create new artwork", async () => {
+        const newArtwork = {
+          title: "New Artwork",
+          description: "Description",
+          secret_threshold: 500,
+        };
+
+        const createdArtwork = { id: 1, ...newArtwork };
+
+        fetch.mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => createdArtwork,
+        });
+
+        const result = await artworkService.create(newArtwork);
+
+        expect(fetch).toHaveBeenCalledWith(
+          expect.stringContaining("/artworks/"),
+          expect.objectContaining({
+            method: "POST",
+            body: JSON.stringify(newArtwork),
+          })
+        );
+        expect(result.data).toEqual(createdArtwork);
+      });
+    });
+
+    describe("uploadImage", () => {
+      it("should upload artwork image", async () => {
+        const mockFile = new File(["content"], "test.jpg", { type: "image/jpeg" });
+        const artworkId = 1;
+
+        fetch.mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => ({ image_url: "http://example.com/test.jpg" }),
+        });
+
+        await artworkService.uploadImage(artworkId, mockFile);
+
+        expect(fetch).toHaveBeenCalledWith(
+          expect.stringContaining(`/artworks/${artworkId}/upload-image`),
+          expect.objectContaining({
+            method: "POST",
+          })
+        );
+      });
+    });
+  });
+
+  describe("bidService", () => {
+    describe("getByArtwork", () => {
+      it("should fetch bids for artwork", async () => {
+        const artworkId = 1;
+        const mockBids = [
+          { id: 1, amount: 100, bidder_id: 5 },
+          { id: 2, amount: 150, bidder_id: 6 },
+        ];
+
+        fetch.mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => mockBids,
+        });
+
+        const result = await bidService.getByArtwork(artworkId);
+
+        expect(fetch).toHaveBeenCalledWith(
+          expect.stringContaining(`/bids/artwork/${artworkId}`),
+          expect.any(Object)
+        );
+        expect(result.data).toEqual(mockBids);
+      });
+    });
+
+    describe("create", () => {
+      it("should create new bid", async () => {
+        const newBid = {
+          artwork_id: 1,
+          bidder_id: 5,
+          amount: 150,
+        };
+
+        const createdBid = { id: 1, ...newBid, is_winning: false };
+
+        fetch.mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => createdBid,
+        });
+
+        const result = await bidService.create(newBid);
+
+        expect(fetch).toHaveBeenCalledWith(
+          expect.stringContaining("/bids/"),
+          expect.objectContaining({
+            method: "POST",
+            body: JSON.stringify(newBid),
+          })
+        );
+        expect(result.data).toEqual(createdBid);
+      });
+    });
+  });
+
+  describe("userService", () => {
+    describe("getAll", () => {
+      it("should fetch all users", async () => {
+        const mockUsers = [
+          { id: 1, email: "user1@example.com", role: "buyer" },
+          { id: 2, email: "user2@example.com", role: "seller" },
+        ];
+
+        fetch.mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => mockUsers,
+        });
+
+        const result = await userService.getAll();
+
+        expect(fetch).toHaveBeenCalledTimes(1);
+        expect(result.data).toEqual(mockUsers);
+      });
+    });
+
+    describe("getById", () => {
+      it("should fetch single user by ID", async () => {
+        const mockUser = { id: 1, email: "test@example.com", role: "buyer" };
+
+        fetch.mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => mockUser,
+        });
+
+        const result = await userService.getById(1);
+
+        expect(fetch).toHaveBeenCalledWith(
+          expect.stringContaining("/users/1"),
+          expect.any(Object)
+        );
+        expect(result.data).toEqual(mockUser);
+      });
+    });
+
+    describe("getCurrentUser", () => {
+      it("should fetch current user by auth0 sub", async () => {
+        const auth0Sub = "auth0|user123";
+        const mockUser = { id: 1, auth0_sub: auth0Sub, email: "test@example.com" };
+
+        fetch.mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => mockUser,
+        });
+
+        const result = await userService.getCurrentUser(auth0Sub);
+
+        expect(fetch).toHaveBeenCalledWith(
+          expect.stringContaining("/auth/me"),
+          expect.any(Object)
+        );
+        expect(fetch).toHaveBeenCalledWith(
+          expect.stringContaining(`auth0_sub=${encodeURIComponent(auth0Sub)}`),
+          expect.any(Object)
+        );
+        expect(result.data).toEqual(mockUser);
+      });
+    });
+
+    describe("register", () => {
+      it("should register new user", async () => {
+        const newUser = {
+          email: "newuser@example.com",
+          name: "New User",
+          auth0_sub: "auth0|newuser",
+        };
+
+        const createdUser = { id: 1, ...newUser, role: "buyer" };
+
+        fetch.mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => createdUser,
+        });
+
+        const result = await userService.register(newUser);
+
+        expect(fetch).toHaveBeenCalledWith(
+          expect.stringContaining("/auth/register"),
+          expect.objectContaining({
+            method: "POST",
+            body: JSON.stringify(newUser),
+          })
+        );
+        expect(result.data).toEqual(createdUser);
+      });
+    });
+  });
+
+  describe("statsService", () => {
+    describe("getPlatformStats", () => {
+      it("should calculate stats from artworks and users", async () => {
+        const mockArtworks = [
+          { id: 1, status: "active", current_highest_bid: 100 },
+          { id: 2, status: "active", current_highest_bid: 200 },
+          { id: 3, status: "sold", current_highest_bid: 300 },
+        ];
+
+        const mockUsers = [
+          { id: 1, role: "buyer" },
+          { id: 2, role: "seller" },
+          { id: 3, role: "admin" },
+        ];
+
+        fetch
+          .mockResolvedValueOnce({
+            ok: true,
+            status: 200,
+            json: async () => mockArtworks,
+          })
+          .mockResolvedValueOnce({
+            ok: true,
+            status: 200,
+            json: async () => mockUsers,
+          });
+
+        const result = await statsService.getPlatformStats();
+
+        expect(fetch).toHaveBeenCalledTimes(2);
+        expect(result.totalArtworks).toBe(2); // Only active
+        expect(result.totalBids).toBe(600); // Sum of all bids
+        expect(result.totalArtists).toBe(2); // Seller + admin
+        expect(result.liveStatus).toBe("24/7");
+      });
+
+      it("should return mock data if API fails", async () => {
+        fetch.mockRejectedValueOnce(new Error("API Error"));
+
+        const result = await statsService.getPlatformStats();
+
+        expect(result.totalArtworks).toBe(1247);
+        expect(result.totalBids).toBe(89000);
+        expect(result.totalArtists).toBe(156);
+        expect(result.liveStatus).toBe("24/7");
+      });
+    });
+  });
+
+  describe("Error Handling", () => {
+    it("should throw error for 401 Unauthorized", async () => {
+      fetch.mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+      });
+
+      await expect(artworkService.getAll()).rejects.toThrow("Unauthorized");
+      expect(localStorage.getItem("access_token")).toBeNull();
+    });
+
+    it("should throw error for non-ok responses", async () => {
+      fetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+      });
+
+      await expect(artworkService.getAll()).rejects.toThrow("HTTP error! status: 500");
+    });
+
+    it("should throw error for network failures", async () => {
+      fetch.mockRejectedValueOnce(new TypeError("Failed to fetch"));
+
+      await expect(artworkService.getAll()).rejects.toThrow(
+        "Unable to connect to server"
+      );
+    });
+
+    it("should throw error for other fetch errors", async () => {
+      fetch.mockRejectedValueOnce(new Error("Random error"));
+
+      await expect(artworkService.getAll()).rejects.toThrow("Random error");
+    });
+  });
+});
