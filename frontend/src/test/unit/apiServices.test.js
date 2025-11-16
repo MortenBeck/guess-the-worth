@@ -67,14 +67,8 @@ describe("API Services", () => {
 
         await artworkService.getAll({ skip: 10, limit: 5 });
 
-        expect(fetch).toHaveBeenCalledWith(
-          expect.stringContaining("skip=10"),
-          expect.any(Object)
-        );
-        expect(fetch).toHaveBeenCalledWith(
-          expect.stringContaining("limit=5"),
-          expect.any(Object)
-        );
+        expect(fetch).toHaveBeenCalledWith(expect.stringContaining("skip=10"), expect.any(Object));
+        expect(fetch).toHaveBeenCalledWith(expect.stringContaining("limit=5"), expect.any(Object));
       });
 
       it("should include authorization header when token exists", async () => {
@@ -135,10 +129,7 @@ describe("API Services", () => {
 
         const result = await artworkService.getFeatured();
 
-        expect(fetch).toHaveBeenCalledWith(
-          expect.stringContaining("limit=6"),
-          expect.any(Object)
-        );
+        expect(fetch).toHaveBeenCalledWith(expect.stringContaining("limit=6"), expect.any(Object));
         expect(result.data.length).toBe(6);
       });
     });
@@ -283,10 +274,7 @@ describe("API Services", () => {
 
         const result = await userService.getById(1);
 
-        expect(fetch).toHaveBeenCalledWith(
-          expect.stringContaining("/users/1"),
-          expect.any(Object)
-        );
+        expect(fetch).toHaveBeenCalledWith(expect.stringContaining("/users/1"), expect.any(Object));
         expect(result.data).toEqual(mockUser);
       });
     });
@@ -304,10 +292,7 @@ describe("API Services", () => {
 
         const result = await userService.getCurrentUser(auth0Sub);
 
-        expect(fetch).toHaveBeenCalledWith(
-          expect.stringContaining("/auth/me"),
-          expect.any(Object)
-        );
+        expect(fetch).toHaveBeenCalledWith(expect.stringContaining("/auth/me"), expect.any(Object));
         expect(fetch).toHaveBeenCalledWith(
           expect.stringContaining(`auth0_sub=${encodeURIComponent(auth0Sub)}`),
           expect.any(Object)
@@ -418,9 +403,7 @@ describe("API Services", () => {
     it("should throw error for network failures", async () => {
       fetch.mockRejectedValueOnce(new TypeError("Failed to fetch"));
 
-      await expect(artworkService.getAll()).rejects.toThrow(
-        "Unable to connect to server"
-      );
+      await expect(artworkService.getAll()).rejects.toThrow("Unable to connect to server");
     });
 
     it("should throw error for other fetch errors", async () => {

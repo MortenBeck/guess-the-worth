@@ -62,13 +62,13 @@ npm test -- --coverage
 
 ### Current Coverage (Unit Tests)
 
-| File | % Stmts | % Branch | % Funcs | % Lines | Status |
-|------|---------|----------|---------|---------|--------|
-| **authStore.js** | 100% | 100% | 100% | 100% | ✅ |
-| **biddingStore.js** | 100% | 100% | 100% | 100% | ✅ |
-| **favoritesStore.js** | 100% | 100% | 100% | 100% | ✅ |
-| **api.js** | 95.2% | 97.36% | 88.88% | 95.2% | ✅ |
-| **Overall** | ~7% | ~77% | ~60% | ~7% | ⚠️ (Components not tested) |
+| File                  | % Stmts | % Branch | % Funcs | % Lines | Status                     |
+| --------------------- | ------- | -------- | ------- | ------- | -------------------------- |
+| **authStore.js**      | 100%    | 100%     | 100%    | 100%    | ✅                         |
+| **biddingStore.js**   | 100%    | 100%     | 100%    | 100%    | ✅                         |
+| **favoritesStore.js** | 100%    | 100%     | 100%    | 100%    | ✅                         |
+| **api.js**            | 95.2%   | 97.36%   | 88.88%  | 95.2%   | ✅                         |
+| **Overall**           | ~7%     | ~77%     | ~60%    | ~7%     | ⚠️ (Components not tested) |
 
 **Note**: Overall coverage is low because components and pages are not yet tested. Store and service coverage is excellent.
 
@@ -79,6 +79,7 @@ npm test -- --coverage
 Tests authentication state management with 27 test cases:
 
 **Covered Functionality**:
+
 - ✅ `setAuth()` - Sets user and token, marks authenticated
 - ✅ `clearAuth()` - Clears all auth data
 - ✅ `setLoading()` - Manages loading state
@@ -89,12 +90,14 @@ Tests authentication state management with 27 test cases:
 - ✅ `isBuyer()` - Checks if user can buy (buyer, seller, or admin)
 
 **Edge Cases Tested**:
+
 - User with missing role
 - Empty token
 - Null user state
 - Role hierarchy (admin > seller > buyer)
 
 **Example Test**:
+
 ```javascript
 it("should set user and token correctly", () => {
   const mockUser = {
@@ -120,6 +123,7 @@ it("should set user and token correctly", () => {
 Tests real-time bidding state with 24 test cases:
 
 **Covered Functionality**:
+
 - ✅ `joinArtwork()` - Adds artwork to active tracking
 - ✅ `leaveArtwork()` - Removes artwork and associated bids
 - ✅ `updateBid()` - Updates bid and artwork's current_highest_bid
@@ -128,12 +132,14 @@ Tests real-time bidding state with 24 test cases:
 - ✅ `setSocketConnected()` - Manages WebSocket connection state
 
 **Complex Scenarios Tested**:
+
 - Full bidding lifecycle (join → bid → update → sold → leave)
 - Multiple concurrent auctions
 - Bid updates on non-tracked artworks
 - Socket connection state changes
 
 **Example Test**:
+
 ```javascript
 it("should update artwork's current_highest_bid", () => {
   const artworkId = 1;
@@ -155,24 +161,28 @@ it("should update artwork's current_highest_bid", () => {
 Tests favorites management with 22 test cases:
 
 **Covered Functionality**:
+
 - ✅ `addToFavorites()` - Adds artwork with timestamp
 - ✅ `removeFromFavorites()` - Removes specific artwork
 - ✅ `isFavorite()` - Checks favorite status
 - ✅ `toggleFavorite()` - Toggles favorite state
 
 **Features Tested**:
+
 - Prevents duplicate favorites
 - Maintains FIFO order
 - Adds `dateAdded` timestamp automatically
 - Preserves all artwork properties
 
 **Edge Cases Tested**:
+
 - Artwork with id 0
 - Rapid add/remove operations
 - Complex artwork data structures
 - Removing non-existent artworks
 
 **Example Test**:
+
 ```javascript
 it("should toggle favorite multiple times correctly", () => {
   const artwork = { id: 1, title: "Artwork 1" };
@@ -194,18 +204,21 @@ it("should toggle favorite multiple times correctly", () => {
 Tests API client and service functions with 19 test cases:
 
 **Services Tested**:
+
 - ✅ **artworkService**: getAll, getById, getFeatured, create, uploadImage
 - ✅ **bidService**: getByArtwork, create
 - ✅ **userService**: getAll, getById, getCurrentUser, register
 - ✅ **statsService**: getPlatformStats
 
 **Error Handling Tested**:
+
 - 401 Unauthorized (clears token, redirects to login)
 - Network failures (graceful error messages)
 - HTTP errors (5xx, 4xx status codes)
 - API unavailability (fallback mock data for stats)
 
 **Example Test**:
+
 ```javascript
 it("should fetch all artworks with pagination", async () => {
   const mockArtworks = [
@@ -221,10 +234,7 @@ it("should fetch all artworks with pagination", async () => {
 
   const result = await artworkService.getAll({ skip: 10, limit: 5 });
 
-  expect(fetch).toHaveBeenCalledWith(
-    expect.stringContaining("skip=10"),
-    expect.any(Object)
-  );
+  expect(fetch).toHaveBeenCalledWith(expect.stringContaining("skip=10"), expect.any(Object));
   expect(result.data).toEqual(mockArtworks);
 });
 ```
@@ -240,6 +250,7 @@ import "@testing-library/jest-dom";
 ```
 
 Imports jest-dom matchers for better assertions:
+
 - `toBeInTheDocument()`
 - `toHaveTextContent()`
 - `toBeVisible()`
@@ -248,6 +259,7 @@ Imports jest-dom matchers for better assertions:
 ### Mocking Best Practices
 
 **Mocking Fetch API**:
+
 ```javascript
 import { vi } from "vitest";
 
@@ -262,6 +274,7 @@ fetch.mockResolvedValueOnce({
 ```
 
 **Mocking localStorage**:
+
 ```javascript
 const localStorageMock = {
   getItem: vi.fn(),
@@ -274,6 +287,7 @@ global.localStorage = localStorageMock;
 ```
 
 **Mocking Zustand Stores**:
+
 ```javascript
 import useAuthStore from "../../store/authStore";
 
@@ -300,7 +314,9 @@ import useMyStore from "../../store/myStore";
 describe("MyStore", () => {
   beforeEach(() => {
     // Reset state before each test
-    useMyStore.setState({ /* initial state */ });
+    useMyStore.setState({
+      /* initial state */
+    });
   });
 
   describe("Feature Name", () => {
@@ -347,10 +363,7 @@ it("should fetch data from API", async () => {
   const result = await myService.getData();
 
   // Verify the call and result
-  expect(fetch).toHaveBeenCalledWith(
-    expect.stringContaining("/api/data"),
-    expect.any(Object)
-  );
+  expect(fetch).toHaveBeenCalledWith(expect.stringContaining("/api/data"), expect.any(Object));
   expect(result.data).toEqual({ data: "test" });
 });
 ```
@@ -362,18 +375,21 @@ it("should fetch data from API", async () => {
 ### Common Issues
 
 **1. Tests fail with "Cannot find module"**
+
 ```bash
 # Install dependencies
 npm install
 ```
 
 **2. Coverage reports not generated**
+
 ```bash
 # Install coverage package
 npm install -D @vitest/coverage-v8
 ```
 
 **3. Tests timeout**
+
 ```bash
 # Increase timeout in vite.config.js
 test: {
@@ -382,6 +398,7 @@ test: {
 ```
 
 **4. Mock not working**
+
 ```bash
 # Make sure to clear mocks in beforeEach
 beforeEach(() => {
@@ -398,18 +415,18 @@ beforeEach(() => {
 Create tests for React components:
 
 ```javascript
-import { render, screen, fireEvent } from '@testing-library/react';
-import ArtworkCard from '../../components/ArtworkCard';
+import { render, screen, fireEvent } from "@testing-library/react";
+import ArtworkCard from "../../components/ArtworkCard";
 
-it('renders artwork card and handles favorite click', () => {
-  const artwork = { id: 1, title: 'Test Art' };
+it("renders artwork card and handles favorite click", () => {
+  const artwork = { id: 1, title: "Test Art" };
   const onFavorite = vi.fn();
 
   render(<ArtworkCard artwork={artwork} onFavorite={onFavorite} />);
 
-  expect(screen.getByText('Test Art')).toBeInTheDocument();
+  expect(screen.getByText("Test Art")).toBeInTheDocument();
 
-  const favoriteBtn = screen.getByRole('button', { name: /favorite/i });
+  const favoriteBtn = screen.getByRole("button", { name: /favorite/i });
   fireEvent.click(favoriteBtn);
 
   expect(onFavorite).toHaveBeenCalledWith(artwork);
@@ -421,7 +438,7 @@ it('renders artwork card and handles favorite click', () => {
 Test complete user flows:
 
 ```javascript
-it('completes full bidding flow', async () => {
+it("completes full bidding flow", async () => {
   // 1. User logs in
   // 2. Browses artworks
   // 3. Places bid

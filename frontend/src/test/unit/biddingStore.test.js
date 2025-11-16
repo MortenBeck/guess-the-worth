@@ -295,11 +295,15 @@ describe("biddingStore", () => {
 
       // Place first bid
       useBiddingStore.getState().updateBid(artworkId, { amount: 150, bidder_id: 5 });
-      expect(useBiddingStore.getState().activeArtworks.get(artworkId).current_highest_bid).toBe(150);
+      expect(useBiddingStore.getState().activeArtworks.get(artworkId).current_highest_bid).toBe(
+        150
+      );
 
       // Place higher bid
       useBiddingStore.getState().updateBid(artworkId, { amount: 200, bidder_id: 6 });
-      expect(useBiddingStore.getState().activeArtworks.get(artworkId).current_highest_bid).toBe(200);
+      expect(useBiddingStore.getState().activeArtworks.get(artworkId).current_highest_bid).toBe(
+        200
+      );
 
       // Mark as sold
       useBiddingStore.getState().markArtworkSold(artworkId);
