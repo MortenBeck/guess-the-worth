@@ -29,6 +29,61 @@ Create `.env` files in `backend/` and `frontend/` directories with:
 
 ---
 
+## 📊 Service Status
+
+<!-- TODO: Add UptimeRobot status badges here once monitors are configured -->
+<!--
+Instructions for adding badges:
+1. Log into UptimeRobot dashboard (https://uptimerobot.com)
+2. For each monitor (Backend Health, Database Health, Frontend):
+   - Click on the monitor name
+   - Go to "Public Status Pages" or "Badge URL"
+   - Copy the badge URL or monitor ID
+3. Add badges below using this format:
+
+[![Backend Health](https://img.shields.io/uptimerobot/status/m123456789-abcdefg?label=Backend)](https://stats.uptimerobot.com/XXXXX)
+[![Database](https://img.shields.io/uptimerobot/status/m123456789-abcdefg?label=Database)](https://stats.uptimerobot.com/XXXXX)
+[![Frontend](https://img.shields.io/uptimerobot/status/m123456789-abcdefg?label=Frontend)](https://stats.uptimerobot.com/XXXXX)
+
+Alternative: Show 7-day uptime percentage
+[![Backend Uptime](https://img.shields.io/uptimerobot/ratio/7/m123456789-abcdefg?label=7-day%20uptime)](https://stats.uptimerobot.com/XXXXX)
+
+Note: Monitor IDs start with 'm' followed by numbers. Get them from:
+- UptimeRobot dashboard → Monitor → Settings → Monitor ID
+- Or from the badge URL generator
+
+Monitored endpoints:
+- Backend: https://<AZURE_BACKEND_APP_NAME>.azurewebsites.net/health
+- Database: https://<AZURE_BACKEND_APP_NAME>.azurewebsites.net/health/db
+- Frontend: https://<AZURE_FRONTEND_APP_NAME>.azurewebsites.net
+-->
+
+### 🏥 Health Dashboard
+
+Open [health-dashboard.html](health-dashboard.html) in your browser for a real-time view of all services.
+
+**Setup**:
+1. Open `health-dashboard.html` in a text editor
+2. Update the `CONFIG` section with your Azure App Service names:
+   ```javascript
+   const CONFIG = {
+       backendUrl: 'your-backend-name.azurewebsites.net',
+       frontendUrl: 'your-frontend-name.azurewebsites.net',
+       checkInterval: 30000 // 30 seconds
+   };
+   ```
+3. Open the file in any modern browser
+4. The dashboard will automatically check service health every 30 seconds
+
+**Features**:
+- ✅ Real-time health monitoring
+- 📊 Response time tracking
+- 🔄 Auto-refresh (toggle with spacebar)
+- ⌨️ Press 'R' to refresh manually
+- 📱 Mobile-friendly design
+
+---
+
 ## 📋 Implementation Tasks
 
 ### 1. Backend Security Hardening
