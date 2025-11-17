@@ -41,7 +41,7 @@ jobs:
         uses: azure/webapps-deploy@v2
         with:
           app-name: ${{ secrets.AZURE_BACKEND_APP_NAME }}
-          images: ghcr.io/${{ env.REPO_LOWERCASE }}/backend:${{ github.sha }}
+          images: ghcr.io/${{ env.REPO_LOWERCASE }}/backend:latest
 
       - name: Run database migrations
         run: |
