@@ -65,14 +65,14 @@ jobs:
         run: npm ci
 
       - name: Run tests with coverage
-        run: npm run test -- --coverage --run || true
+        run: npm run test -- --coverage --run
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v4
         with:
           file: ./frontend/coverage/lcov.info
           flags: frontend
-          fail_ci_if_error: false
+          fail_ci_if_error: true
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
@@ -99,7 +99,6 @@ jobs:
 
       - name: Run npm audit
         run: npm audit --audit-level=high
-        continue-on-error: true
 
       - name: TruffleHog Secret Scan
         uses: trufflesecurity/trufflehog@main
@@ -108,7 +107,6 @@ jobs:
           base: ${{ github.event.repository.default_branch }}
           head: HEAD
           extra_args: --only-verified
-        continue-on-error: true
 
   build:
     name: Frontend Build
@@ -191,10 +189,11 @@ jobs:
           image-ref: ${{ github.ref == 'refs/heads/main' && format('ghcr.io/{0}/frontend:{1}', env.REPO_LOWERCASE, github.sha) || format('frontend:{0}', github.sha) }}
           format: 'sarif'
           output: 'trivy-results.sarif'
-        continue-on-error: true
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
 
       - name: Upload Trivy results to GitHub Security
+        if: always()
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-results.sarif'
-        continue-on-error: true
