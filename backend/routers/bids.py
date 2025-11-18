@@ -18,6 +18,10 @@ async def get_artwork_bids(artwork_id: int, db: Session = Depends(get_db)):
 
 @router.post("/", response_model=BidResponse)
 async def create_bid(bid: BidCreate, bidder_id: int, db: Session = Depends(get_db)):
+    # Validate bid amount
+    if bid.amount < 0:
+        raise HTTPException(status_code=400, detail="Bid amount must be non-negative")
+
     # Verify bidder exists
     from models.user import User
     bidder = db.query(User).filter(User.id == bidder_id).first()

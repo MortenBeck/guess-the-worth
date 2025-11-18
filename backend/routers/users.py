@@ -12,12 +12,7 @@ router = APIRouter()
 
 
 @router.get("/", response_model=List[UserResponse])
-async def get_users(
-    skip: int = 0,
-    limit: int = 100,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+async def get_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     users = db.query(User).offset(skip).limit(limit).all()
     return users
 

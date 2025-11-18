@@ -258,7 +258,7 @@ class TestAuthWithAuth0:
         assert data["email"] == "firstlogin@example.com"
 
     @patch("services.auth_service.AuthService.verify_auth0_token")
-    def test_auth0_token_updates_role(self, mock_verify, client, buyer_user, mock_auth0_response):
+    def test_auth0_token_updates_role(self, mock_verify, client, db_session, buyer_user, mock_auth0_response):
         """Test Auth0 token updates user role if changed."""
         # Mock Auth0 response with updated role
         updated_user_data = mock_auth0_response(
@@ -271,14 +271,9 @@ class TestAuthWithAuth0:
 
         # Trigger authentication (could be any protected endpoint)
         # For this test, we'll just verify the get_or_create_user logic
-        from services.auth_service import get_or_create_user
+        from services.auth_service import AuthService
 
-        user = get_or_create_user(
-            client.app.dependency_overrides[
-                client.app.dependency_overrides.keys().__iter__().__next__()
-            ](),
-            updated_user_data,
-        )
+        user = AuthService.get_or_create_user(db_session, updated_user_data)
 
         assert user.id == buyer_user.id
         assert user.role == UserRole.ADMIN
