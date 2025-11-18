@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
 import jwt
+from jwt import DecodeError, ExpiredSignatureError
 
 from config.settings import settings
 
@@ -29,7 +30,7 @@ class JWTService:
                 token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm]
             )
             return payload
-        except jwt.PyJWTError:
+        except (DecodeError, ExpiredSignatureError):
             return None
 
     @staticmethod
@@ -37,5 +38,5 @@ class JWTService:
         try:
             payload = jwt.decode(token, options={"verify_signature": False})
             return payload
-        except jwt.PyJWTError:
+        except DecodeError:
             return None
