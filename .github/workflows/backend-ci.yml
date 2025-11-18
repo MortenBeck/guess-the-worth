@@ -148,7 +148,7 @@ jobs:
         with:
           base: ${{ github.event.repository.default_branch }}
           head: HEAD
-          extra_args: --only-verified --filter-path="backend/"
+          extra_args: --only-verified
 
   docker-build:
     name: Backend Docker Build
