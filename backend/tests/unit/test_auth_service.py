@@ -9,8 +9,8 @@ from unittest.mock import Mock, patch
 import jwt
 import pytest
 from jwt import DecodeError, ExpiredSignatureError
-from settings import Settings
 
+from config.settings import Settings
 from models.user import UserRole
 from schemas.auth import AuthUser
 from services.auth_service import AuthService

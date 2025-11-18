@@ -103,10 +103,9 @@ jobs:
       - name: TruffleHog Secret Scan
         uses: trufflesecurity/trufflehog@main
         with:
-          path: ./frontend/
           base: ${{ github.event.repository.default_branch }}
           head: HEAD
-          extra_args: --only-verified
+          extra_args: --only-verified --filter-path="frontend/"
 
   build:
     name: Frontend Build
