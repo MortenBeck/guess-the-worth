@@ -5,8 +5,11 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install all dependencies (including dev dependencies for build)
-RUN npm ci
+# Update Alpine packages and install dependencies
+RUN apk update && \
+    apk upgrade && \
+    rm -rf /var/cache/apk/* && \
+    npm ci
 
 # Copy application files
 COPY . .
@@ -38,8 +41,11 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install only production dependencies
-RUN npm ci --only=production
+# Update Alpine packages and install production dependencies
+RUN apk update && \
+    apk upgrade && \
+    rm -rf /var/cache/apk/* && \
+    npm ci --only=production
 
 # Copy built files and server from builder
 COPY --from=builder /app/dist ./dist
