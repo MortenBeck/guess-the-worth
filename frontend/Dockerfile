@@ -1,15 +1,18 @@
+# Builder stage - build the application
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-
 # Update Alpine packages and install dependencies
 RUN apk update && \
     apk upgrade && \
-    rm -rf /var/cache/apk/* && \
-    npm ci
+    rm -rf /var/cache/apk/*
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci
 
 # Copy application files
 COPY . .
@@ -33,26 +36,38 @@ ENV VITE_SENTRY_DSN=$VITE_SENTRY_DSN
 # Build the application
 RUN npm run build
 
-# Production stage
-FROM node:20-alpine
+# Dependencies stage - install production dependencies
+FROM node:20-alpine AS dependencies
 
 WORKDIR /app
+
+# Update Alpine packages
+RUN apk update && \
+    apk upgrade && \
+    rm -rf /var/cache/apk/*
 
 # Copy package files
 COPY package*.json ./
 
-# Update Alpine packages and install production dependencies
-RUN apk update && \
-    apk upgrade && \
-    rm -rf /var/cache/apk/* && \
-    npm ci --only=production
+# Install only production dependencies
+RUN npm ci --only=production
 
-# Copy built files and server from builder
+# Production stage - distroless
+FROM gcr.io/distroless/nodejs20-debian12
+
+WORKDIR /app
+
+# Copy production dependencies from dependencies stage
+COPY --from=dependencies /app/node_modules ./node_modules
+
+# Copy built files from builder
 COPY --from=builder /app/dist ./dist
+
+# Copy server file
 COPY server.cjs ./
 
 # Expose port (Azure will override this with PORT env var)
 EXPOSE 8080
 
 # Start the Express server
-CMD ["node", "server.cjs"]
+CMD ["server.cjs"]
