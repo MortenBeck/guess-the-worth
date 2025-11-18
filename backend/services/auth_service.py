@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-import httpx
+import requests
 from sqlalchemy.orm import Session
 
 from config.settings import settings
@@ -10,30 +10,29 @@ from schemas.auth import AuthUser
 
 class AuthService:
     @staticmethod
-    async def verify_auth0_token(token: str) -> Optional[AuthUser]:
+    def verify_auth0_token(token: str) -> Optional[AuthUser]:
         """Verify Auth0 token and return user info with roles"""
         try:
             userinfo_url = f"https://{settings.auth0_domain}/userinfo"
+            headers = {"Authorization": f"Bearer {token}"}
+            response = requests.get(userinfo_url, headers=headers, timeout=10)
 
-            async with httpx.AsyncClient() as client:
-                headers = {"Authorization": f"Bearer {token}"}
-                response = await client.get(userinfo_url, headers=headers)
+            if response.status_code == 200:
+                user_data = response.json()
+                auth0_roles = user_data.get("https://guesstheworth.com/roles", [])
 
-                if response.status_code == 200:
-                    user_data = response.json()
-                    auth0_roles = user_data.get("https://api.guesstheworth.com/roles", [])
-
-                    return AuthUser(
-                        sub=user_data.get("sub"),
-                        email=user_data.get("email"),
-                        name=user_data.get("name"),
-                        picture=user_data.get("picture"),
-                        email_verified=user_data.get("email_verified", False),
-                        roles=auth0_roles,
-                    )
-                return None
-        except Exception:
-            return None
+                return AuthUser(
+                    sub=user_data.get("sub"),
+                    email=user_data.get("email"),
+                    name=user_data.get("name"),
+                    picture=user_data.get("picture"),
+                    email_verified=user_data.get("email_verified", False),
+                    roles=auth0_roles,
+                )
+            else:
+                raise ValueError("Invalid Auth0 token")
+        except requests.RequestException as e:
+            raise ValueError(f"Auth0 verification failed: {str(e)}")
 
     @staticmethod
     def map_auth0_role_to_user_role(auth0_roles: List[str]) -> UserRole:
@@ -41,9 +40,12 @@ class AuthService:
         if not auth0_roles:
             return UserRole.BUYER
 
-        if "admin" in auth0_roles:
+        # Convert to lowercase for case-insensitive comparison
+        roles_lower = [role.lower() for role in auth0_roles]
+
+        if "admin" in roles_lower:
             return UserRole.ADMIN
-        elif "seller" in auth0_roles:
+        elif "seller" in roles_lower:
             return UserRole.SELLER
         else:
             return UserRole.BUYER

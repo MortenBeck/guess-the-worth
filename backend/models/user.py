@@ -8,9 +8,9 @@ from .base import Base
 
 
 class UserRole(str, enum.Enum):
-    BUYER = "buyer"
-    SELLER = "seller"
-    ADMIN = "admin"
+    BUYER = "BUYER"
+    SELLER = "SELLER"
+    ADMIN = "ADMIN"
 
 
 class User(Base):
