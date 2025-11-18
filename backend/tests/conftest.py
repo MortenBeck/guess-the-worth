@@ -72,9 +72,27 @@ def client(db_session) -> TestClient:
             pass
 
     app.dependency_overrides[get_db] = override_get_db
-    with TestClient(app) as test_client:
-        yield test_client
-    app.dependency_overrides.clear()
+
+    # Override the database engine used in startup event
+    import database
+
+    original_engine = database.engine
+    database.engine = engine
+
+    # Also patch the engine in main module
+    import main
+
+    original_main_engine = main.engine
+    main.engine = engine
+
+    try:
+        with TestClient(app) as test_client:
+            yield test_client
+    finally:
+        # Restore original engines
+        database.engine = original_engine
+        main.engine = original_main_engine
+        app.dependency_overrides.clear()
 
 
 # User fixtures
