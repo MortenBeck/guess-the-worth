@@ -194,7 +194,9 @@ class TestGetSingleArtwork:
         data = response.json()
         assert "secret_threshold" not in data
 
-    def test_get_artwork_includes_current_highest_bid(self, client, db_session, artwork, buyer_user):
+    def test_get_artwork_includes_current_highest_bid(
+        self, client, db_session, artwork, buyer_user
+    ):
         """Test artwork response includes current_highest_bid."""
         from models.bid import Bid
 

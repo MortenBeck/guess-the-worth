@@ -24,6 +24,7 @@ async def create_bid(bid: BidCreate, bidder_id: int, db: Session = Depends(get_d
 
     # Verify bidder exists
     from models.user import User
+
     bidder = db.query(User).filter(User.id == bidder_id).first()
     if not bidder:
         raise HTTPException(status_code=404, detail="Bidder not found")
@@ -34,7 +35,9 @@ async def create_bid(bid: BidCreate, bidder_id: int, db: Session = Depends(get_d
         raise HTTPException(status_code=404, detail="Artwork not found")
 
     if artwork.status != "ACTIVE":
-        raise HTTPException(status_code=400, detail=f"Artwork is not active (status: {artwork.status})")
+        raise HTTPException(
+            status_code=400, detail=f"Artwork is not active (status: {artwork.status})"
+        )
 
     # Check if bid meets threshold
     is_winning = bid.amount >= artwork.secret_threshold

@@ -271,7 +271,9 @@ class TestAuthWithAuth0:
         assert data["email"] == "firstlogin@example.com"
 
     @patch("services.auth_service.AuthService.verify_auth0_token")
-    def test_auth0_token_updates_role(self, mock_verify, client, db_session, buyer_user, mock_auth0_response):
+    def test_auth0_token_updates_role(
+        self, mock_verify, client, db_session, buyer_user, mock_auth0_response
+    ):
         """Test Auth0 token updates user role if changed."""
         # Mock Auth0 response with updated role
         updated_user_data = mock_auth0_response(

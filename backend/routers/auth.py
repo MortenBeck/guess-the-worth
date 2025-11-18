@@ -29,7 +29,9 @@ async def register_user(user: UserCreate, db: Session = Depends(get_db)):
         return db_user
     except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=400, detail="User registration failed due to constraint violation")
+        raise HTTPException(
+            status_code=400, detail="User registration failed due to constraint violation"
+        )
 
 
 @router.get("/me", response_model=UserResponse)

@@ -38,6 +38,7 @@ async def create_artwork(
 
     # Verify seller exists
     from models.user import User
+
     seller = db.query(User).filter(User.id == seller_id).first()
     if not seller:
         raise HTTPException(status_code=404, detail="Seller not found")
