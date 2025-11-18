@@ -1,0 +1,24 @@
+# Trivy Ignore List for Backend Docker Image
+# These CVEs are in the gcr.io/distroless/python3-debian12 base image
+# and have no fixes available. They are not in our application code or dependencies.
+
+# CVE-2025-8194 (HIGH)
+# Package: libpython3.11-minimal, libpython3.11-stdlib, python3.11-minimal
+# Issue: CPython infinite loop when parsing a tarfile
+# Status: affected (no fix available)
+# Impact: Base Python 3.11 packages in Debian 12
+CVE-2025-8194
+
+# CVE-2025-7458 (CRITICAL)
+# Package: libsqlite3-0
+# Issue: SQLite integer overflow
+# Status: affected (no fix available)
+# Impact: System SQLite library in Debian 12
+CVE-2025-7458
+
+# CVE-2023-45853 (CRITICAL)
+# Package: zlib1g
+# Issue: Integer overflow and heap-based buffer overflow in zipOpenNewFileInZip4_6
+# Status: will_not_fix (Debian has decided not to fix this)
+# Impact: System zlib compression library in Debian 12
+CVE-2023-45853
