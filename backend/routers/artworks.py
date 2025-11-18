@@ -5,9 +5,7 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from models import Artwork
-from models.user import User, UserRole
 from schemas import ArtworkCreate, ArtworkResponse
-from utils.auth import get_current_user, require_seller
 
 router = APIRouter()
 
