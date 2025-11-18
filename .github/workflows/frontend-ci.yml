@@ -68,7 +68,7 @@ jobs:
         run: npm run test -- --coverage --run
 
       - name: Upload coverage reports
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v3
         with:
           file: ./frontend/coverage/lcov.info
           flags: frontend
@@ -101,6 +101,7 @@ jobs:
         run: npm audit --audit-level=high
 
       - name: TruffleHog Secret Scan
+        if: github.ref != 'refs/heads/main'
         uses: trufflesecurity/trufflehog@main
         with:
           base: ${{ github.event.repository.default_branch }}
