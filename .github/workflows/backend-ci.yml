@@ -137,8 +137,8 @@ jobs:
         run: |
           # Generate JSON report for analysis
           bandit -r . -f json -o bandit-report.json || true
-          # Display results and fail on high severity issues only
-          bandit -r . --severity-level high
+          # Display results and fail on medium+ severity issues
+          bandit -r . --severity-level medium
 
       - name: Run pip-audit
         run: pip-audit --desc
