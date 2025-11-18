@@ -18,13 +18,19 @@ async def get_artwork_bids(artwork_id: int, db: Session = Depends(get_db)):
 
 @router.post("/", response_model=BidResponse)
 async def create_bid(bid: BidCreate, bidder_id: int, db: Session = Depends(get_db)):
+    # Verify bidder exists
+    from models.user import User
+    bidder = db.query(User).filter(User.id == bidder_id).first()
+    if not bidder:
+        raise HTTPException(status_code=404, detail="Bidder not found")
+
     # Get artwork to check threshold
     artwork = db.query(Artwork).filter(Artwork.id == bid.artwork_id).first()
     if not artwork:
         raise HTTPException(status_code=404, detail="Artwork not found")
 
     if artwork.status != "ACTIVE":
-        raise HTTPException(status_code=400, detail="Artwork is not available for bidding")
+        raise HTTPException(status_code=400, detail=f"Artwork is not active (status: {artwork.status})")
 
     # Check if bid meets threshold
     is_winning = bid.amount >= artwork.secret_threshold

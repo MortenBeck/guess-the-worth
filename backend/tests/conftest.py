@@ -219,10 +219,10 @@ def mock_auth0_response():
 @pytest.fixture
 def mock_auth0_service(mock_auth0_response):
     """
-    Mock the auth_service.verify_auth0_token function.
+    Mock the auth_service.AuthService.verify_auth0_token function.
     Use this to avoid actual Auth0 API calls in tests.
     """
-    with patch("services.auth_service.verify_auth0_token") as mock:
+    with patch("services.auth_service.AuthService.verify_auth0_token") as mock:
         mock.return_value = mock_auth0_response()
         yield mock
 

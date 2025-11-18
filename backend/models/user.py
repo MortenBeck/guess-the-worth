@@ -23,5 +23,5 @@ class User(Base):
     role = Column(Enum(UserRole), default=UserRole.BUYER, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    artworks = relationship("Artwork", back_populates="seller")
-    bids = relationship("Bid", back_populates="bidder")
+    artworks = relationship("Artwork", back_populates="seller", cascade="all, delete-orphan")
+    bids = relationship("Bid", back_populates="bidder", cascade="all, delete-orphan")

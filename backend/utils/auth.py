@@ -17,19 +17,27 @@ async def get_current_user(
     token = credentials.credentials
 
     # Try Auth0 token first
-    auth_user = await AuthService.verify_auth0_token(token)
-    if auth_user:
-        user = AuthService.get_or_create_user(db, auth_user)
-        return user
+    try:
+        auth_user = AuthService.verify_auth0_token(token)
+        if auth_user:
+            user = AuthService.get_or_create_user(db, auth_user)
+            return user
+    except (ValueError, Exception):
+        # Auth0 verification failed, try JWT token
+        pass
 
     # Fallback to JWT token
-    payload = JWTService.verify_token(token)
-    if payload:
-        auth0_sub = payload.get("sub")
-        if auth0_sub:
-            user = AuthService.get_user_by_auth0_sub(db, auth0_sub)
-            if user:
-                return user
+    try:
+        payload = JWTService.verify_token(token)
+        if payload:
+            auth0_sub = payload.get("sub")
+            if auth0_sub:
+                user = AuthService.get_user_by_auth0_sub(db, auth0_sub)
+                if user:
+                    return user
+    except Exception:
+        # JWT verification failed
+        pass
 
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,

@@ -9,7 +9,7 @@ from unittest.mock import patch
 class TestCompleteUserFlow:
     """Test complete user journey from registration to purchase."""
 
-    @patch("services.auth_service.verify_auth0_token")
+    @patch("services.auth_service.AuthService.verify_auth0_token")
     def test_buyer_registration_to_winning_bid_flow(
         self, mock_verify, client, db_session, mock_auth0_response
     ):

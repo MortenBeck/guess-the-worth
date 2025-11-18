@@ -185,7 +185,7 @@ class TestAuthGetCurrentUser:
 class TestAuthWithJWT:
     """Test authentication using JWT tokens."""
 
-    @patch("utils.auth.verify_auth0_token")
+    @patch("services.auth_service.AuthService.verify_auth0_token")
     def test_protected_endpoint_with_jwt(self, mock_verify, client, buyer_user, buyer_token):
         """Test accessing protected endpoint with JWT token."""
         # Mock Auth0 verification to return None (fallback to JWT)
@@ -211,7 +211,7 @@ class TestAuthWithJWT:
 
         assert response.status_code in [401, 403]
 
-    @patch("utils.auth.verify_auth0_token")
+    @patch("services.auth_service.AuthService.verify_auth0_token")
     def test_protected_endpoint_expired_token(self, mock_verify, client):
         """Test accessing protected endpoint with expired JWT token."""
         from datetime import timedelta
@@ -234,7 +234,7 @@ class TestAuthWithJWT:
 class TestAuthWithAuth0:
     """Test authentication using Auth0 tokens."""
 
-    @patch("services.auth_service.verify_auth0_token")
+    @patch("services.auth_service.AuthService.verify_auth0_token")
     def test_auth0_token_creates_user_on_first_login(
         self, mock_verify, client, db_session, mock_auth0_response
     ):
@@ -257,7 +257,7 @@ class TestAuthWithAuth0:
         assert data["auth0_sub"] == "auth0|firstlogin"
         assert data["email"] == "firstlogin@example.com"
 
-    @patch("services.auth_service.verify_auth0_token")
+    @patch("services.auth_service.AuthService.verify_auth0_token")
     def test_auth0_token_updates_role(self, mock_verify, client, buyer_user, mock_auth0_response):
         """Test Auth0 token updates user role if changed."""
         # Mock Auth0 response with updated role

@@ -194,24 +194,18 @@ class TestGetSingleArtwork:
         data = response.json()
         assert "secret_threshold" not in data
 
-    def test_get_artwork_includes_current_highest_bid(self, client, artwork, buyer_user):
+    def test_get_artwork_includes_current_highest_bid(self, client, db_session, artwork, buyer_user):
         """Test artwork response includes current_highest_bid."""
         from models.bid import Bid
 
         # Place some bids
         bid = Bid(artwork_id=artwork.id, bidder_id=buyer_user.id, amount=150.0)
-        client.app.dependency_overrides[
-            client.app.dependency_overrides.keys().__iter__().__next__()
-        ]().add(bid)
-        client.app.dependency_overrides[
-            client.app.dependency_overrides.keys().__iter__().__next__()
-        ]().commit()
+        db_session.add(bid)
+        db_session.commit()
 
         # Update artwork's current_highest_bid
         artwork.current_highest_bid = 150.0
-        client.app.dependency_overrides[
-            client.app.dependency_overrides.keys().__iter__().__next__()
-        ]().commit()
+        db_session.commit()
 
         response = client.get(f"/api/artworks/{artwork.id}")
 

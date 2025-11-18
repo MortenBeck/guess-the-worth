@@ -5,7 +5,9 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from models import Artwork
+from models.user import User, UserRole
 from schemas import ArtworkCreate, ArtworkResponse
+from utils.auth import get_current_user, require_seller
 
 router = APIRouter()
 
@@ -25,8 +27,22 @@ async def get_artwork(artwork_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/", response_model=ArtworkResponse)
-async def create_artwork(artwork: ArtworkCreate, db: Session = Depends(get_db)):
-    db_artwork = Artwork(**artwork.dict())
+async def create_artwork(
+    artwork: ArtworkCreate,
+    seller_id: int = None,
+    db: Session = Depends(get_db),
+):
+    """Create a new artwork. Requires seller_id parameter."""
+    if seller_id is None:
+        raise HTTPException(status_code=400, detail="seller_id is required")
+
+    # Verify seller exists
+    from models.user import User
+    seller = db.query(User).filter(User.id == seller_id).first()
+    if not seller:
+        raise HTTPException(status_code=404, detail="Seller not found")
+
+    db_artwork = Artwork(**artwork.dict(), seller_id=seller_id)
     db.add(db_artwork)
     db.commit()
     db.refresh(db_artwork)
