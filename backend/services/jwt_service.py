@@ -28,9 +28,7 @@ class JWTService:
 
         Raises DecodeError or ExpiredSignatureError on failure.
         """
-        payload = jwt.decode(
-            token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm]
-        )
+        payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
         return payload
 
     @staticmethod
