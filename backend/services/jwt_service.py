@@ -24,18 +24,15 @@ class JWTService:
 
     @staticmethod
     def verify_token(token: str) -> Optional[Dict[str, Any]]:
-        try:
-            payload = jwt.decode(
-                token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm]
-            )
-            return payload
-        except jwt.PyJWTError:
-            return None
+        """Verify JWT token and return payload.
+
+        Raises DecodeError or ExpiredSignatureError on failure.
+        """
+        payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
+        return payload
 
     @staticmethod
     def decode_token(token: str) -> Optional[Dict[str, Any]]:
-        try:
-            payload = jwt.decode(token, options={"verify_signature": False})
-            return payload
-        except jwt.PyJWTError:
-            return None
+        """Decode JWT token without verification. Raises DecodeError on failure."""
+        payload = jwt.decode(token, options={"verify_signature": False})
+        return payload

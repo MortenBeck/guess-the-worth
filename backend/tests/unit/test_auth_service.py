@@ -6,11 +6,11 @@ Tests Auth0 integration, JWT operations, and role mapping.
 from datetime import datetime, timedelta
 from unittest.mock import Mock, patch
 
+import jwt
 import pytest
-from jose import jwt
-from jose.exceptions import ExpiredSignatureError, JWTError
-from settings import Settings
+from jwt import DecodeError, ExpiredSignatureError
 
+from config.settings import Settings
 from models.user import UserRole
 from schemas.auth import AuthUser
 from services.auth_service import AuthService
@@ -244,7 +244,7 @@ class TestJWTService:
         to_encode.update({"exp": expire})
         fake_token = jwt.encode(to_encode, "wrong_secret", algorithm="HS256")
 
-        with pytest.raises(JWTError):
+        with pytest.raises(DecodeError):
             JWTService.verify_token(fake_token)
 
     def test_verify_token_expired(self):
@@ -258,7 +258,7 @@ class TestJWTService:
 
     def test_verify_token_malformed(self):
         """Test verifying malformed token."""
-        with pytest.raises(JWTError):
+        with pytest.raises(DecodeError):
             JWTService.verify_token("not.a.valid.jwt.token")
 
     def test_decode_token_without_verification(self):

@@ -72,9 +72,27 @@ def client(db_session) -> TestClient:
             pass
 
     app.dependency_overrides[get_db] = override_get_db
-    with TestClient(app) as test_client:
-        yield test_client
-    app.dependency_overrides.clear()
+
+    # Override the database engine used in startup event
+    import database
+
+    original_engine = database.engine
+    database.engine = engine
+
+    # Also patch the engine in main module
+    import main
+
+    original_main_engine = main.engine
+    main.engine = engine
+
+    try:
+        with TestClient(app) as test_client:
+            yield test_client
+    finally:
+        # Restore original engines
+        database.engine = original_engine
+        main.engine = original_main_engine
+        app.dependency_overrides.clear()
 
 
 # User fixtures
@@ -219,10 +237,10 @@ def mock_auth0_response():
 @pytest.fixture
 def mock_auth0_service(mock_auth0_response):
     """
-    Mock the auth_service.verify_auth0_token function.
+    Mock the auth_service.AuthService.verify_auth0_token function.
     Use this to avoid actual Auth0 API calls in tests.
     """
-    with patch("services.auth_service.verify_auth0_token") as mock:
+    with patch("services.auth_service.AuthService.verify_auth0_token") as mock:
         mock.return_value = mock_auth0_response()
         yield mock
 

@@ -1,0 +1,55 @@
+codecov:
+  require_ci_to_pass: yes
+  notify:
+    wait_for_ci: yes
+
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+        informational: false
+    patch:
+      default:
+        target: auto
+        threshold: 1%
+        informational: false
+
+  precision: 2
+  round: down
+  range: "70...100"
+
+comment:
+  layout: "reach,diff,flags,tree"
+  behavior: default
+  require_changes: false
+  require_base: false
+  require_head: true
+
+flags:
+  backend:
+    paths:
+      - backend/
+    carryforward: false
+  frontend:
+    paths:
+      - frontend/
+    carryforward: false
+
+ignore:
+  - "**/*test*.py"
+  - "**/*test*.js"
+  - "**/*test*.jsx"
+  - "**/*test*.ts"
+  - "**/*test*.tsx"
+  - "**/test_*.py"
+  - "**/*.test.js"
+  - "**/*.test.jsx"
+  - "**/*.test.ts"
+  - "**/*.test.tsx"
+  - "**/__tests__/**"
+  - "**/tests/**"
+  - "**/node_modules/**"
+  - "**/venv/**"
+  - "**/.venv/**"

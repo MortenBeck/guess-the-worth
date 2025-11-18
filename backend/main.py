@@ -79,4 +79,6 @@ async def leave_artwork(sid, data):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("main:socket_app", host="0.0.0.0", port=8000, reload=True)
+    # nosec B104: Binding to 0.0.0.0 is required for Docker containers
+    # to accept external connections
+    uvicorn.run("main:socket_app", host="0.0.0.0", port=8000, reload=True)  # nosec B104

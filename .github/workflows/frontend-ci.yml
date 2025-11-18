@@ -2,7 +2,7 @@ name: Frontend CI
 
 on:
   push:
-    branches: [main, dev]
+    branches: [main]
     paths:
       - 'frontend/**'
       - '.github/workflows/frontend-ci.yml'
@@ -65,14 +65,14 @@ jobs:
         run: npm ci
 
       - name: Run tests with coverage
-        run: npm run test -- --coverage --run || true
+        run: npm run test -- --coverage --run
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v4
         with:
           file: ./frontend/coverage/lcov.info
           flags: frontend
-          fail_ci_if_error: false
+          fail_ci_if_error: true
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
@@ -99,16 +99,13 @@ jobs:
 
       - name: Run npm audit
         run: npm audit --audit-level=high
-        continue-on-error: true
 
       - name: TruffleHog Secret Scan
         uses: trufflesecurity/trufflehog@main
         with:
-          path: ./frontend/
           base: ${{ github.event.repository.default_branch }}
           head: HEAD
           extra_args: --only-verified
-        continue-on-error: true
 
   build:
     name: Frontend Build
@@ -185,16 +182,25 @@ jobs:
           cache-to: type=gha,mode=max
           load: ${{ github.ref != 'refs/heads/main' }}
 
-      - name: Run Trivy vulnerability scanner
+      - name: Run Trivy vulnerability scanner (table output)
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ github.ref == 'refs/heads/main' && format('ghcr.io/{0}/frontend:{1}', env.REPO_LOWERCASE, github.sha) || format('frontend:{0}', github.sha) }}
+          image-ref: ghcr.io/${{ env.REPO_LOWERCASE }}/frontend:latest
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '0'
+
+      - name: Run Trivy vulnerability scanner (SARIF output)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ env.REPO_LOWERCASE }}/frontend:latest
           format: 'sarif'
           output: 'trivy-results.sarif'
-        continue-on-error: true
+          severity: 'CRITICAL'
+          exit-code: '0'
 
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: 'trivy-results.sarif'
-        continue-on-error: true

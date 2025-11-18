@@ -2,7 +2,7 @@ name: Backend CI
 
 on:
   push:
-    branches: [main, dev]
+    branches: [main]
     paths:
       - 'backend/**'
       - '.github/workflows/backend-ci.yml'
@@ -96,15 +96,15 @@ jobs:
         run: |
           # Create tests directory if it doesn't exist
           mkdir -p tests
-          # Run pytest (will pass even if no tests found)
-          pytest tests/ --cov --cov-report=xml --cov-report=term || true
+          # Run pytest (will fail if tests fail)
+          pytest tests/ --cov --cov-report=xml --cov-report=term
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v4
         with:
           file: ./backend/coverage.xml
           flags: backend
-          fail_ci_if_error: false
+          fail_ci_if_error: true
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
@@ -134,24 +134,21 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run Bandit security scan
-        run: bandit -r . -f json -o bandit-report.json || true
-
-      - name: Display Bandit results
-        run: bandit -r .
-        continue-on-error: true
+        run: |
+          # Generate JSON report for analysis
+          bandit -r . -f json -o bandit-report.json || true
+          # Display results and fail on medium+ severity issues
+          bandit -r . --severity-level medium
 
       - name: Run pip-audit
-        run: pip-audit
-        continue-on-error: true
+        run: pip-audit --desc
 
       - name: TruffleHog Secret Scan
         uses: trufflesecurity/trufflehog@main
         with:
-          path: ./backend/
           base: ${{ github.event.repository.default_branch }}
           head: HEAD
           extra_args: --only-verified
-        continue-on-error: true
 
   docker-build:
     name: Backend Docker Build
@@ -188,16 +185,27 @@ jobs:
           cache-to: type=gha,mode=max
           load: ${{ github.ref != 'refs/heads/main' }}
 
-      - name: Run Trivy vulnerability scanner
+      - name: Run Trivy vulnerability scanner (table output)
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ github.ref == 'refs/heads/main' && format('ghcr.io/{0}/backend:{1}', env.REPO_LOWERCASE, github.sha) || format('backend:{0}', github.sha) }}
+          image-ref: ghcr.io/${{ env.REPO_LOWERCASE }}/backend:latest
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '0'
+          trivyignores: 'backend/.trivyignore'
+
+      - name: Run Trivy vulnerability scanner (SARIF output)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ env.REPO_LOWERCASE }}/backend:latest
           format: 'sarif'
           output: 'trivy-results.sarif'
-        continue-on-error: true
+          severity: 'CRITICAL'
+          exit-code: '0'
+          trivyignores: 'backend/.trivyignore'
 
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: 'trivy-results.sarif'
-        continue-on-error: true

@@ -8,9 +8,9 @@ from .base import Base
 
 
 class ArtworkStatus(str, enum.Enum):
-    ACTIVE = "active"
-    SOLD = "sold"
-    ARCHIVED = "archived"
+    ACTIVE = "ACTIVE"
+    SOLD = "SOLD"
+    ARCHIVED = "ARCHIVED"
 
 
 class Artwork(Base):

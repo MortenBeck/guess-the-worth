@@ -17,14 +17,27 @@ async def get_artwork_bids(artwork_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/", response_model=BidResponse)
-async def create_bid(bid: BidCreate, db: Session = Depends(get_db)):
+async def create_bid(bid: BidCreate, bidder_id: int, db: Session = Depends(get_db)):
+    # Validate bid amount
+    if bid.amount < 0:
+        raise HTTPException(status_code=400, detail="Bid amount must be non-negative")
+
+    # Verify bidder exists
+    from models.user import User
+
+    bidder = db.query(User).filter(User.id == bidder_id).first()
+    if not bidder:
+        raise HTTPException(status_code=404, detail="Bidder not found")
+
     # Get artwork to check threshold
     artwork = db.query(Artwork).filter(Artwork.id == bid.artwork_id).first()
     if not artwork:
         raise HTTPException(status_code=404, detail="Artwork not found")
 
-    if artwork.status != "active":
-        raise HTTPException(status_code=400, detail="Artwork is not available for bidding")
+    if artwork.status != "ACTIVE":
+        raise HTTPException(
+            status_code=400, detail=f"Artwork is not active (status: {artwork.status})"
+        )
 
     # Check if bid meets threshold
     is_winning = bid.amount >= artwork.secret_threshold
@@ -32,7 +45,7 @@ async def create_bid(bid: BidCreate, db: Session = Depends(get_db)):
     # Create bid
     db_bid = Bid(
         artwork_id=bid.artwork_id,
-        bidder_id=bid.bidder_id,
+        bidder_id=bidder_id,
         amount=bid.amount,
         is_winning=is_winning,
     )
@@ -43,7 +56,7 @@ async def create_bid(bid: BidCreate, db: Session = Depends(get_db)):
 
     # If winning bid, mark artwork as sold
     if is_winning:
-        artwork.status = "sold"
+        artwork.status = "SOLD"
 
     db.add(db_bid)
     db.commit()

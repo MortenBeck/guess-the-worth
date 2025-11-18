@@ -3,7 +3,7 @@ uvicorn[standard]
 sqlalchemy
 psycopg2-binary
 alembic
-python-jose[cryptography]
+PyJWT
 passlib[bcrypt]
 aiofiles
 pillow
@@ -14,6 +14,10 @@ python-dotenv
 pydantic-settings
 pydantic[email]
 sentry-sdk[fastapi]
+requests
+
+# Security: Pin h11 to fix CVE (required by uvicorn/httpx)
+h11>=0.16.0
 
 # Testing
 pytest
