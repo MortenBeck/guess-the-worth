@@ -238,7 +238,7 @@ class TestAuthWithAuth0:
     def test_auth0_token_creates_user_on_first_login(
         self, mock_verify, client, db_session, mock_auth0_response
     ):
-        """Test Auth0 token creates user on first login."""
+        """Test Auth0 token creates user on first login via registration."""
         # Mock Auth0 response for new user
         new_user_data = mock_auth0_response(
             sub="auth0|firstlogin",
@@ -248,10 +248,22 @@ class TestAuthWithAuth0:
         )
         mock_verify.return_value = new_user_data
 
-        # Make request to protected endpoint
+        # First, register the user (simulates first login)
+        register_response = client.post(
+            "/api/auth/register",
+            json={
+                "email": "firstlogin@example.com",
+                "name": "First Login User",
+                "auth0_sub": "auth0|firstlogin",
+                "role": "BUYER",
+            },
+        )
+        assert register_response.status_code == 200
+
+        # Then retrieve user info
         response = client.get("/api/auth/me?auth0_sub=auth0|firstlogin")
 
-        # User should be created automatically
+        # User should be found
         assert response.status_code == 200
         data = response.json()
         assert data["auth0_sub"] == "auth0|firstlogin"
