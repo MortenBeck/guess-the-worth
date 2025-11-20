@@ -17,30 +17,40 @@ services:
       retries: 5
 
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      target: builder
     container_name: guess_the_worth_backend
     ports:
       - "8000:8000"
     environment:
       DATABASE_URL: postgresql://postgres:password@postgres:5432/guess_the_worth_db
+      PATH: /app/.venv/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      PYTHONPATH: /app
     depends_on:
       postgres:
         condition: service_healthy
     volumes:
       - ./backend:/app
-    command: uvicorn main:socket_app --host 0.0.0.0 --port 8000 --reload
+      - backend_venv:/app/.venv
+    command: /app/.venv/bin/uvicorn main:socket_app --host 0.0.0.0 --port 8000 --reload
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      target: builder
     container_name: guess_the_worth_frontend
     ports:
       - "5173:5173"
+    environment:
+      PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
     volumes:
       - ./frontend:/app
       - /app/node_modules
-    command: npm run dev -- --host 0.0.0.0
+    command: sh -c "cd /app && npm run dev -- --host 0.0.0.0"
     depends_on:
       - backend
 
 volumes:
   postgres_data:
+  backend_venv:
