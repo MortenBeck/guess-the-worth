@@ -75,3 +75,11 @@ CVE-2025-7709
 # Impact: System ncurses library in Debian 12
 # Note: Low risk - requires specific ncurses terminal manipulation
 CVE-2023-50495
+
+# CVE-2025-59375 (MEDIUM)
+# Package: libexpat1
+# Issue: libexpat allows attackers to trigger large dynamic memory allocations
+# Status: will_not_fix (Debian has decided not to fix this)
+# Impact: System XML parser library in Debian 12
+# Note: DoS risk requiring malicious XML input
+CVE-2025-59375
