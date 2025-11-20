@@ -22,3 +22,64 @@ CVE-2025-7458
 # Status: will_not_fix (Debian has decided not to fix this)
 # Impact: System zlib compression library in Debian 12
 CVE-2023-45853
+
+# ============================================================================
+# MEDIUM Severity - Base Image Vulnerabilities
+# Temporarily ignored until Google updates Distroless Python base image
+# Review monthly: Check if Python 3.11 patches are available in Debian 12
+# ============================================================================
+
+# CVE-2025-8291 (MEDIUM)
+# Package: libpython3.11-minimal, python3.11-minimal
+# Issue: Python zipfile End of Central Directory (EOCD) Locator record offset issue
+# Status: affected (awaiting upstream Python/Debian patch)
+# Impact: Base Python 3.11 packages in Debian 12
+# Note: Requires malicious zipfile input to exploit
+CVE-2025-8291
+
+# CVE-2025-4516 (MEDIUM)
+# Package: python3.11-minimal
+# Issue: CPython DecodeError Handling Vulnerability
+# Status: affected (awaiting upstream Python/Debian patch)
+# Impact: Base Python 3.11 packages in Debian 12
+CVE-2025-4516
+
+# CVE-2025-6069 (MEDIUM)
+# Package: python3.11-minimal
+# Issue: Python HTMLParser quadratic complexity
+# Status: affected (awaiting upstream Python/Debian patch)
+# Impact: Base Python 3.11 packages in Debian 12
+# Note: DoS risk only with large, malicious HTML input
+CVE-2025-6069
+
+# CVE-2025-6075 (MEDIUM)
+# Package: python3.11-minimal
+# Issue: Quadratic complexity in os.path.expandvars() with user-controlled template
+# Status: affected (awaiting upstream Python/Debian patch)
+# Impact: Base Python 3.11 packages in Debian 12
+# Note: DoS risk only with user-controlled path expansion
+CVE-2025-6075
+
+# CVE-2025-7709 (MEDIUM)
+# Package: libsqlite3-0
+# Issue: Integer overflow exists in the FTS5 extension
+# Status: affected (awaiting upstream SQLite/Debian patch)
+# Impact: System SQLite library in Debian 12
+# Note: Requires FTS5 full-text search usage to exploit
+CVE-2025-7709
+
+# CVE-2023-50495 (MEDIUM)
+# Package: libtinfo6
+# Issue: ncurses segmentation fault via _nc_wrap_entry()
+# Status: affected (awaiting Debian patch)
+# Impact: System ncurses library in Debian 12
+# Note: Low risk - requires specific ncurses terminal manipulation
+CVE-2023-50495
+
+# CVE-2025-59375 (MEDIUM)
+# Package: libexpat1
+# Issue: libexpat allows attackers to trigger large dynamic memory allocations
+# Status: will_not_fix (Debian has decided not to fix this)
+# Impact: System XML parser library in Debian 12
+# Note: DoS risk requiring malicious XML input
+CVE-2025-59375
