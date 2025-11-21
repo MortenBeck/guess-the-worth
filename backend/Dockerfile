@@ -34,5 +34,5 @@ EXPOSE 8000
 ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONPATH="/app"
 
-# Run uvicorn (without --reload in production)
-CMD ["/app/.venv/bin/uvicorn", "main:socket_app", "--host", "0.0.0.0", "--port", "8000"]
+# Run startup script that respects Azure's PORT env var
+CMD ["/app/.venv/bin/python", "start.py"]
