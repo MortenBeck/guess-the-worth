@@ -1,5 +1,5 @@
 # Builder stage - build the application
-FROM node:25-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
@@ -37,7 +37,7 @@ ENV VITE_SENTRY_DSN=$VITE_SENTRY_DSN
 RUN npm run build
 
 # Dependencies stage - install production dependencies
-FROM node:25-alpine AS dependencies
+FROM node:20-alpine AS dependencies
 
 WORKDIR /app
 
@@ -52,7 +52,7 @@ COPY package*.json ./
 # Install only production dependencies
 RUN npm ci --only=production
 
-# Production stage - distroless
+# Production stage - distroless for security
 FROM gcr.io/distroless/nodejs20-debian12
 
 WORKDIR /app

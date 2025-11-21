@@ -1,5 +1,5 @@
 # Builder stage - install dependencies
-FROM python:3.14-slim-bookworm AS builder
+FROM python:3.13-slim-bookworm AS builder
 
 WORKDIR /app
 
@@ -17,7 +17,7 @@ RUN python -m venv /app/.venv && \
     /app/.venv/bin/pip install --no-cache-dir --upgrade pip && \
     /app/.venv/bin/pip install --no-cache-dir -r requirements.txt
 
-# Production stage - distroless
+# Production stage - distroless for security
 FROM gcr.io/distroless/python3-debian12
 
 WORKDIR /app
