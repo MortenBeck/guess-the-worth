@@ -100,7 +100,12 @@ jobs:
           cp server.cjs deploy/
           cp package.json deploy/
           cp package-lock.json deploy/
+          cp .deployment deploy/
+
+          # Install only production dependencies in deploy directory
           cd deploy
+          npm ci --only=production
+
           # Create archive
           zip -r ../frontend-deploy.zip .
 
