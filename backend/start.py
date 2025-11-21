@@ -4,7 +4,6 @@ Startup script for Azure App Service.
 Reads the PORT environment variable and starts uvicorn.
 """
 import os
-import sys
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", "8000"))
