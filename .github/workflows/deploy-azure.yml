@@ -69,45 +69,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install dependencies
-        working-directory: ./frontend
-        run: npm ci
-
-      - name: Build frontend
-        working-directory: ./frontend
-        env:
-          VITE_API_BASE_URL: ${{ secrets.AZURE_BACKEND_URL }}
-          VITE_SOCKET_URL: ${{ secrets.AZURE_BACKEND_URL }}
-          VITE_AUTH0_DOMAIN: ${{ secrets.VITE_AUTH0_DOMAIN }}
-          VITE_AUTH0_CLIENT_ID: ${{ secrets.VITE_AUTH0_CLIENT_ID }}
-          VITE_AUTH0_AUDIENCE: ${{ secrets.VITE_AUTH0_AUDIENCE }}
-          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
-        run: npm run build
-
-      - name: Create deployment package
-        working-directory: ./frontend
-        run: |
-          # Create a deployment directory with all needed files
-          mkdir -p deploy
-          cp -r dist deploy/
-          cp server.cjs deploy/
-          cp package.json deploy/
-          cp package-lock.json deploy/
-          cp .deployment deploy/
-
-          # Install only production dependencies in deploy directory
-          cd deploy
-          npm ci --only=production
-
-          # Create archive
-          zip -r ../frontend-deploy.zip .
+      - name: Set lowercase repository name
+        run: echo "REPO_LOWERCASE=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Log in to Azure
         uses: azure/login@v1
@@ -116,11 +79,18 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Deploy to Azure App Service
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ secrets.AZURE_FRONTEND_APP_NAME }}
-          package: ./frontend/frontend-deploy.zip
+          images: ghcr.io/${{ env.REPO_LOWERCASE }}/frontend:latest
 
       - name: Health check
         run: |
