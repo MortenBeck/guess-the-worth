@@ -4,11 +4,12 @@ import sentry_sdk
 import socketio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from config.settings import settings
 from database import engine
 from models.base import Base
-from routers import artworks, auth, bids, health, users
+from routers import artworks, auth, bids, health, stats, users
 from services.auth_service import AuthService
 from services.jwt_service import JWTService
 
@@ -42,6 +43,12 @@ app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(artworks.router, prefix="/api/artworks", tags=["artworks"])
 app.include_router(bids.router, prefix="/api/bids", tags=["bids"])
+app.include_router(stats.router, prefix="/api/stats", tags=["stats"])
+
+# Mount static files for image uploads
+# Create uploads directory if it doesn't exist
+os.makedirs("uploads", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 
 @app.on_event("startup")
