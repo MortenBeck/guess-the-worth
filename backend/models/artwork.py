@@ -17,13 +17,16 @@ class Artwork(Base):
     __tablename__ = "artworks"
 
     id = Column(Integer, primary_key=True, index=True)
-    seller_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    seller_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     title = Column(String, nullable=False)
+    artist_name = Column(String, nullable=True)
+    category = Column(String, nullable=True, index=True)
     secret_threshold = Column(Float, nullable=False)
     current_highest_bid = Column(Float, default=0.0)
     description = Column(String)
     image_url = Column(String)
-    status = Column(Enum(ArtworkStatus), default=ArtworkStatus.ACTIVE, nullable=False)
+    status = Column(Enum(ArtworkStatus), default=ArtworkStatus.ACTIVE, nullable=False, index=True)
+    end_date = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships

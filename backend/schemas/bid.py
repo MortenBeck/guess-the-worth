@@ -15,7 +15,7 @@ class BidResponse(BidBase):
     id: int
     artwork_id: int
     bidder_id: int
-    bid_time: datetime
+    created_at: datetime
     is_winning: bool
 
     class Config:
