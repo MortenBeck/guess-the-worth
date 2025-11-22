@@ -9,7 +9,8 @@ const port = process.env.PORT || 8080;
 app.use(express.static(path.join(__dirname, 'dist')));
 
 // Handle client-side routing - always return index.html for unknown routes
-app.get('*', (_req, res) => {
+// Use middleware instead of route to catch all unmatched routes
+app.use((_req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
