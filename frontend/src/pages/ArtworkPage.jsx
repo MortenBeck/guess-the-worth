@@ -18,6 +18,7 @@ import { useParams } from "react-router-dom";
 import { artworkService, bidService } from "../services/api";
 import useAuthStore from "../store/authStore";
 import useFavoritesStore from "../store/favoritesStore";
+import { useRealtimeBids } from "../hooks/useRealtimeBids";
 import placeholderImg from "../assets/placeholder.jpg";
 
 const ArtworkPage = () => {
@@ -27,6 +28,9 @@ const ArtworkPage = () => {
   const [bidAmount, setBidAmount] = useState("");
   const toast = useToast();
   const queryClient = useQueryClient();
+
+  // Enable real-time bid updates for this artwork
+  useRealtimeBids(id);
 
   // Fetch artwork details
   const { data: artwork, isLoading: artworkLoading, error: artworkError } = useQuery({

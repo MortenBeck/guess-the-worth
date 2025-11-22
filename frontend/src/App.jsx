@@ -7,6 +7,7 @@ import socketService from "./services/socket";
 import { userService } from "./services/api";
 import Header from "./components/Header";
 import NotificationSystem from "./components/NotificationSystem";
+import SocketStatus from "./components/SocketStatus";
 import HomePage from "./pages/HomePage";
 import Home from "./pages/Home";
 import ArtworksPage from "./pages/ArtworksPage";
@@ -81,6 +82,7 @@ function App() {
           <Route path="/favourites" element={<FavouritesPage />} />
           <Route path="/help" element={<HelpPage />} />
         </Routes>
+        <SocketStatus />
       </Box>
     </BrowserRouter>
   );

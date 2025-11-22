@@ -17,12 +17,16 @@ class SocketService {
       // Use environment variable or default to localhost:8000
       const socketUrl = import.meta.env.VITE_SOCKET_URL || "http://localhost:8000";
 
+      // Get JWT token from localStorage
+      const token = localStorage.getItem("access_token");
+
       this.socket = io(socketUrl, {
         transports: ["websocket"],
         timeout: 5000,
         forceNew: false,
-        auth: {
-          token: localStorage.getItem("access_token"),
+        // Pass token in query params (backend expects it there)
+        query: {
+          token: token,
         },
       });
 
@@ -51,6 +55,7 @@ class SocketService {
 
   enable() {
     this.isEnabled = true;
+    this.connect();
   }
 
   disable() {

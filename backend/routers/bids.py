@@ -11,6 +11,12 @@ from utils.auth import get_current_user
 
 router = APIRouter()
 
+# Import socket.io server for real-time events
+# This import is placed after router definition to avoid circular imports
+def get_sio():
+    from main import sio
+    return sio
+
 
 @router.get("/artwork/{artwork_id}", response_model=List[BidResponse])
 async def get_artwork_bids(artwork_id: int, db: Session = Depends(get_db)):
@@ -74,9 +80,39 @@ async def create_bid(
     db.commit()
     db.refresh(db_bid)
 
-    # TODO: Emit socket event for real-time bidding
-    # await sio.emit("new_bid", {"bid": db_bid, "artwork_id": artwork.id},
-    #                room=f"artwork_{artwork.id}")
+    # Emit socket event for real-time bidding
+    sio = get_sio()
+    await sio.emit(
+        "new_bid",
+        {
+            "bid": {
+                "id": db_bid.id,
+                "artwork_id": db_bid.artwork_id,
+                "bidder_id": db_bid.bidder_id,
+                "amount": float(db_bid.amount),
+                "is_winning": db_bid.is_winning,
+                "bid_time": db_bid.bid_time.isoformat(),
+            },
+            "artwork": {
+                "id": artwork.id,
+                "current_highest_bid": float(artwork.current_highest_bid),
+                "status": artwork.status.value,
+            },
+        },
+        room=f"artwork_{artwork.id}",
+    )
+
+    # If winning bid, emit artwork_sold event
+    if is_winning:
+        await sio.emit(
+            "artwork_sold",
+            {
+                "artwork_id": artwork.id,
+                "winning_bid": float(db_bid.amount),
+                "winner_id": current_user.id,
+            },
+            room=f"artwork_{artwork.id}",
+        )
 
     return db_bid
 
