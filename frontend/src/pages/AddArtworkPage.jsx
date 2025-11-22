@@ -4,6 +4,7 @@ import { Box, Container, Heading, Text, Button, VStack, HStack, useToast } from 
 import { useNavigate } from "react-router-dom";
 import { artworkService } from "../services/api";
 import useAuthStore from "../store/authStore";
+import ImageUpload from "../components/ImageUpload";
 
 const AddArtworkPage = () => {
   const navigate = useNavigate();
@@ -19,6 +20,9 @@ const AddArtworkPage = () => {
     category: "",
     end_date: "",
   });
+
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [createdArtworkId, setCreatedArtworkId] = useState(null);
 
   // Check if user is allowed to create artwork
   if (!isSeller() && !isAdmin()) {
@@ -42,16 +46,42 @@ const AddArtworkPage = () => {
   // Create artwork mutation
   const createArtworkMutation = useMutation({
     mutationFn: (artworkData) => artworkService.create(artworkData),
-    onSuccess: (response) => {
+    onSuccess: async (response) => {
       const { data: artwork } = response;
-      toast({
-        title: "Artwork created successfully",
-        description: `Your artwork "${artwork.title}" has been listed.`,
-        status: "success",
-        duration: 5000,
-        isClosable: true,
-      });
+      setCreatedArtworkId(artwork.id);
+
+      // If user selected image, upload it
+      if (selectedImage) {
+        try {
+          await artworkService.uploadImage(artwork.id, selectedImage);
+          toast({
+            title: "Artwork created successfully",
+            description: `Your artwork "${artwork.title}" has been listed with image.`,
+            status: "success",
+            duration: 5000,
+            isClosable: true,
+          });
+        } catch (error) {
+          toast({
+            title: "Artwork created but image upload failed",
+            description: error.message,
+            status: "warning",
+            duration: 5000,
+            isClosable: true,
+          });
+        }
+      } else {
+        toast({
+          title: "Artwork created successfully",
+          description: `Your artwork "${artwork.title}" has been listed.`,
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        });
+      }
+
       queryClient.invalidateQueries(["artworks"]);
+      queryClient.invalidateQueries(["my-artworks"]);
       navigate(`/artwork/${artwork.id}`);
     },
     onError: (error) => {
@@ -64,6 +94,13 @@ const AddArtworkPage = () => {
       });
     },
   });
+
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedImage(file);
+    }
+  };
 
   const handleSubmitArtwork = () => {
     if (!newArtwork.title || !newArtwork.secretThreshold) {
@@ -106,6 +143,63 @@ const AddArtworkPage = () => {
             borderColor="rgba(255,255,255,0.1)"
           >
             <VStack spacing={6}>
+              {/* Image Upload Section */}
+              <Box w="full">
+                <Text fontWeight="bold" mb={2} color="white">
+                  Artwork Image
+                </Text>
+                <Text fontSize="sm" color="#94a3b8" mb={3}>
+                  Upload an image of your artwork (JPEG, PNG, or WebP, max 5MB)
+                </Text>
+                <Box
+                  border="2px dashed"
+                  borderColor="rgba(255,255,255,0.2)"
+                  borderRadius="md"
+                  p={4}
+                  textAlign="center"
+                  bg="#0f172a"
+                >
+                  {selectedImage ? (
+                    <VStack spacing={3}>
+                      <Text fontSize="3xl">✅</Text>
+                      <Text color="#94a3b8">{selectedImage.name}</Text>
+                      <Text fontSize="sm" color="#64748b">
+                        {(selectedImage.size / 1024).toFixed(2)} KB
+                      </Text>
+                    </VStack>
+                  ) : (
+                    <VStack spacing={2} py={8}>
+                      <Text fontSize="3xl">🖼️</Text>
+                      <Text color="#94a3b8">Click to select image</Text>
+                      <Text fontSize="sm" color="#64748b">
+                        JPEG, PNG, or WebP (max 5MB)
+                      </Text>
+                    </VStack>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    style={{ display: 'none' }}
+                    id="artwork-image-input"
+                    onChange={handleImageSelect}
+                  />
+                  <Button
+                    as="label"
+                    htmlFor="artwork-image-input"
+                    size="sm"
+                    mt={3}
+                    bg="white"
+                    color="#1e293b"
+                    cursor="pointer"
+                    _hover={{
+                      bg: "#f1f5f9",
+                    }}
+                  >
+                    {selectedImage ? 'Change Image' : 'Select Image'}
+                  </Button>
+                </Box>
+              </Box>
+
               <Box w="full">
                 <Text fontWeight="bold" mb={2} color="white">
                   Title *
