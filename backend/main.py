@@ -9,6 +9,8 @@ from config.settings import settings
 from database import engine
 from models.base import Base
 from routers import artworks, auth, bids, health, users
+from services.auth_service import AuthService
+from services.jwt_service import JWTService
 
 # Initialize Sentry
 sentry_dsn = os.getenv("SENTRY_DSN")
@@ -54,7 +56,60 @@ async def root():
 
 @sio.event
 async def connect(sid, environ):
-    print(f"Client {sid} connected")
+    """
+    Handle WebSocket connection with JWT authentication.
+
+    SECURITY: Validates JWT token before allowing connection.
+    Disconnects client if authentication fails.
+    """
+    # Extract token from query parameters or headers
+    query_string = environ.get("QUERY_STRING", "")
+    token = None
+
+    # Parse query string for token
+    if "token=" in query_string:
+        for param in query_string.split("&"):
+            if param.startswith("token="):
+                token = param.split("=", 1)[1]
+                break
+
+    # If no token in query, try Authorization header
+    if not token:
+        auth_header = environ.get("HTTP_AUTHORIZATION", "")
+        if auth_header.startswith("Bearer "):
+            token = auth_header[7:]
+
+    if not token:
+        print(f"Client {sid} connection rejected: No token provided")
+        await sio.disconnect(sid)
+        return False
+
+    # Verify token (try Auth0 first, then JWT)
+    user_id = None
+    try:
+        # Try Auth0 token
+        auth_user = AuthService.verify_auth0_token(token)
+        if auth_user:
+            user_id = auth_user.sub
+    except Exception:
+        # Try JWT token
+        try:
+            payload = JWTService.verify_token(token)
+            if payload:
+                user_id = payload.get("sub")
+        except Exception:
+            pass
+
+    if not user_id:
+        print(f"Client {sid} connection rejected: Invalid token")
+        await sio.disconnect(sid)
+        return False
+
+    # Store user_id in session for later use
+    async with sio.session(sid) as session:
+        session["user_id"] = user_id
+
+    print(f"Client {sid} connected (user: {user_id})")
 
 
 @sio.event

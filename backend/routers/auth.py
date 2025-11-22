@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models import User
 from schemas import UserCreate, UserResponse
+from utils.auth import get_current_user
 
 router = APIRouter()
 
@@ -35,8 +36,11 @@ async def register_user(user: UserCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/me", response_model=UserResponse)
-async def get_current_user(auth0_sub: str, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.auth0_sub == auth0_sub).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
+async def get_current_user_endpoint(current_user: User = Depends(get_current_user)):
+    """
+    Get the current authenticated user from JWT token.
+
+    SECURITY: User ID is extracted from the Bearer token, not from query parameters.
+    This prevents user impersonation attacks.
+    """
+    return current_user
