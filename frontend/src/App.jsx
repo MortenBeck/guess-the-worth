@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Box, Spinner, Center } from "@chakra-ui/react";
 import useAuthStore from "./store/authStore";
 import socketService from "./services/socket";
+import { userService } from "./services/api";
 import Header from "./components/Header";
 import NotificationSystem from "./components/NotificationSystem";
 import HomePage from "./pages/HomePage";
@@ -29,22 +30,15 @@ function App() {
       if (isAuthenticated && user) {
         try {
           const token = await getAccessTokenSilently();
-
-          setAuth(
-            {
-              id: user.sub,
-              auth0_sub: user.sub,
-              email: user.email,
-              name: user.name,
-              picture: user.picture,
-            },
-            token
-          );
-
           localStorage.setItem("access_token", token);
+
+          // Get user from backend database
+          const { data: backendUser } = await userService.getCurrentUser();
+
+          setAuth(backendUser, token);
           socketService.connect();
         } catch (error) {
-          console.error("Error getting token:", error);
+          console.error("Error getting token or user:", error);
           clearAuth();
         }
       } else if (!isAuthenticated) {
