@@ -17,16 +17,23 @@ RUN python -m venv /app/.venv && \
     /app/.venv/bin/pip install --no-cache-dir --upgrade pip && \
     /app/.venv/bin/pip install --no-cache-dir -r requirements.txt
 
-# Production stage - distroless for security
-FROM gcr.io/distroless/python3-debian12
+# Production stage - slim for compatibility with venv
+FROM python:3.13-slim-bookworm
 
 WORKDIR /app
+
+# Create non-root user for security
+RUN useradd -m -u 1000 appuser && \
+    chown -R appuser:appuser /app
 
 # Copy virtual environment from builder
 COPY --from=builder /app/.venv /app/.venv
 
 # Copy application code
-COPY . .
+COPY --chown=appuser:appuser . .
+
+# Switch to non-root user
+USER appuser
 
 EXPOSE 8000
 
