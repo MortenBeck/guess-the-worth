@@ -84,6 +84,7 @@ export const artworkService = {
   getAll: (params = {}) => api.get("/artworks/", { params }),
   getById: (id) => api.get(`/artworks/${id}`),
   getFeatured: () => api.get("/artworks/", { params: { limit: 6 } }), // Get first 6 as featured
+  getMyArtworks: () => api.get("/artworks/my-artworks"),
   create: (data) => api.post("/artworks/", data),
   uploadImage: (id, file) => {
     const formData = new FormData();
@@ -96,13 +97,14 @@ export const artworkService = {
 
 export const bidService = {
   getByArtwork: (artworkId) => api.get(`/bids/artwork/${artworkId}`),
+  getMyBids: () => api.get("/bids/my-bids"),
   create: (data) => api.post("/bids/", data),
 };
 
 export const userService = {
   getAll: (params = {}) => api.get("/users/", { params }),
   getById: (id) => api.get(`/users/${id}`),
-  getCurrentUser: (auth0Sub) => api.get("/auth/me", { params: { auth0_sub: auth0Sub } }),
+  getCurrentUser: () => api.get("/auth/me"), // Token automatically added by interceptor
   register: (data) => api.post("/auth/register", data),
 };
 

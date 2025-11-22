@@ -1,25 +1,89 @@
 import { useState } from "react";
-import { Box, Container, Heading, Text, Button, VStack, HStack } from "@chakra-ui/react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Box, Container, Heading, Text, Button, VStack, HStack, useToast } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
+import { artworkService } from "../services/api";
+import useAuthStore from "../store/authStore";
 
 const AddArtworkPage = () => {
   const navigate = useNavigate();
+  const toast = useToast();
+  const queryClient = useQueryClient();
+  const { isSeller, isAdmin } = useAuthStore();
+
   const [newArtwork, setNewArtwork] = useState({
     title: "",
     description: "",
+    artist_name: "",
     secretThreshold: "",
     category: "",
-    medium: "",
-    dimensions: "",
-    yearCreated: "",
+    end_date: "",
+  });
+
+  // Check if user is allowed to create artwork
+  if (!isSeller() && !isAdmin()) {
+    return (
+      <Box bg="#0f172a" minH="100vh" color="white">
+        <Container maxW="container.md" py={8}>
+          <Box textAlign="center" p={8}>
+            <Heading size="lg" color="white" mb={4}>
+              Access Denied
+            </Heading>
+            <Text color="#94a3b8" mb={6}>
+              You must be a seller to create artworks.
+            </Text>
+            <Button onClick={() => navigate("/")}>Go Home</Button>
+          </Box>
+        </Container>
+      </Box>
+    );
+  }
+
+  // Create artwork mutation
+  const createArtworkMutation = useMutation({
+    mutationFn: (artworkData) => artworkService.create(artworkData),
+    onSuccess: (response) => {
+      const { data: artwork } = response;
+      toast({
+        title: "Artwork created successfully",
+        description: `Your artwork "${artwork.title}" has been listed.`,
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
+      queryClient.invalidateQueries(["artworks"]);
+      navigate(`/artwork/${artwork.id}`);
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to create artwork",
+        description: error.response?.data?.detail || error.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    },
   });
 
   const handleSubmitArtwork = () => {
-    // Handle artwork submission
-    console.log("Submitting artwork:", newArtwork);
-    // TODO: API call to create artwork
-    // After success, navigate back to seller dashboard
-    navigate("/seller-dashboard");
+    if (!newArtwork.title || !newArtwork.secretThreshold) {
+      toast({
+        title: "Missing required fields",
+        description: "Please fill in title and secret threshold",
+        status: "warning",
+        duration: 3000,
+      });
+      return;
+    }
+
+    createArtworkMutation.mutate({
+      title: newArtwork.title,
+      description: newArtwork.description,
+      artist_name: newArtwork.artist_name,
+      category: newArtwork.category,
+      secret_threshold: parseFloat(newArtwork.secretThreshold),
+      end_date: newArtwork.end_date ? new Date(newArtwork.end_date).toISOString() : null,
+    });
   };
 
   return (
@@ -88,6 +152,50 @@ const AddArtworkPage = () => {
 
               <Box w="full">
                 <Text fontWeight="bold" mb={2} color="white">
+                  Artist Name
+                </Text>
+                <input
+                  style={{
+                    width: "100%",
+                    padding: "12px",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: "6px",
+                    fontSize: "16px",
+                    outline: "none",
+                    backgroundColor: "#0f172a",
+                    color: "white",
+                  }}
+                  value={newArtwork.artist_name}
+                  onChange={(e) =>
+                    setNewArtwork({ ...newArtwork, artist_name: e.target.value })
+                  }
+                  placeholder="Enter artist name"
+                />
+              </Box>
+
+              <Box w="full">
+                <Text fontWeight="bold" mb={2} color="white">
+                  Category
+                </Text>
+                <input
+                  style={{
+                    width: "100%",
+                    padding: "12px",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: "6px",
+                    fontSize: "16px",
+                    outline: "none",
+                    backgroundColor: "#0f172a",
+                    color: "white",
+                  }}
+                  value={newArtwork.category}
+                  onChange={(e) => setNewArtwork({ ...newArtwork, category: e.target.value })}
+                  placeholder="e.g., Painting, Photography, Sculpture"
+                />
+              </Box>
+
+              <Box w="full">
+                <Text fontWeight="bold" mb={2} color="white">
                   Secret Threshold ($) *
                 </Text>
                 <Text fontSize="sm" color="#94a3b8" mb={2}>
@@ -106,6 +214,7 @@ const AddArtworkPage = () => {
                     color: "white",
                   }}
                   type="number"
+                  step="0.01"
                   value={newArtwork.secretThreshold}
                   onChange={(e) =>
                     setNewArtwork({ ...newArtwork, secretThreshold: e.target.value })
@@ -114,100 +223,14 @@ const AddArtworkPage = () => {
                 />
               </Box>
 
-              <Box display="grid" gridTemplateColumns="repeat(2, 1fr)" gap={4} w="full">
-                <Box>
-                  <Text fontWeight="bold" mb={2} color="white">
-                    Category
-                  </Text>
-                  <input
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      borderRadius: "6px",
-                      fontSize: "16px",
-                      outline: "none",
-                      backgroundColor: "#0f172a",
-                      color: "white",
-                    }}
-                    value={newArtwork.category}
-                    onChange={(e) => setNewArtwork({ ...newArtwork, category: e.target.value })}
-                    placeholder="e.g., Painting"
-                  />
-                </Box>
-                <Box>
-                  <Text fontWeight="bold" mb={2} color="white">
-                    Medium
-                  </Text>
-                  <input
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      borderRadius: "6px",
-                      fontSize: "16px",
-                      outline: "none",
-                      backgroundColor: "#0f172a",
-                      color: "white",
-                    }}
-                    value={newArtwork.medium}
-                    onChange={(e) => setNewArtwork({ ...newArtwork, medium: e.target.value })}
-                    placeholder="e.g., Oil on Canvas"
-                  />
-                </Box>
-              </Box>
-
-              <Box display="grid" gridTemplateColumns="repeat(2, 1fr)" gap={4} w="full">
-                <Box>
-                  <Text fontWeight="bold" mb={2} color="white">
-                    Dimensions
-                  </Text>
-                  <input
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      borderRadius: "6px",
-                      fontSize: "16px",
-                      outline: "none",
-                      backgroundColor: "#0f172a",
-                      color: "white",
-                    }}
-                    value={newArtwork.dimensions}
-                    onChange={(e) => setNewArtwork({ ...newArtwork, dimensions: e.target.value })}
-                    placeholder="e.g., 24 x 36 inches"
-                  />
-                </Box>
-                <Box>
-                  <Text fontWeight="bold" mb={2} color="white">
-                    Year Created
-                  </Text>
-                  <input
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      borderRadius: "6px",
-                      fontSize: "16px",
-                      outline: "none",
-                      backgroundColor: "#0f172a",
-                      color: "white",
-                    }}
-                    type="number"
-                    value={newArtwork.yearCreated}
-                    onChange={(e) => setNewArtwork({ ...newArtwork, yearCreated: e.target.value })}
-                    placeholder="2024"
-                  />
-                </Box>
-              </Box>
-
               <Box w="full">
                 <Text fontWeight="bold" mb={2} color="white">
-                  Upload Image
+                  End Date (Optional)
+                </Text>
+                <Text fontSize="sm" color="#94a3b8" mb={2}>
+                  Set when the auction should end
                 </Text>
                 <input
-                  type="file"
-                  accept="image/*"
                   style={{
                     width: "100%",
                     padding: "12px",
@@ -218,6 +241,9 @@ const AddArtworkPage = () => {
                     backgroundColor: "#0f172a",
                     color: "white",
                   }}
+                  type="datetime-local"
+                  value={newArtwork.end_date}
+                  onChange={(e) => setNewArtwork({ ...newArtwork, end_date: e.target.value })}
                 />
               </Box>
 
@@ -242,6 +268,7 @@ const AddArtworkPage = () => {
                   }}
                   transition="all 0.2s"
                   onClick={handleSubmitArtwork}
+                  isLoading={createArtworkMutation.isLoading}
                   isDisabled={!newArtwork.title || !newArtwork.secretThreshold}
                 >
                   List Artwork

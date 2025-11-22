@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Box,
   Container,
@@ -9,8 +10,11 @@ import {
   Image,
   Badge,
   Button,
+  Spinner,
+  Center,
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
+import { artworkService } from "../services/api";
 import placeholderImg from "../assets/placeholder.jpg";
 
 const ArtworksPage = () => {
@@ -19,107 +23,80 @@ const ArtworksPage = () => {
   const [sortBy, setSortBy] = useState("newest");
   const [filterCategory, setFilterCategory] = useState("all");
 
-  // Mock artworks data - replace with actual API call
-  const artworks = [
-    {
-      id: 1,
-      title: "Sunset Dreams",
-      artist: "John Doe",
-      image: placeholderImg,
-      currentBid: 150,
-      minimumBid: 160,
-      totalBids: 12,
-      timeLeft: "2 days 14 hours",
-      status: "active",
-      category: "Painting",
+  // Fetch artworks from API
+  const { data: artworks = [], isLoading, error } = useQuery({
+    queryKey: ["artworks"],
+    queryFn: async () => {
+      const response = await artworkService.getAll();
+      return response.data;
     },
-    {
-      id: 2,
-      title: "Ocean Waves",
-      artist: "Jane Smith",
-      image: placeholderImg,
-      currentBid: 300,
-      minimumBid: 310,
-      totalBids: 8,
-      timeLeft: "5 hours",
-      status: "ending_soon",
-      category: "Painting",
-    },
-    {
-      id: 3,
-      title: "Mountain Peak",
-      artist: "Bob Wilson",
-      image: placeholderImg,
-      currentBid: 450,
-      minimumBid: 460,
-      totalBids: 23,
-      timeLeft: "1 day 3 hours",
-      status: "active",
-      category: "Photography",
-    },
-    {
-      id: 4,
-      title: "City Lights",
-      artist: "Alice Brown",
-      image: placeholderImg,
-      currentBid: 320,
-      minimumBid: 330,
-      totalBids: 15,
-      timeLeft: "3 days 8 hours",
-      status: "active",
-      category: "Digital Art",
-    },
-    {
-      id: 5,
-      title: "Forest Path",
-      artist: "Mike Johnson",
-      image: placeholderImg,
-      currentBid: 200,
-      minimumBid: 210,
-      totalBids: 5,
-      timeLeft: "6 days 12 hours",
-      status: "active",
-      category: "Painting",
-    },
-    {
-      id: 6,
-      title: "Abstract Thoughts",
-      artist: "Sarah Lee",
-      image: placeholderImg,
-      currentBid: 180,
-      minimumBid: 190,
-      totalBids: 9,
-      timeLeft: "12 hours",
-      status: "ending_soon",
-      category: "Abstract",
-    },
-  ];
+    staleTime: 30000, // 30 seconds
+  });
+
+  // Calculate time left for each artwork
+  const calculateTimeLeft = (endDate) => {
+    if (!endDate) return "No end date";
+    const now = new Date();
+    const end = new Date(endDate);
+    const diffMs = end - now;
+
+    if (diffMs <= 0) return "Ended";
+
+    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+    if (days > 0) return `${days} day${days !== 1 ? "s" : ""} ${hours} hour${hours !== 1 ? "s" : ""}`;
+    return `${hours} hour${hours !== 1 ? "s" : ""}`;
+  };
 
   const filteredArtworks = artworks
     .filter((artwork) => {
       const matchesSearch =
         artwork.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        artwork.artist.toLowerCase().includes(searchTerm.toLowerCase());
+        (artwork.artist_name && artwork.artist_name.toLowerCase().includes(searchTerm.toLowerCase()));
       const matchesCategory = filterCategory === "all" || artwork.category === filterCategory;
       return matchesSearch && matchesCategory;
     })
     .sort((a, b) => {
       switch (sortBy) {
         case "price_low":
-          return a.currentBid - b.currentBid;
+          return (a.current_highest_bid || 0) - (b.current_highest_bid || 0);
         case "price_high":
-          return b.currentBid - a.currentBid;
+          return (b.current_highest_bid || 0) - (a.current_highest_bid || 0);
         case "ending_soon":
-          // This would need proper time parsing in a real app
-          return a.status === "ending_soon" ? -1 : 1;
-        case "most_bids":
-          return b.totalBids - a.totalBids;
+          if (!a.end_date) return 1;
+          if (!b.end_date) return -1;
+          return new Date(a.end_date) - new Date(b.end_date);
         default: // newest
           return b.id - a.id;
       }
     });
 
-  const categories = ["all", "Painting", "Photography", "Digital Art", "Abstract", "Sculpture"];
+  // Extract unique categories from artworks
+  const categories = ["all", ...new Set(artworks.map(a => a.category).filter(Boolean))];
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <Center h="100vh" bg="#0f172a">
+        <Spinner size="xl" color="purple.400" thickness="4px" />
+      </Center>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <Center h="100vh" bg="#0f172a">
+        <Box textAlign="center" p={8}>
+          <Text color="red.400" fontSize="xl" mb={4}>
+            Error loading artworks
+          </Text>
+          <Text color="#94a3b8">{error.message}</Text>
+        </Box>
+      </Center>
+    );
+  }
 
   return (
     <Box bg="#0f172a" color="white" minH="100vh" pt={6}>
@@ -241,7 +218,7 @@ const ArtworksPage = () => {
                 onClick={() => navigate(`/artwork/${artwork.id}`)}
               >
                 <Image
-                  src={artwork.image}
+                  src={artwork.image_url || placeholderImg}
                   alt={artwork.title}
                   h="200px"
                   w="full"
@@ -252,14 +229,16 @@ const ArtworksPage = () => {
                   <VStack align="start" spacing={3}>
                     <HStack justify="space-between" w="full">
                       <Badge
-                        colorScheme={artwork.status === "ending_soon" ? "red" : "green"}
+                        colorScheme={artwork.status === "sold" ? "red" : "green"}
                         variant="subtle"
                       >
-                        {artwork.status === "ending_soon" ? "Ending Soon" : "Active"}
+                        {artwork.status === "sold" ? "Sold" : "Active"}
                       </Badge>
-                      <Badge variant="outline" colorScheme="gray">
-                        {artwork.category}
-                      </Badge>
+                      {artwork.category && (
+                        <Badge variant="outline" colorScheme="gray">
+                          {artwork.category}
+                        </Badge>
+                      )}
                     </HStack>
 
                     <Box w="full">
@@ -267,7 +246,7 @@ const ArtworksPage = () => {
                         {artwork.title}
                       </Heading>
                       <Text color="#94a3b8" fontSize="sm">
-                        by {artwork.artist}
+                        by {artwork.artist_name || "Unknown Artist"}
                       </Text>
                     </Box>
 
@@ -277,17 +256,19 @@ const ArtworksPage = () => {
                           Current Bid
                         </Text>
                         <Text fontSize="sm" fontWeight="bold" color="green.400">
-                          ${artwork.currentBid}
+                          ${artwork.current_highest_bid || 0}
                         </Text>
                       </HStack>
-                      <HStack justify="space-between" w="full">
-                        <Text fontSize="xs" color="#94a3b8">
-                          {artwork.totalBids} bid{artwork.totalBids !== 1 ? "s" : ""}
-                        </Text>
-                        <Text fontSize="xs" color="#94a3b8">
-                          {artwork.timeLeft} left
-                        </Text>
-                      </HStack>
+                      {artwork.end_date && (
+                        <HStack justify="space-between" w="full">
+                          <Text fontSize="xs" color="#94a3b8">
+                            Time Left
+                          </Text>
+                          <Text fontSize="xs" color="#94a3b8">
+                            {calculateTimeLeft(artwork.end_date)}
+                          </Text>
+                        </HStack>
+                      )}
                     </VStack>
 
                     <Button
@@ -303,8 +284,9 @@ const ArtworksPage = () => {
                         transform: "translateY(-1px)",
                         boxShadow: "0 4px 15px rgba(99, 102, 241, 0.3)",
                       }}
+                      isDisabled={artwork.status === "sold"}
                     >
-                      Place Bid (Min: ${artwork.minimumBid})
+                      {artwork.status === "sold" ? "Sold" : "Place Bid"}
                     </Button>
                   </VStack>
                 </Box>
