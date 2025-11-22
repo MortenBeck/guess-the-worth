@@ -9,10 +9,11 @@ const port = process.env.PORT || 8080;
 app.use(express.static(path.join(__dirname, 'dist')));
 
 // Handle client-side routing - always return index.html for unknown routes
-app.get('*', (req, res) => {
+app.get('*', (_req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
-app.listen(port, () => {
+// Bind to 0.0.0.0 for Docker containers to accept external connections
+app.listen(port, '0.0.0.0', () => {
   console.log(`Frontend server running on port ${port}`);
 });
