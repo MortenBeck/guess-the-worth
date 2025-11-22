@@ -1,13 +1,17 @@
+import os
+import uuid
 from typing import List
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from PIL import Image
 from sqlalchemy.orm import Session
 
 from database import get_db
 from models import Artwork
 from models.user import User, UserRole
-from schemas import ArtworkCreate, ArtworkResponse
-from utils.auth import get_current_user, require_seller
+from schemas import ArtworkCreate, ArtworkResponse, ArtworkUpdate
+from services.auction_service import AuctionService
+from utils.auth import get_current_user, require_admin, require_seller
 
 router = APIRouter()
 
@@ -62,12 +66,150 @@ async def get_my_artworks(
     return artworks
 
 
-@router.post("/{artwork_id}/upload-image")
-async def upload_artwork_image(
-    artwork_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)
+@router.put("/{artwork_id}", response_model=ArtworkResponse)
+async def update_artwork(
+    artwork_id: int,
+    artwork_update: ArtworkUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
+    """
+    Update artwork details (only owner or admin).
+
+    SECURITY: Only the artwork owner or admin can update artwork details.
+    Sellers cannot update other sellers' artworks.
+    """
     artwork = db.query(Artwork).filter(Artwork.id == artwork_id).first()
     if not artwork:
         raise HTTPException(status_code=404, detail="Artwork not found")
 
-    return {"message": "Image upload endpoint - to be implemented"}
+    # Check ownership
+    if artwork.seller_id != current_user.id and current_user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=403, detail="Not authorized to update this artwork"
+        )
+
+    # Update fields
+    for field, value in artwork_update.dict(exclude_unset=True).items():
+        setattr(artwork, field, value)
+
+    db.commit()
+    db.refresh(artwork)
+    return artwork
+
+
+@router.delete("/{artwork_id}")
+async def delete_artwork(
+    artwork_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Delete artwork (only owner or admin).
+
+    SECURITY: Only the artwork owner or admin can delete artwork.
+    Cannot delete sold artworks to maintain transaction history.
+    """
+    artwork = db.query(Artwork).filter(Artwork.id == artwork_id).first()
+    if not artwork:
+        raise HTTPException(status_code=404, detail="Artwork not found")
+
+    # Check ownership
+    if artwork.seller_id != current_user.id and current_user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=403, detail="Not authorized to delete this artwork"
+        )
+
+    # Check if artwork is sold
+    if artwork.status == "SOLD":
+        raise HTTPException(
+            status_code=400, detail="Cannot delete sold artwork"
+        )
+
+    db.delete(artwork)
+    db.commit()
+    return {"message": "Artwork deleted successfully"}
+
+
+@router.post("/{artwork_id}/upload-image")
+async def upload_artwork_image(
+    artwork_id: int,
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Upload artwork image (only owner or admin).
+
+    SECURITY: Only the artwork owner or admin can upload images.
+    Validates file type and size to prevent abuse.
+    """
+    artwork = db.query(Artwork).filter(Artwork.id == artwork_id).first()
+    if not artwork:
+        raise HTTPException(status_code=404, detail="Artwork not found")
+
+    # Check ownership
+    if artwork.seller_id != current_user.id and current_user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=403, detail="Not authorized to upload image for this artwork"
+        )
+
+    # Validate file type
+    allowed_types = ["image/jpeg", "image/png", "image/webp"]
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid file type. Allowed types: {', '.join(allowed_types)}",
+        )
+
+    # Read file contents
+    contents = await file.read()
+
+    # Validate file size (max 5MB)
+    MAX_SIZE = 5 * 1024 * 1024
+    if len(contents) > MAX_SIZE:
+        raise HTTPException(status_code=400, detail="File too large (max 5MB)")
+
+    # Generate unique filename
+    file_extension = file.filename.split(".")[-1] if file.filename else "jpg"
+    unique_filename = f"{uuid.uuid4()}.{file_extension}"
+
+    # Save to uploads directory
+    upload_dir = "uploads/artworks"
+    os.makedirs(upload_dir, exist_ok=True)
+    file_path = os.path.join(upload_dir, unique_filename)
+
+    # Save file
+    with open(file_path, "wb") as f:
+        f.write(contents)
+
+    # Optional: Resize/optimize image with Pillow
+    try:
+        img = Image.open(file_path)
+        # Resize if too large (max 1200px on longest side)
+        img.thumbnail((1200, 1200))
+        img.save(file_path, optimize=True, quality=85)
+    except Exception as e:
+        print(f"Image optimization failed: {e}")
+        # Continue anyway - image is saved but not optimized
+
+    # Update artwork with image URL
+    artwork.image_url = f"/uploads/artworks/{unique_filename}"
+    db.commit()
+
+    return {"message": "Image uploaded successfully", "image_url": artwork.image_url}
+
+
+@router.post("/expire-auctions")
+async def expire_auctions(
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """
+    Manually trigger auction expiration check (admin only).
+
+    SECURITY: Only admins can trigger this endpoint.
+    Closes all auctions past their end_date.
+    """
+    count = AuctionService.check_expired_auctions(db)
+    return {"message": f"Closed {count} expired auctions"}
