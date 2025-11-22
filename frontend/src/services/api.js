@@ -24,24 +24,66 @@ const createApiClient = () => {
     try {
       const response = await fetch(url, fetchOptions);
 
-      if (response.status === 401) {
-        localStorage.removeItem("access_token");
-        window.location.href = "/login";
-        throw new Error("Unauthorized");
+      // Parse response body (try JSON, fallback to null)
+      let responseData = null;
+      try {
+        responseData = await response.json();
+      } catch {
+        // Response body is not JSON or empty
+        responseData = null;
       }
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        // Create detailed error object
+        const error = new Error(
+          responseData?.detail || `HTTP ${response.status}: ${response.statusText}`
+        );
+        error.status = response.status;
+        error.data = responseData;
+
+        // Handle specific status codes
+        if (response.status === 401) {
+          error.message = "Your session has expired. Please log in again.";
+          localStorage.removeItem("access_token");
+          // Don't redirect immediately - let the component handle it
+        }
+
+        if (response.status === 403) {
+          error.message = responseData?.detail || "You do not have permission to perform this action";
+        }
+
+        if (response.status === 404) {
+          error.message = responseData?.detail || "The requested resource was not found";
+        }
+
+        if (response.status === 400) {
+          error.message = responseData?.detail || "Invalid request. Please check your input.";
+        }
+
+        if (response.status >= 500) {
+          error.message = "Server error. Please try again later.";
+        }
+
+        throw error;
       }
 
-      const data = await response.json();
-      return { data };
+      return { data: responseData };
     } catch (error) {
+      // If error already has a status, it's an HTTP error we already handled
+      if (error.status) {
+        throw error;
+      }
+
       // Handle network errors (backend offline, no internet, etc.)
       if (error instanceof TypeError && error.message === "Failed to fetch") {
-        throw new Error("Unable to connect to server. The service may be temporarily offline.");
+        const networkError = new Error(
+          "Unable to connect to server. Please check your internet connection."
+        );
+        networkError.isNetworkError = true;
+        throw networkError;
       }
-      // Re-throw other errors
+
+      // Re-throw other unexpected errors
       throw error;
     }
   };
@@ -84,6 +126,7 @@ export const artworkService = {
   getAll: (params = {}) => api.get("/artworks/", { params }),
   getById: (id) => api.get(`/artworks/${id}`),
   getFeatured: () => api.get("/artworks/", { params: { limit: 6 } }), // Get first 6 as featured
+  getMyArtworks: () => api.get("/artworks/my-artworks"),
   create: (data) => api.post("/artworks/", data),
   uploadImage: (id, file) => {
     const formData = new FormData();
@@ -96,14 +139,16 @@ export const artworkService = {
 
 export const bidService = {
   getByArtwork: (artworkId) => api.get(`/bids/artwork/${artworkId}`),
+  getMyBids: () => api.get("/bids/my-bids"),
   create: (data) => api.post("/bids/", data),
 };
 
 export const userService = {
   getAll: (params = {}) => api.get("/users/", { params }),
   getById: (id) => api.get(`/users/${id}`),
-  getCurrentUser: (auth0Sub) => api.get("/auth/me", { params: { auth0_sub: auth0Sub } }),
+  getCurrentUser: () => api.get("/auth/me"), // Token automatically added by interceptor
   register: (data) => api.post("/auth/register", data),
+  updateProfile: (data) => api.put("/users/me", data),
 };
 
 export const statsService = {
@@ -141,6 +186,10 @@ export const statsService = {
       };
     }
   },
+
+  getUserStats: () => api.get("/stats/user"),
+
+  getSellerStats: () => api.get("/stats/seller"),
 };
 
 export default api;

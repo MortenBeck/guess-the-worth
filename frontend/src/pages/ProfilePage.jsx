@@ -9,104 +9,106 @@ import {
   HStack,
   Image,
   Badge,
+  Spinner,
+  useToast,
 } from "@chakra-ui/react";
-// Simple custom icons
-const EditIcon = () => <span>✏️</span>;
-const CheckIcon = () => <span>✓</span>;
-const CloseIcon = () => <span>✕</span>;
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { userService, statsService } from "../services/api";
 import useAuthStore from "../store/authStore";
 import placeholderImg from "../assets/placeholder.jpg";
 
+const EditIcon = () => <span>✏️</span>;
+const CheckIcon = () => <span>✓</span>;
+const CloseIcon = () => <span>✕</span>;
+
 const ProfilePage = () => {
-  const { user } = useAuthStore();
+  const { user, updateUser } = useAuthStore();
+  const queryClient = useQueryClient();
+  const toast = useToast();
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    name: user?.name || "",
-    email: user?.email || "",
-    bio: "Art enthusiast and collector with a passion for contemporary works.",
-    location: "New York, NY",
-    website: "https://myartblog.com",
-    phone: "+1 (555) 123-4567",
-  });
-  const [notifications, setNotifications] = useState({
-    bidUpdates: true,
-    auctionReminders: true,
-    newArtworks: false,
-    priceAlerts: true,
-    marketingEmails: false,
+
+  // Fetch current user data
+  const { data: currentUserData, isLoading: userLoading } = useQuery({
+    queryKey: ["current-user"],
+    queryFn: userService.getCurrentUser,
+    staleTime: 60000,
   });
 
-  // Mock user statistics
-  const userStats = {
-    joinDate: "2023-06-15",
-    totalBids: 45,
-    wonAuctions: 8,
-    savedArtworks: 23,
-    rating: 4.8,
-    verificationStatus: "verified",
+  // Fetch user stats
+  const { data: userStatsData, isLoading: statsLoading } = useQuery({
+    queryKey: ["user-stats"],
+    queryFn: statsService.getUserStats,
+    staleTime: 60000,
+  });
+
+  const currentUser = currentUserData?.data || user;
+  const userStats = userStatsData?.data || {
+    active_bids: 0,
+    won_auctions: 0,
+    watchlist: 0,
   };
 
-  const recentActivity = [
-    {
-      id: 1,
-      type: "bid",
-      description: 'Placed bid on "Sunset Dreams"',
-      amount: 175,
-      date: "2024-01-15",
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+  });
+
+  // Update formData when currentUser loads
+  useState(() => {
+    if (currentUser) {
+      setFormData({
+        name: currentUser.name || "",
+        email: currentUser.email || "",
+      });
+    }
+  }, [currentUser]);
+
+  // Update user mutation
+  const updateUserMutation = useMutation({
+    mutationFn: (userData) => userService.updateProfile(userData),
+    onSuccess: (response) => {
+      toast({
+        title: "Profile updated successfully",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      queryClient.invalidateQueries(["current-user"]);
+      // Update auth store with new user data
+      if (response?.data) {
+        updateUser(response.data);
+      }
+      setIsEditing(false);
     },
-    {
-      id: 2,
-      type: "win",
-      description: 'Won auction for "Mountain Peak"',
-      amount: 450,
-      date: "2024-01-10",
+    onError: (error) => {
+      toast({
+        title: "Update failed",
+        description: error.message || "Failed to update profile",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
     },
-    {
-      id: 3,
-      type: "save",
-      description: 'Added "Ocean Waves" to watchlist',
-      date: "2024-01-08",
-    },
-  ];
+  });
+
+  if (userLoading || statsLoading) {
+    return (
+      <Box bg="#0f172a" minH="100vh" color="white" display="flex" alignItems="center" justifyContent="center">
+        <Spinner size="xl" color="#6366f1" />
+      </Box>
+    );
+  }
 
   const handleSave = () => {
-    // Handle profile update
-    // Show success message (replaced toast with console.log for now)
-    console.log("Profile updated successfully");
-    setIsEditing(false);
+    updateUserMutation.mutate(formData);
   };
 
   const handleCancel = () => {
-    // Reset form data
     setFormData({
-      name: user?.name || "",
-      email: user?.email || "",
-      bio: "Art enthusiast and collector with a passion for contemporary works.",
-      location: "New York, NY",
-      website: "https://myartblog.com",
-      phone: "+1 (555) 123-4567",
+      name: currentUser?.name || "",
+      email: currentUser?.email || "",
     });
     setIsEditing(false);
-  };
-
-  const getActivityIcon = (type) => {
-    switch (type) {
-      case "bid":
-        return "🔨";
-      case "win":
-        return "🏆";
-      case "save":
-        return "❤️";
-      default:
-        return "📝";
-    }
-  };
-
-  const handleNotificationChange = (key, value) => {
-    setNotifications((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
   };
 
   return (
@@ -129,21 +131,19 @@ const ProfilePage = () => {
                   w="120px"
                   h="120px"
                   borderRadius="full"
-                  src={user?.picture || placeholderImg}
-                  alt={user?.name}
+                  src={currentUser?.picture || placeholderImg}
+                  alt={currentUser?.name}
                   objectFit="cover"
                 />
                 <VStack spacing={1}>
                   <Heading size="lg" color="text">
-                    {user?.name}
+                    {currentUser?.name}
                   </Heading>
                   <HStack>
                     <Badge colorScheme="primary" textTransform="capitalize">
-                      {user?.role}
+                      {currentUser?.role}
                     </Badge>
-                    <Badge colorScheme="green">{userStats.verificationStatus}</Badge>
                   </HStack>
-                  <Text color="#94a3b8">{formData.location}</Text>
                 </VStack>
 
                 <Button
@@ -152,6 +152,7 @@ const ProfilePage = () => {
                   variant={isEditing ? "outline" : "solid"}
                   size="sm"
                   onClick={isEditing ? handleCancel : () => setIsEditing(true)}
+                  isDisabled={updateUserMutation.isLoading}
                 >
                   {isEditing ? "Cancel" : "Edit Profile"}
                 </Button>
@@ -172,33 +173,27 @@ const ProfilePage = () => {
               </Heading>
               <VStack spacing={3}>
                 <HStack justify="space-between" w="full">
-                  <Text fontSize="sm">Member since</Text>
-                  <Text fontSize="sm" fontWeight="bold">
-                    {new Date(userStats.joinDate).toLocaleDateString()}
+                  <Text fontSize="sm" color="#94a3b8">Member since</Text>
+                  <Text fontSize="sm" fontWeight="bold" color="white">
+                    {new Date(currentUser?.created_at || Date.now()).toLocaleDateString()}
                   </Text>
                 </HStack>
                 <HStack justify="space-between" w="full">
-                  <Text fontSize="sm">Total bids</Text>
-                  <Text fontSize="sm" fontWeight="bold">
-                    {userStats.totalBids}
+                  <Text fontSize="sm" color="#94a3b8">Total bids</Text>
+                  <Text fontSize="sm" fontWeight="bold" color="white">
+                    {userStats.active_bids}
                   </Text>
                 </HStack>
                 <HStack justify="space-between" w="full">
-                  <Text fontSize="sm">Won auctions</Text>
-                  <Text fontSize="sm" fontWeight="bold">
-                    {userStats.wonAuctions}
+                  <Text fontSize="sm" color="#94a3b8">Won auctions</Text>
+                  <Text fontSize="sm" fontWeight="bold" color="white">
+                    {userStats.won_auctions}
                   </Text>
                 </HStack>
                 <HStack justify="space-between" w="full">
-                  <Text fontSize="sm">Saved artworks</Text>
-                  <Text fontSize="sm" fontWeight="bold">
-                    {userStats.savedArtworks}
-                  </Text>
-                </HStack>
-                <HStack justify="space-between" w="full">
-                  <Text fontSize="sm">Rating</Text>
-                  <Text fontSize="sm" fontWeight="bold">
-                    ⭐ {userStats.rating}/5
+                  <Text fontSize="sm" color="#94a3b8">Watchlist</Text>
+                  <Text fontSize="sm" fontWeight="bold" color="white">
+                    {userStats.watchlist}
                   </Text>
                 </HStack>
               </VStack>
@@ -225,6 +220,7 @@ const ProfilePage = () => {
                     colorScheme="green"
                     size="sm"
                     onClick={handleSave}
+                    isLoading={updateUserMutation.isLoading}
                   >
                     Save Changes
                   </Button>
@@ -237,18 +233,19 @@ const ProfilePage = () => {
                   gap={4}
                 >
                   <Box>
-                    <Text fontWeight="bold" mb={2}>
+                    <Text fontWeight="bold" mb={2} color="white">
                       Full Name
                     </Text>
                     <input
                       style={{
                         width: "100%",
                         padding: "8px 12px",
-                        border: "1px solid #e2e8f0",
+                        border: "1px solid rgba(255,255,255,0.2)",
                         borderRadius: "6px",
                         fontSize: "14px",
                         outline: "none",
-                        backgroundColor: isEditing ? "white" : "#f7fafc",
+                        backgroundColor: isEditing ? "#0f172a" : "#1e293b",
+                        color: "white",
                       }}
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -256,18 +253,19 @@ const ProfilePage = () => {
                     />
                   </Box>
                   <Box>
-                    <Text fontWeight="bold" mb={2}>
+                    <Text fontWeight="bold" mb={2} color="white">
                       Email
                     </Text>
                     <input
                       style={{
                         width: "100%",
                         padding: "8px 12px",
-                        border: "1px solid #e2e8f0",
+                        border: "1px solid rgba(255,255,255,0.2)",
                         borderRadius: "6px",
                         fontSize: "14px",
                         outline: "none",
-                        backgroundColor: isEditing ? "white" : "#f7fafc",
+                        backgroundColor: isEditing ? "#0f172a" : "#1e293b",
+                        color: "white",
                       }}
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -277,231 +275,22 @@ const ProfilePage = () => {
                 </Box>
 
                 <Box>
-                  <Text fontWeight="bold" mb={2}>
-                    Bio
+                  <Text fontWeight="bold" mb={2} color="white">
+                    Auth0 ID
                   </Text>
-                  <textarea
-                    style={{
-                      width: "100%",
-                      padding: "8px 12px",
-                      border: "1px solid #e2e8f0",
-                      borderRadius: "6px",
-                      fontSize: "14px",
-                      outline: "none",
-                      minHeight: "80px",
-                      fontFamily: "inherit",
-                      backgroundColor: isEditing ? "white" : "#f7fafc",
-                    }}
-                    value={formData.bio}
-                    onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                    readOnly={!isEditing}
-                    rows={3}
-                  />
-                </Box>
-
-                <Box
-                  display="grid"
-                  gridTemplateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}
-                  gap={4}
-                >
-                  <Box>
-                    <Text fontWeight="bold" mb={2}>
-                      Location
-                    </Text>
-                    <input
-                      style={{
-                        width: "100%",
-                        padding: "8px 12px",
-                        border: "1px solid #e2e8f0",
-                        borderRadius: "6px",
-                        fontSize: "14px",
-                        outline: "none",
-                        backgroundColor: isEditing ? "white" : "#f7fafc",
-                      }}
-                      value={formData.location}
-                      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                      readOnly={!isEditing}
-                    />
-                  </Box>
-                  <Box>
-                    <Text fontWeight="bold" mb={2}>
-                      Phone
-                    </Text>
-                    <input
-                      style={{
-                        width: "100%",
-                        padding: "8px 12px",
-                        border: "1px solid #e2e8f0",
-                        borderRadius: "6px",
-                        fontSize: "14px",
-                        outline: "none",
-                        backgroundColor: isEditing ? "white" : "#f7fafc",
-                      }}
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      readOnly={!isEditing}
-                    />
-                  </Box>
+                  <Text fontSize="sm" color="#94a3b8" fontFamily="monospace">
+                    {currentUser?.auth0_sub || "N/A"}
+                  </Text>
                 </Box>
 
                 <Box>
-                  <Text fontWeight="bold" mb={2}>
-                    Website
+                  <Text fontWeight="bold" mb={2} color="white">
+                    Account Type
                   </Text>
-                  <input
-                    style={{
-                      width: "100%",
-                      padding: "8px 12px",
-                      border: "1px solid #e2e8f0",
-                      borderRadius: "6px",
-                      fontSize: "14px",
-                      outline: "none",
-                      backgroundColor: isEditing ? "white" : "#f7fafc",
-                    }}
-                    value={formData.website}
-                    onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                    readOnly={!isEditing}
-                  />
+                  <Text fontSize="sm" color="#94a3b8" textTransform="capitalize">
+                    {currentUser?.role || "N/A"}
+                  </Text>
                 </Box>
-              </VStack>
-            </Box>
-
-            {/* Notification Preferences */}
-            <Box
-              bg="#1e293b"
-              p={6}
-              borderRadius="lg"
-              boxShadow="sm"
-              border="1px"
-              borderColor="rgba(255,255,255,0.1)"
-            >
-              <Heading size="md" color="text" mb={4}>
-                Notification Preferences
-              </Heading>
-              <VStack spacing={4} align="stretch">
-                <HStack justify="space-between">
-                  <VStack align="start" spacing={0}>
-                    <Text fontWeight="medium">Bid Updates</Text>
-                    <Text fontSize="sm" color="#94a3b8">
-                      Get notified when you're outbid
-                    </Text>
-                  </VStack>
-                  <Button
-                    size="sm"
-                    colorScheme={notifications.bidUpdates ? "green" : "gray"}
-                    onClick={() =>
-                      handleNotificationChange("bidUpdates", !notifications.bidUpdates)
-                    }
-                  >
-                    {notifications.bidUpdates ? "On" : "Off"}
-                  </Button>
-                </HStack>
-
-                <HStack justify="space-between">
-                  <VStack align="start" spacing={0}>
-                    <Text fontWeight="medium">Auction Reminders</Text>
-                    <Text fontSize="sm" color="#94a3b8">
-                      Reminders before auctions end
-                    </Text>
-                  </VStack>
-                  <Button
-                    size="sm"
-                    colorScheme={notifications.auctionReminders ? "green" : "gray"}
-                    onClick={() =>
-                      handleNotificationChange("auctionReminders", !notifications.auctionReminders)
-                    }
-                  >
-                    {notifications.auctionReminders ? "On" : "Off"}
-                  </Button>
-                </HStack>
-
-                <HStack justify="space-between">
-                  <VStack align="start" spacing={0}>
-                    <Text fontWeight="medium">New Artworks</Text>
-                    <Text fontSize="sm" color="#94a3b8">
-                      Notify when new artworks are added
-                    </Text>
-                  </VStack>
-                  <Button
-                    size="sm"
-                    colorScheme={notifications.newArtworks ? "green" : "gray"}
-                    onClick={() =>
-                      handleNotificationChange("newArtworks", !notifications.newArtworks)
-                    }
-                  >
-                    {notifications.newArtworks ? "On" : "Off"}
-                  </Button>
-                </HStack>
-
-                <HStack justify="space-between">
-                  <VStack align="start" spacing={0}>
-                    <Text fontWeight="medium">Price Alerts</Text>
-                    <Text fontSize="sm" color="#94a3b8">
-                      Alert when watched items hit target price
-                    </Text>
-                  </VStack>
-                  <Button
-                    size="sm"
-                    colorScheme={notifications.priceAlerts ? "green" : "gray"}
-                    onClick={() =>
-                      handleNotificationChange("priceAlerts", !notifications.priceAlerts)
-                    }
-                  >
-                    {notifications.priceAlerts ? "On" : "Off"}
-                  </Button>
-                </HStack>
-
-                <HStack justify="space-between">
-                  <VStack align="start" spacing={0}>
-                    <Text fontWeight="medium">Marketing Emails</Text>
-                    <Text fontSize="sm" color="#94a3b8">
-                      Receive promotional emails
-                    </Text>
-                  </VStack>
-                  <Button
-                    size="sm"
-                    colorScheme={notifications.marketingEmails ? "green" : "gray"}
-                    onClick={() =>
-                      handleNotificationChange("marketingEmails", !notifications.marketingEmails)
-                    }
-                  >
-                    {notifications.marketingEmails ? "On" : "Off"}
-                  </Button>
-                </HStack>
-              </VStack>
-            </Box>
-
-            {/* Recent Activity */}
-            <Box
-              bg="#1e293b"
-              p={6}
-              borderRadius="lg"
-              boxShadow="sm"
-              border="1px"
-              borderColor="rgba(255,255,255,0.1)"
-            >
-              <Heading size="md" color="text" mb={4}>
-                Recent Activity
-              </Heading>
-              <VStack spacing={3} align="stretch">
-                {recentActivity.map((activity) => (
-                  <HStack key={activity.id} spacing={3} p={3} bg="gray.50" borderRadius="md">
-                    <Text fontSize="lg">{getActivityIcon(activity.type)}</Text>
-                    <VStack align="start" spacing={0} flex={1}>
-                      <Text fontSize="sm" fontWeight="medium">
-                        {activity.description}
-                      </Text>
-                      <Text fontSize="xs" color="#94a3b8">
-                        {new Date(activity.date).toLocaleDateString()}
-                      </Text>
-                    </VStack>
-                    {activity.amount && (
-                      <Text fontSize="sm" fontWeight="bold" color="primary">
-                        ${activity.amount}
-                      </Text>
-                    )}
-                  </HStack>
-                ))}
               </VStack>
             </Box>
 
@@ -518,16 +307,9 @@ const ProfilePage = () => {
                 Account Settings
               </Heading>
               <VStack spacing={3} align="stretch">
-                <Button variant="outline" colorScheme="primary">
-                  Change Password
-                </Button>
-                <Button variant="outline" colorScheme="yellow">
-                  Download My Data
-                </Button>
-                <Box h="1px" bg="rgba(255,255,255,0.1)" />
-                <Button variant="outline" colorScheme="red">
-                  Delete Account
-                </Button>
+                <Text fontSize="sm" color="#94a3b8">
+                  Additional account management features will be available soon.
+                </Text>
               </VStack>
             </Box>
           </VStack>

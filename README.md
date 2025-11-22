@@ -21,11 +21,44 @@ docker-compose up
 ```
 
 ### Environment Setup
-Create `.env` files in `backend/` and `frontend/` directories with:
-- Database credentials
-- Auth0 credentials (domain, client ID, client secret)
-- Stripe API keys
-- JWT secret key
+
+**IMPORTANT**: You must configure environment variables before running the application.
+
+#### Backend Environment Setup
+
+1. **Copy the example environment file**:
+   ```bash
+   cp backend/.env.example backend/.env
+   ```
+
+2. **Edit `backend/.env` and fill in the required values**:
+   - `DATABASE_URL`: PostgreSQL connection string (default works for Docker)
+   - `JWT_SECRET_KEY`: Generate using `openssl rand -hex 32`
+   - `AUTH0_DOMAIN`: Your Auth0 tenant domain (e.g., `your-tenant.auth0.com`)
+   - `AUTH0_CLIENT_ID`: Get from [Auth0 Dashboard](https://manage.auth0.com/)
+   - `AUTH0_CLIENT_SECRET`: Get from [Auth0 Dashboard](https://manage.auth0.com/)
+   - `AUTH0_AUDIENCE`: Your API identifier (e.g., `https://api.guesstheworth.com`)
+   - `STRIPE_SECRET_KEY`: (Optional) Get from [Stripe Dashboard](https://dashboard.stripe.com/apikeys)
+
+3. **Generate a secure JWT secret**:
+   ```bash
+   openssl rand -hex 32
+   ```
+
+#### Frontend Environment Setup
+
+1. **Copy the example environment file**:
+   ```bash
+   cp frontend/.env.example frontend/.env
+   ```
+
+2. **Edit `frontend/.env` and fill in the required values**:
+   - `VITE_AUTH0_DOMAIN`: Same as backend `AUTH0_DOMAIN`
+   - `VITE_AUTH0_CLIENT_ID`: Same as backend `AUTH0_CLIENT_ID`
+   - `VITE_AUTH0_AUDIENCE`: Same as backend `AUTH0_AUDIENCE`
+   - `VITE_API_BASE_URL`: `http://localhost:8000` (or your backend URL)
+
+**Note**: The `.env` files are gitignored and will not be committed to the repository. See `.env.example` files for all available configuration options.
 
 ---
 
@@ -1273,6 +1306,3 @@ main (production)
 ---
 
 **Last Updated**: 2025-10-30
-
-
-testing 1

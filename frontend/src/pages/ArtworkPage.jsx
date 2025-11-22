@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Box,
   Container,
@@ -9,10 +10,15 @@ import {
   HStack,
   Image,
   Badge,
+  Spinner,
+  Center,
+  useToast,
 } from "@chakra-ui/react";
 import { useParams } from "react-router-dom";
+import { artworkService, bidService } from "../services/api";
 import useAuthStore from "../store/authStore";
 import useFavoritesStore from "../store/favoritesStore";
+import { useRealtimeBids } from "../hooks/useRealtimeBids";
 import placeholderImg from "../assets/placeholder.jpg";
 
 const ArtworkPage = () => {
@@ -20,51 +26,132 @@ const ArtworkPage = () => {
   const { isAuthenticated } = useAuthStore();
   const { toggleFavorite, isFavorite } = useFavoritesStore();
   const [bidAmount, setBidAmount] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const toast = useToast();
+  const queryClient = useQueryClient();
 
-  // Mock artwork data - replace with actual API call
-  const artwork = {
-    id: parseInt(id),
-    title: "Sunset Dreams",
-    artist: "John Doe",
-    description:
-      "A beautiful painting capturing the essence of a perfect sunset over the mountains. This piece represents the artist's journey through different emotional landscapes.",
-    image: placeholderImg,
-    currentBid: 150,
-    minimumBid: 160,
-    totalBids: 23,
-    timeLeft: "2 days 14 hours",
-    status: "active",
-    category: "Painting",
-    dimensions: "24' x 36'",
-    medium: "Oil on Canvas",
-    yearCreated: 2023,
-    seller: {
-      name: "John Doe",
-      avatar: placeholderImg,
-      rating: 4.8,
-      totalSales: 12,
+  // Enable real-time bid updates for this artwork
+  useRealtimeBids(id);
+
+  // Fetch artwork details
+  const { data: artwork, isLoading: artworkLoading, error: artworkError } = useQuery({
+    queryKey: ["artwork", id],
+    queryFn: async () => {
+      const response = await artworkService.getById(id);
+      return response.data;
     },
-  };
+    staleTime: 10000,
+  });
 
-  const recentBids = [
-    { id: 1, bidder: "Anonymous", amount: 150, timestamp: "2 minutes ago" },
-    { id: 2, bidder: "Art Lover", amount: 140, timestamp: "5 minutes ago" },
-    { id: 3, bidder: "Anonymous", amount: 130, timestamp: "12 minutes ago" },
-  ];
+  // Fetch recent bids
+  const { data: recentBids = [], isLoading: bidsLoading } = useQuery({
+    queryKey: ["bids", id],
+    queryFn: async () => {
+      const response = await bidService.getByArtwork(id);
+      return response.data;
+    },
+    staleTime: 5000,
+  });
+
+  // Place bid mutation
+  const placeBidMutation = useMutation({
+    mutationFn: (amount) => bidService.create({
+      artwork_id: parseInt(id),
+      amount: parseFloat(amount),
+    }),
+    onSuccess: (response) => {
+      const { data: bid } = response;
+      toast({
+        title: bid.is_winning ? "Congratulations! You won!" : "Bid placed successfully",
+        description: bid.is_winning
+          ? `Your bid of $${bid.amount} met the threshold!`
+          : `Your bid of $${bid.amount} has been recorded.`,
+        status: bid.is_winning ? "success" : "info",
+        duration: 5000,
+        isClosable: true,
+      });
+
+      // Refresh artwork and bids
+      queryClient.invalidateQueries(["artwork", id]);
+      queryClient.invalidateQueries(["bids", id]);
+
+      setBidAmount("");
+    },
+    onError: (error) => {
+      toast({
+        title: "Bid failed",
+        description: error.response?.data?.detail || error.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    },
+  });
 
   const handleBidSubmit = async () => {
-    if (!bidAmount || bidAmount < artwork.minimumBid) return;
+    if (!bidAmount || parseFloat(bidAmount) <= 0) {
+      toast({
+        title: "Invalid bid amount",
+        description: "Please enter a valid bid amount",
+        status: "warning",
+        duration: 3000,
+      });
+      return;
+    }
 
-    setIsSubmitting(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setBidAmount("");
-      // Show success notification
-    }, 1000);
+    placeBidMutation.mutate(bidAmount);
   };
+
+  // Calculate time left
+  const calculateTimeLeft = (endDate) => {
+    if (!endDate) return "No end date";
+    const now = new Date();
+    const end = new Date(endDate);
+    const diffMs = end - now;
+
+    if (diffMs <= 0) return "Ended";
+
+    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+    if (days > 0) return `${days} day${days !== 1 ? "s" : ""} ${hours} hour${hours !== 1 ? "s" : ""}`;
+    return `${hours} hour${hours !== 1 ? "s" : ""}`;
+  };
+
+  // Loading state
+  if (artworkLoading || bidsLoading) {
+    return (
+      <Center h="100vh" bg="#0f172a">
+        <Spinner size="xl" color="purple.400" thickness="4px" />
+      </Center>
+    );
+  }
+
+  // Error state
+  if (artworkError) {
+    return (
+      <Center h="100vh" bg="#0f172a">
+        <Box textAlign="center" p={8}>
+          <Text color="red.400" fontSize="xl" mb={4}>
+            Error loading artwork
+          </Text>
+          <Text color="#94a3b8">{artworkError.message}</Text>
+        </Box>
+      </Center>
+    );
+  }
+
+  // Not found state
+  if (!artwork) {
+    return (
+      <Center h="100vh" bg="#0f172a">
+        <Box textAlign="center" p={8}>
+          <Text color="#94a3b8" fontSize="xl">
+            Artwork not found
+          </Text>
+        </Box>
+      </Center>
+    );
+  }
 
   return (
     <Box bg="#0f172a" minH="100vh" color="white">
@@ -73,7 +160,7 @@ const ArtworkPage = () => {
           {/* Left Column - Artwork Details */}
           <VStack spacing={6} align="stretch">
             <Image
-              src={artwork.image}
+              src={artwork.image_url || placeholderImg}
               alt={artwork.title}
               w="full"
               h="400px"
@@ -97,7 +184,7 @@ const ArtworkPage = () => {
                         {artwork.title}
                       </Heading>
                       <Text color="#94a3b8" fontSize="lg">
-                        by {artwork.artist}
+                        by {artwork.artist_name || "Unknown Artist"}
                       </Text>
                     </VStack>
                     {isAuthenticated && (
@@ -114,34 +201,26 @@ const ArtworkPage = () => {
                   </HStack>
                 </Box>
 
-                <Text color="#94a3b8">{artwork.description}</Text>
+                <Text color="#94a3b8">{artwork.description || "No description available."}</Text>
 
                 <Box h="1px" bg="rgba(255,255,255,0.1)" />
 
                 <Box display="grid" gridTemplateColumns="repeat(2, 1fr)" gap={4}>
+                  {artwork.category && (
+                    <Box>
+                      <Text fontWeight="bold" color="text">
+                        Category
+                      </Text>
+                      <Text color="#94a3b8">{artwork.category}</Text>
+                    </Box>
+                  )}
                   <Box>
                     <Text fontWeight="bold" color="text">
-                      Category
+                      Status
                     </Text>
-                    <Text color="#94a3b8">{artwork.category}</Text>
-                  </Box>
-                  <Box>
-                    <Text fontWeight="bold" color="text">
-                      Medium
+                    <Text color="#94a3b8" textTransform="capitalize">
+                      {artwork.status}
                     </Text>
-                    <Text color="#94a3b8">{artwork.medium}</Text>
-                  </Box>
-                  <Box>
-                    <Text fontWeight="bold" color="text">
-                      Dimensions
-                    </Text>
-                    <Text color="#94a3b8">{artwork.dimensions}</Text>
-                  </Box>
-                  <Box>
-                    <Text fontWeight="bold" color="text">
-                      Year
-                    </Text>
-                    <Text color="#94a3b8">{artwork.yearCreated}</Text>
                   </Box>
                 </Box>
               </VStack>
@@ -163,8 +242,8 @@ const ArtworkPage = () => {
                   <Heading size="md" color="text">
                     Current Auction
                   </Heading>
-                  <Badge colorScheme={artwork.status === "ending_soon" ? "red" : "green"}>
-                    {artwork.status === "ending_soon" ? "Ending Soon" : "Active"}
+                  <Badge colorScheme={artwork.status === "sold" ? "red" : "green"}>
+                    {artwork.status === "sold" ? "Sold" : "Active"}
                   </Badge>
                 </HStack>
 
@@ -173,7 +252,7 @@ const ArtworkPage = () => {
                     Current Highest Bid
                   </Text>
                   <Text fontSize="2xl" fontWeight="bold" color="primary">
-                    ${artwork.currentBid}
+                    ${artwork.current_highest_bid || 0}
                   </Text>
                 </Box>
 
@@ -182,19 +261,34 @@ const ArtworkPage = () => {
                     <Text fontWeight="bold" color="text">
                       Total Bids
                     </Text>
-                    <Text color="#94a3b8">{artwork.totalBids}</Text>
+                    <Text color="#94a3b8">{recentBids.length}</Text>
                   </Box>
-                  <Box>
-                    <Text fontWeight="bold" color="text">
-                      Time Left
-                    </Text>
-                    <Text color="#94a3b8">{artwork.timeLeft}</Text>
-                  </Box>
+                  {artwork.end_date && (
+                    <Box>
+                      <Text fontWeight="bold" color="text">
+                        Time Left
+                      </Text>
+                      <Text color="#94a3b8">{calculateTimeLeft(artwork.end_date)}</Text>
+                    </Box>
+                  )}
                 </Box>
 
                 <Box h="1px" bg="rgba(255,255,255,0.1)" />
 
-                {isAuthenticated ? (
+                {artwork.status === "sold" ? (
+                  <Box
+                    bg="rgba(239, 68, 68, 0.1)"
+                    border="1px"
+                    borderColor="rgba(239, 68, 68, 0.3)"
+                    borderRadius="md"
+                    p={4}
+                  >
+                    <HStack>
+                      <Text mr={2}>🔒</Text>
+                      <Text color="rgb(252, 165, 165)">This artwork has been sold</Text>
+                    </HStack>
+                  </Box>
+                ) : isAuthenticated ? (
                   <VStack spacing={4}>
                     <Box w="full">
                       <Text color="text" mb={2} fontWeight="medium">
@@ -212,10 +306,10 @@ const ArtworkPage = () => {
                           color: "white",
                         }}
                         type="number"
-                        placeholder={`Minimum $${artwork.minimumBid}`}
+                        step="0.01"
+                        placeholder="Enter your bid amount"
                         value={bidAmount}
                         onChange={(e) => setBidAmount(e.target.value)}
-                        min={artwork.minimumBid}
                       />
                     </Box>
 
@@ -225,8 +319,8 @@ const ArtworkPage = () => {
                       size="lg"
                       w="full"
                       onClick={handleBidSubmit}
-                      isLoading={isSubmitting}
-                      isDisabled={!bidAmount || bidAmount < artwork.minimumBid}
+                      isLoading={placeBidMutation.isLoading}
+                      isDisabled={!bidAmount || parseFloat(bidAmount) <= 0}
                       _hover={{
                         bg: "#f1f5f9",
                         transform: "translateY(-1px)",
@@ -243,7 +337,7 @@ const ArtworkPage = () => {
                     </Button>
 
                     <Text fontSize="sm" color="#94a3b8" textAlign="center">
-                      Minimum bid: ${artwork.minimumBid}
+                      Enter any amount to place your bid
                     </Text>
                   </VStack>
                 ) : (
@@ -263,47 +357,6 @@ const ArtworkPage = () => {
               </VStack>
             </Box>
 
-            {/* Seller Info */}
-            <Box
-              bg="#1e293b"
-              p={6}
-              borderRadius="lg"
-              boxShadow="sm"
-              border="1px"
-              borderColor="rgba(255,255,255,0.1)"
-            >
-              <VStack spacing={4} align="stretch">
-                <Heading size="md" color="text">
-                  Seller Information
-                </Heading>
-                <HStack spacing={3}>
-                  <Image
-                    src={artwork.seller.avatar}
-                    alt={artwork.seller.name}
-                    w="40px"
-                    h="40px"
-                    borderRadius="full"
-                  />
-                  <VStack align="start" spacing={1}>
-                    <Text fontWeight="bold" color="text">
-                      {artwork.seller.name}
-                    </Text>
-                    <HStack>
-                      <Text fontSize="sm" color="#94a3b8">
-                        Rating: {artwork.seller.rating}/5
-                      </Text>
-                      <Text fontSize="sm" color="#94a3b8">
-                        •
-                      </Text>
-                      <Text fontSize="sm" color="#94a3b8">
-                        {artwork.seller.totalSales} sales
-                      </Text>
-                    </HStack>
-                  </VStack>
-                </HStack>
-              </VStack>
-            </Box>
-
             {/* Recent Bids */}
             <Box
               bg="#1e293b"
@@ -315,31 +368,44 @@ const ArtworkPage = () => {
             >
               <VStack spacing={4} align="stretch">
                 <Heading size="md" color="text">
-                  Recent Bids
+                  Recent Bids ({recentBids.length})
                 </Heading>
-                <VStack spacing={2} align="stretch">
-                  {recentBids.map((bid) => (
-                    <HStack
-                      key={bid.id}
-                      justify="space-between"
-                      p={2}
-                      bg="rgba(255,255,255,0.05)"
-                      borderRadius="md"
-                    >
-                      <VStack align="start" spacing={0}>
-                        <Text fontWeight="bold" fontSize="sm">
-                          {bid.bidder}
-                        </Text>
-                        <Text fontSize="xs" color="#94a3b8">
-                          {bid.timestamp}
-                        </Text>
-                      </VStack>
-                      <Text fontWeight="bold" color="primary">
-                        ${bid.amount}
-                      </Text>
-                    </HStack>
-                  ))}
-                </VStack>
+                {recentBids.length > 0 ? (
+                  <VStack spacing={2} align="stretch">
+                    {recentBids.slice(0, 10).map((bid) => (
+                      <HStack
+                        key={bid.id}
+                        justify="space-between"
+                        p={2}
+                        bg="rgba(255,255,255,0.05)"
+                        borderRadius="md"
+                      >
+                        <VStack align="start" spacing={0}>
+                          <Text fontWeight="bold" fontSize="sm">
+                            Bid #{bid.id}
+                          </Text>
+                          <Text fontSize="xs" color="#94a3b8">
+                            {new Date(bid.bid_time).toLocaleString()}
+                          </Text>
+                        </VStack>
+                        <VStack align="end" spacing={0}>
+                          <Text fontWeight="bold" color="primary">
+                            ${bid.amount}
+                          </Text>
+                          {bid.is_winning && (
+                            <Badge colorScheme="green" fontSize="xs">
+                              Winning
+                            </Badge>
+                          )}
+                        </VStack>
+                      </HStack>
+                    ))}
+                  </VStack>
+                ) : (
+                  <Text color="#94a3b8" textAlign="center" py={4}>
+                    No bids yet. Be the first to bid!
+                  </Text>
+                )}
               </VStack>
             </Box>
           </VStack>
