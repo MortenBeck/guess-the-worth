@@ -64,10 +64,10 @@ RUN npm install -g npm@latest
 RUN chown -R node:node /app
 
 # Copy production dependencies from dependencies stage
-COPY --from=dependencies /app/node_modules ./node_modules
+COPY --chown=node:node --from=dependencies /app/node_modules ./node_modules
 
 # Copy built files from builder
-COPY --from=builder /app/dist ./dist
+COPY --chown=node:node --from=builder /app/dist ./dist
 
 # Copy server file
 COPY --chown=node:node server.cjs ./
