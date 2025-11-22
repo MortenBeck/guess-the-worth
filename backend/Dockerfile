@@ -22,6 +22,9 @@ FROM python:3.13-slim-bookworm
 
 WORKDIR /app
 
+# Upgrade system pip to fix CVE-2025-8869
+RUN pip install --no-cache-dir --upgrade pip==25.3
+
 # Create non-root user for security
 RUN useradd -m -u 1000 appuser && \
     chown -R appuser:appuser /app
