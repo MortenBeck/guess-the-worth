@@ -1,11 +1,12 @@
 import { Box, Button, HStack, Text, Container, VStack } from "@chakra-ui/react";
 import { useAuth0 } from "@auth0/auth0-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 
 const Header = () => {
   const { loginWithRedirect, logout, isAuthenticated, user } = useAuth0();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const publicNavItems = [
@@ -25,10 +26,16 @@ const Header = () => {
 
   const handleNavClick = (path) => {
     if (path.startsWith("#")) {
-      // Handle anchor links - scroll to section
-      const element = document.querySelector(path);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth" });
+      // Handle anchor links
+      if (location.pathname === "/") {
+        // Already on homepage, just scroll
+        const element = document.querySelector(path);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
+      } else {
+        // Navigate to homepage with scroll target
+        navigate("/", { state: { scrollTo: path } });
       }
     } else {
       navigate(path);
@@ -62,7 +69,7 @@ const Header = () => {
           </Box>
 
           {/* Navigation - Center */}
-          <Box flex="1" display="flex" justifyContent="center">
+          <Box as="nav" flex="1" display="flex" justifyContent="center" data-testid="main-nav">
             <HStack spacing={8}>
               {navItems.map((item) => (
                 <Text
@@ -78,6 +85,7 @@ const Header = () => {
                   }}
                   transition="all 0.2s"
                   onClick={() => handleNavClick(item.path)}
+                  data-testid={`nav-${item.label.toLowerCase().replace(/ /g, '-')}`}
                 >
                   {item.label}
                 </Text>
