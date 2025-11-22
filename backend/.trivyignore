@@ -83,3 +83,44 @@ CVE-2023-50495
 # Impact: System XML parser library in Debian 12
 # Note: DoS risk requiring malicious XML input
 CVE-2025-59375
+
+# ============================================================================
+# PAM (Pluggable Authentication Modules) Vulnerabilities
+# Base OS authentication libraries - awaiting Debian upstream fixes
+# ============================================================================
+
+# CVE-2025-6020 (HIGH)
+# Package: libpam-modules, libpam-modules-bin, libpam-runtime, libpam0g
+# Issue: Linux-pam directory traversal vulnerability
+# Status: affected (awaiting Debian patch)
+# Impact: System PAM libraries in Debian 12
+# Note: Affects authentication system, but requires local access
+CVE-2025-6020
+
+# CVE-2024-10041 (MEDIUM)
+# Package: libpam-modules, libpam-modules-bin, libpam-runtime, libpam0g
+# Issue: libpam vulnerable to read hashed password
+# Status: will_not_fix (design limitation)
+# Impact: System PAM libraries in Debian 12
+CVE-2024-10041
+
+# CVE-2024-22365 (MEDIUM)
+# Package: libpam-modules, libpam-modules-bin, libpam-runtime, libpam0g
+# Issue: Allows unprivileged user to block another user namespace
+# Status: affected (awaiting Debian patch)
+# Impact: System PAM libraries in Debian 12
+# Note: Requires local user access to exploit
+CVE-2024-22365
+
+# ============================================================================
+# GnuPG Vulnerabilities
+# Base OS package management tools - awaiting Debian upstream fixes
+# ============================================================================
+
+# CVE-2025-30258 (MEDIUM)
+# Package: gpgv
+# Issue: Verification DoS due to malicious subkey in keyring
+# Status: affected (awaiting Debian patch)
+# Impact: GPG verification tool in Debian 12
+# Note: DoS only, requires malicious keyring - low risk for containerized apps
+CVE-2025-30258

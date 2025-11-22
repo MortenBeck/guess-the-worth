@@ -191,6 +191,7 @@ jobs:
           format: 'table'
           severity: 'MEDIUM,HIGH,CRITICAL'
           exit-code: '1'
+          trivyignores: 'frontend/.trivyignore'
 
       - name: Run Trivy vulnerability scanner (SARIF output)
         uses: aquasecurity/trivy-action@master
@@ -200,6 +201,7 @@ jobs:
           output: 'trivy-results.sarif'
           severity: 'MEDIUM,HIGH,CRITICAL'
           exit-code: '0'
+          trivyignores: 'frontend/.trivyignore'
 
       - name: Upload Trivy results to GitHub Security
         if: always()

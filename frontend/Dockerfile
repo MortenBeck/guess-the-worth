@@ -52,10 +52,16 @@ COPY package*.json ./
 # Install only production dependencies
 RUN npm ci --only=production
 
-# Production stage - distroless for security
-FROM gcr.io/distroless/nodejs20-debian12
+# Production stage - alpine for compatibility
+FROM node:20-alpine
 
 WORKDIR /app
+
+# Upgrade npm to fix CVE-2024-21538 (cross-spawn) and CVE-2025-64756 (glob)
+RUN npm install -g npm@latest
+
+# Create non-root user for security (use node user that already exists in alpine)
+RUN chown -R node:node /app
 
 # Copy production dependencies from dependencies stage
 COPY --from=dependencies /app/node_modules ./node_modules
@@ -64,10 +70,13 @@ COPY --from=dependencies /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 
 # Copy server file
-COPY server.cjs ./
+COPY --chown=node:node server.cjs ./
+
+# Switch to non-root user
+USER node
 
 # Expose port (Azure will override this with PORT env var)
 EXPOSE 8080
 
 # Start the Express server
-CMD ["server.cjs"]
+CMD ["node", "server.cjs"]
