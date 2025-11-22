@@ -111,3 +111,16 @@ CVE-2024-10041
 # Impact: System PAM libraries in Debian 12
 # Note: Requires local user access to exploit
 CVE-2024-22365
+
+# ============================================================================
+# GnuPG Vulnerabilities
+# Base OS package management tools - awaiting Debian upstream fixes
+# ============================================================================
+
+# CVE-2025-30258 (MEDIUM)
+# Package: gpgv
+# Issue: Verification DoS due to malicious subkey in keyring
+# Status: affected (awaiting Debian patch)
+# Impact: GPG verification tool in Debian 12
+# Note: DoS only, requires malicious keyring - low risk for containerized apps
+CVE-2025-30258
