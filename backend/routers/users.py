@@ -17,10 +17,37 @@ security = HTTPBearer(auto_error=False)
 @router.get("/", response_model=List[UserResponse])
 async def get_users(
     skip: int = 0,
-    limit: int = 100,
+    limit: int = 20,
     db: Session = Depends(get_db),
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
 ):
+    """
+    Get list of users with pagination.
+
+    Query parameters:
+    - skip: Number of records to skip (default: 0)
+    - limit: Maximum number of records to return (default: 20, max: 100)
+    """
+    # Validate pagination parameters
+    if skip < 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Skip parameter must be non-negative"
+        )
+
+    if limit < 1:
+        raise HTTPException(
+            status_code=400,
+            detail="Limit parameter must be at least 1"
+        )
+
+    # Enforce maximum limit to prevent resource exhaustion
+    if limit > 100:
+        raise HTTPException(
+            status_code=400,
+            detail="Limit cannot exceed 100"
+        )
+
     # If credentials provided, validate them
     if credentials:
         # This will raise HTTPException if token is invalid

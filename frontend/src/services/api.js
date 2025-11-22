@@ -24,24 +24,66 @@ const createApiClient = () => {
     try {
       const response = await fetch(url, fetchOptions);
 
-      if (response.status === 401) {
-        localStorage.removeItem("access_token");
-        window.location.href = "/login";
-        throw new Error("Unauthorized");
+      // Parse response body (try JSON, fallback to null)
+      let responseData = null;
+      try {
+        responseData = await response.json();
+      } catch {
+        // Response body is not JSON or empty
+        responseData = null;
       }
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        // Create detailed error object
+        const error = new Error(
+          responseData?.detail || `HTTP ${response.status}: ${response.statusText}`
+        );
+        error.status = response.status;
+        error.data = responseData;
+
+        // Handle specific status codes
+        if (response.status === 401) {
+          error.message = "Your session has expired. Please log in again.";
+          localStorage.removeItem("access_token");
+          // Don't redirect immediately - let the component handle it
+        }
+
+        if (response.status === 403) {
+          error.message = responseData?.detail || "You do not have permission to perform this action";
+        }
+
+        if (response.status === 404) {
+          error.message = responseData?.detail || "The requested resource was not found";
+        }
+
+        if (response.status === 400) {
+          error.message = responseData?.detail || "Invalid request. Please check your input.";
+        }
+
+        if (response.status >= 500) {
+          error.message = "Server error. Please try again later.";
+        }
+
+        throw error;
       }
 
-      const data = await response.json();
-      return { data };
+      return { data: responseData };
     } catch (error) {
+      // If error already has a status, it's an HTTP error we already handled
+      if (error.status) {
+        throw error;
+      }
+
       // Handle network errors (backend offline, no internet, etc.)
       if (error instanceof TypeError && error.message === "Failed to fetch") {
-        throw new Error("Unable to connect to server. The service may be temporarily offline.");
+        const networkError = new Error(
+          "Unable to connect to server. Please check your internet connection."
+        );
+        networkError.isNetworkError = true;
+        throw networkError;
       }
-      // Re-throw other errors
+
+      // Re-throw other unexpected errors
       throw error;
     }
   };

@@ -103,6 +103,7 @@ const AddArtworkPage = () => {
   };
 
   const handleSubmitArtwork = () => {
+    // Validate required fields
     if (!newArtwork.title || !newArtwork.secretThreshold) {
       toast({
         title: "Missing required fields",
@@ -113,12 +114,71 @@ const AddArtworkPage = () => {
       return;
     }
 
+    // Validate title length
+    if (newArtwork.title.length < 3) {
+      toast({
+        title: "Invalid title",
+        description: "Title must be at least 3 characters long",
+        status: "warning",
+        duration: 3000,
+      });
+      return;
+    }
+
+    if (newArtwork.title.length > 200) {
+      toast({
+        title: "Invalid title",
+        description: "Title cannot exceed 200 characters",
+        status: "warning",
+        duration: 3000,
+      });
+      return;
+    }
+
+    // Validate description length
+    if (newArtwork.description && newArtwork.description.length > 2000) {
+      toast({
+        title: "Invalid description",
+        description: "Description cannot exceed 2000 characters",
+        status: "warning",
+        duration: 3000,
+      });
+      return;
+    }
+
+    // Validate secret threshold
+    const threshold = parseFloat(newArtwork.secretThreshold);
+    if (isNaN(threshold) || threshold < 0) {
+      toast({
+        title: "Invalid secret threshold",
+        description: "Secret threshold must be a non-negative number",
+        status: "warning",
+        duration: 3000,
+      });
+      return;
+    }
+
+    // Validate end date (if provided)
+    if (newArtwork.end_date) {
+      const endDate = new Date(newArtwork.end_date);
+      const now = new Date();
+      if (endDate <= now) {
+        toast({
+          title: "Invalid end date",
+          description: "End date must be in the future",
+          status: "warning",
+          duration: 3000,
+        });
+        return;
+      }
+    }
+
     createArtworkMutation.mutate({
       title: newArtwork.title,
       description: newArtwork.description,
       artist_name: newArtwork.artist_name,
       category: newArtwork.category,
-      secret_threshold: parseFloat(newArtwork.secretThreshold),
+      secret_threshold: threshold,
       end_date: newArtwork.end_date ? new Date(newArtwork.end_date).toISOString() : null,
     });
   };

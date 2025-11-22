@@ -1,5 +1,6 @@
 import os
 import uuid
+from datetime import datetime
 from typing import List
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
@@ -17,7 +18,34 @@ router = APIRouter()
 
 
 @router.get("/", response_model=List[ArtworkResponse])
-async def get_artworks(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+async def get_artworks(skip: int = 0, limit: int = 20, db: Session = Depends(get_db)):
+    """
+    Get list of artworks with pagination.
+
+    Query parameters:
+    - skip: Number of records to skip (default: 0)
+    - limit: Maximum number of records to return (default: 20, max: 100)
+    """
+    # Validate pagination parameters
+    if skip < 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Skip parameter must be non-negative"
+        )
+
+    if limit < 1:
+        raise HTTPException(
+            status_code=400,
+            detail="Limit parameter must be at least 1"
+        )
+
+    # Enforce maximum limit to prevent resource exhaustion
+    if limit > 100:
+        raise HTTPException(
+            status_code=400,
+            detail="Limit cannot exceed 100"
+        )
+
     artworks = db.query(Artwork).offset(skip).limit(limit).all()
     return artworks
 
@@ -43,6 +71,39 @@ async def create_artwork(
     Only users with SELLER or ADMIN role can create artworks.
     This prevents artwork creation with forged seller_id.
     """
+    # Validate secret_threshold
+    if artwork.secret_threshold < 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Secret threshold must be non-negative"
+        )
+
+    # Validate title length
+    if len(artwork.title) < 3:
+        raise HTTPException(
+            status_code=400,
+            detail="Title must be at least 3 characters long"
+        )
+    if len(artwork.title) > 200:
+        raise HTTPException(
+            status_code=400,
+            detail="Title cannot exceed 200 characters"
+        )
+
+    # Validate description length if provided
+    if artwork.description and len(artwork.description) > 2000:
+        raise HTTPException(
+            status_code=400,
+            detail="Description cannot exceed 2000 characters"
+        )
+
+    # Validate end_date is in future if provided
+    if artwork.end_date and artwork.end_date < datetime.utcnow():
+        raise HTTPException(
+            status_code=400,
+            detail="End date must be in the future"
+        )
+
     # Create artwork with authenticated user's ID
     db_artwork = Artwork(**artwork.dict(), seller_id=current_user.id)
     db.add(db_artwork)
@@ -89,8 +150,41 @@ async def update_artwork(
             status_code=403, detail="Not authorized to update this artwork"
         )
 
+    # Validate updated fields
+    update_data = artwork_update.dict(exclude_unset=True)
+
+    if "secret_threshold" in update_data and update_data["secret_threshold"] < 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Secret threshold must be non-negative"
+        )
+
+    if "title" in update_data:
+        if len(update_data["title"]) < 3:
+            raise HTTPException(
+                status_code=400,
+                detail="Title must be at least 3 characters long"
+            )
+        if len(update_data["title"]) > 200:
+            raise HTTPException(
+                status_code=400,
+                detail="Title cannot exceed 200 characters"
+            )
+
+    if "description" in update_data and update_data["description"] and len(update_data["description"]) > 2000:
+        raise HTTPException(
+            status_code=400,
+            detail="Description cannot exceed 2000 characters"
+        )
+
+    if "end_date" in update_data and update_data["end_date"] and update_data["end_date"] < datetime.utcnow():
+        raise HTTPException(
+            status_code=400,
+            detail="End date must be in the future"
+        )
+
     # Update fields
-    for field, value in artwork_update.dict(exclude_unset=True).items():
+    for field, value in update_data.items():
         setattr(artwork, field, value)
 
     db.commit()

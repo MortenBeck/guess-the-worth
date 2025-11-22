@@ -37,9 +37,20 @@ async def create_bid(
     This prevents bid creation with forged bidder_id.
     Sellers cannot bid on their own artworks.
     """
-    # Validate bid amount
-    if bid.amount < 0:
-        raise HTTPException(status_code=400, detail="Bid amount must be non-negative")
+    # Validate bid amount is positive
+    if bid.amount <= 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Bid amount must be greater than zero"
+        )
+
+    # Validate bid amount is reasonable (prevent overflow/ridiculous values)
+    MAX_BID_AMOUNT = 1_000_000_000  # 1 billion
+    if bid.amount > MAX_BID_AMOUNT:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Bid amount cannot exceed ${MAX_BID_AMOUNT:,}"
+        )
 
     # Get artwork to check threshold and ownership
     artwork = db.query(Artwork).filter(Artwork.id == bid.artwork_id).first()
@@ -55,6 +66,13 @@ async def create_bid(
     if artwork.seller_id == current_user.id:
         raise HTTPException(
             status_code=403, detail="You cannot bid on your own artwork"
+        )
+
+    # Validate bid is higher than current highest bid (if any)
+    if artwork.current_highest_bid and bid.amount <= artwork.current_highest_bid:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Bid must be higher than current highest bid (${artwork.current_highest_bid})"
         )
 
     # Check if bid meets threshold

@@ -25,7 +25,23 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes
-      retry: 1,
+      retry: (failureCount, error) => {
+        // Don't retry on 4xx errors (client errors)
+        if (error.status >= 400 && error.status < 500) {
+          return false;
+        }
+        // Retry up to 2 times for 5xx and network errors
+        return failureCount < 2;
+      },
+      onError: (error) => {
+        console.error("Query error:", error);
+      },
+    },
+    mutations: {
+      retry: false, // Don't retry mutations
+      onError: (error) => {
+        console.error("Mutation error:", error);
+      },
     },
   },
 });
