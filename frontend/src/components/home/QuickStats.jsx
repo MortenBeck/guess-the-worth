@@ -1,17 +1,31 @@
 import { Box, Container, Heading, Text, VStack, SimpleGrid } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { statsService } from "../../services/api";
+import useAuthStore from "../../store/authStore";
 
 const QuickStats = () => {
-  const { data: platformStats, isLoading, error } = useQuery({
+  const { isAuthenticated } = useAuthStore();
+
+  // Fetch platform stats
+  const { data: platformStats, isLoading: platformLoading, error: platformError } = useQuery({
     queryKey: ["platform-stats"],
     queryFn: () => statsService.getPlatformStats(),
     staleTime: 5 * 60 * 1000,
     retry: 2,
   });
 
+  // Fetch user stats (only if logged in)
+  const { data: userStatsData, isLoading: userLoading } = useQuery({
+    queryKey: ["user-stats"],
+    queryFn: statsService.getUserStats,
+    enabled: isAuthenticated,
+    staleTime: 60000,
+  });
+
+  const userStats = userStatsData?.data;
+
   // Show error if platform stats fail to load
-  if (error) {
+  if (platformError) {
     return (
       <Box py={12}>
         <Container maxW="7xl">
@@ -26,7 +40,7 @@ const QuickStats = () => {
   }
 
   // Show loading state
-  if (isLoading || !platformStats) {
+  if (platformLoading) {
     return (
       <Box py={12}>
         <Container maxW="7xl">
@@ -39,16 +53,55 @@ const QuickStats = () => {
   }
 
   const platformStatsData = [
-    { label: "Active Artworks", value: platformStats.totalArtworks, icon: "🎨", color: "#6366f1" },
-    { label: "Total Bids", value: `$${platformStats.totalBids}`, icon: "💎", color: "#10b981" },
-    { label: "Artists", value: platformStats.totalArtists, icon: "👨‍🎨", color: "#f59e0b" },
-    { label: "Live Bidding", value: platformStats.liveStatus, icon: "⚡", color: "#ec4899" },
+    { label: "Active Artworks", value: platformStats?.totalArtworks || 0, icon: "🎨", color: "#6366f1" },
+    { label: "Total Bids", value: `$${platformStats?.totalBids || 0}`, icon: "💎", color: "#10b981" },
+    { label: "Artists", value: platformStats?.totalArtists || 0, icon: "👨‍🎨", color: "#f59e0b" },
+    { label: "Live Bidding", value: platformStats?.liveStatus || "24/7", icon: "⚡", color: "#ec4899" },
   ];
+
+  const personalStats = isAuthenticated && userStats ? [
+    { label: "Your Bids", value: userStats.active_bids || 0, icon: "💰", color: "#6366f1" },
+    { label: "Artworks Won", value: userStats.won_auctions || 0, icon: "🏆", color: "#10b981" },
+    { label: "Watchlist", value: userStats.watchlist || 0, icon: "❤️", color: "#ec4899" },
+  ] : [];
 
   return (
     <Box py={12}>
       <Container maxW="7xl">
         <VStack spacing={12}>
+          {/* Personal Stats (only for logged-in users) */}
+          {isAuthenticated && !userLoading && personalStats.length > 0 && (
+            <VStack spacing={6} w="full">
+              <Heading size="lg" color="white" fontWeight="700" textAlign="center">
+                Your Activity
+              </Heading>
+
+              <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6} w="full">
+                {personalStats.map((stat, index) => (
+                  <Box
+                    key={index}
+                    bg="#0f172a"
+                    p={6}
+                    borderRadius="xl"
+                    textAlign="center"
+                    border="1px solid"
+                    borderColor="rgba(255,255,255,0.1)"
+                  >
+                    <VStack spacing={3}>
+                      <Text fontSize="xl">{stat.icon}</Text>
+                      <Text fontSize="2xl" fontWeight="700" color={stat.color}>
+                        {stat.value}
+                      </Text>
+                      <Text fontSize="sm" color="#94a3b8" textAlign="center">
+                        {stat.label}
+                      </Text>
+                    </VStack>
+                  </Box>
+                ))}
+              </SimpleGrid>
+            </VStack>
+          )}
+
           {/* Platform Stats */}
           <VStack spacing={6} w="full">
             <Heading size="xl" color="white" fontWeight="700" textAlign="center">

@@ -8,8 +8,11 @@ import {
   HStack,
   Image,
   Badge,
+  Spinner,
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { statsService, bidService } from "../services/api";
 import useAuthStore from "../store/authStore";
 import placeholderImg from "../assets/placeholder.jpg";
 
@@ -17,70 +20,39 @@ const UserDashboard = () => {
   const { user } = useAuthStore();
   const navigate = useNavigate();
 
-  // Mock data
-  const stats = {
-    activeBids: 5,
-    wonAuctions: 3,
-    totalSpent: 1250,
-    watchlist: 12,
+  // Fetch user stats
+  const { data: stats, isLoading: statsLoading } = useQuery({
+    queryKey: ["user-stats"],
+    queryFn: statsService.getUserStats,
+    staleTime: 30000,
+  });
+
+  // Fetch user's bids
+  const { data: myBidsData, isLoading: bidsLoading } = useQuery({
+    queryKey: ["my-bids"],
+    queryFn: bidService.getMyBids,
+    staleTime: 10000,
+  });
+
+  if (statsLoading || bidsLoading) {
+    return (
+      <Box bg="#0f172a" color="white" minH="100vh" display="flex" alignItems="center" justifyContent="center">
+        <Spinner size="xl" color="#6366f1" />
+      </Box>
+    );
+  }
+
+  const myBids = myBidsData?.data || [];
+  const userStats = stats?.data || {
+    active_bids: 0,
+    won_auctions: 0,
+    total_spent: 0,
+    watchlist: 0,
   };
 
-  const activeBids = [
-    {
-      id: 1,
-      title: "Sunset Dreams",
-      artist: "John Doe",
-      image: placeholderImg,
-      yourBid: 175,
-      currentHighest: 180,
-      status: "outbid",
-      timeLeft: "2 days",
-      artworkId: 1,
-    },
-    {
-      id: 2,
-      title: "Ocean Waves",
-      artist: "Jane Smith",
-      image: placeholderImg,
-      yourBid: 300,
-      currentHighest: 300,
-      status: "winning",
-      timeLeft: "5 hours",
-      artworkId: 2,
-    },
-    {
-      id: 3,
-      title: "Mountain Peak",
-      artist: "Bob Wilson",
-      image: placeholderImg,
-      yourBid: 420,
-      currentHighest: 450,
-      status: "outbid",
-      timeLeft: "1 day",
-      artworkId: 3,
-    },
-  ];
-
-  const wonAuctions = [
-    {
-      id: 1,
-      title: "City Lights",
-      artist: "Alice Brown",
-      image: placeholderImg,
-      winningBid: 320,
-      datePurchased: "2024-01-15",
-      artworkId: 4,
-    },
-    {
-      id: 2,
-      title: "Forest Path",
-      artist: "Mike Johnson",
-      image: placeholderImg,
-      winningBid: 200,
-      datePurchased: "2024-01-10",
-      artworkId: 5,
-    },
-  ];
+  // Separate active bids and won auctions
+  const activeBids = myBids.filter(bid => bid.artwork?.status === "ACTIVE");
+  const wonAuctions = myBids.filter(bid => bid.is_winning && bid.artwork?.status === "SOLD");
 
   return (
     <Box bg="#0f172a" color="white" minH="100vh" pt={6}>
@@ -115,7 +87,7 @@ const UserDashboard = () => {
                   Active Bids
                 </Text>
                 <Text fontSize="2xl" fontWeight="bold" color="#6366f1">
-                  {stats.activeBids}
+                  {userStats.active_bids}
                 </Text>
                 <Text fontSize="xs" color="#94a3b8">
                   Currently bidding
@@ -135,7 +107,7 @@ const UserDashboard = () => {
                   Won Auctions
                 </Text>
                 <Text fontSize="2xl" fontWeight="bold" color="#10b981">
-                  {stats.wonAuctions}
+                  {userStats.won_auctions}
                 </Text>
                 <Text fontSize="xs" color="#94a3b8">
                   Total artworks won
@@ -155,7 +127,7 @@ const UserDashboard = () => {
                   Total Spent
                 </Text>
                 <Text fontSize="2xl" fontWeight="bold" color="#ec4899">
-                  ${stats.totalSpent}
+                  ${userStats.total_spent}
                 </Text>
                 <Text fontSize="xs" color="#94a3b8">
                   On artwork purchases
@@ -175,7 +147,7 @@ const UserDashboard = () => {
                   Watchlist
                 </Text>
                 <Text fontSize="2xl" fontWeight="bold" color="#f59e0b">
-                  {stats.watchlist}
+                  {userStats.watchlist}
                 </Text>
                 <Text fontSize="xs" color="#94a3b8">
                   Items watching
@@ -195,74 +167,75 @@ const UserDashboard = () => {
             <Heading size="md" color="white" mb={4}>
               Active Bids
             </Heading>
-            <VStack spacing={4} align="stretch">
-              {activeBids.map((bid) => (
-                <Box
-                  key={bid.id}
-                  bg="#0f172a"
-                  p={4}
-                  borderRadius="lg"
-                  border="1px"
-                  borderColor="rgba(255,255,255,0.1)"
-                >
-                  <HStack spacing={4}>
-                    <Image
-                      src={bid.image}
-                      alt={bid.title}
-                      boxSize="60px"
-                      objectFit="cover"
-                      borderRadius="md"
-                    />
-                    <VStack align="start" spacing={1} flex={1}>
-                      <HStack justify="space-between" w="full">
-                        <Text fontWeight="semibold" color="white">
-                          {bid.title}
-                        </Text>
-                        <Badge colorScheme={bid.status === "winning" ? "green" : "red"}>
-                          {bid.status === "winning" ? "Winning" : "Outbid"}
-                        </Badge>
-                      </HStack>
-                      <Text fontSize="sm" color="#94a3b8">
-                        by {bid.artist}
-                      </Text>
-                      <HStack spacing={4}>
-                        <Text fontSize="sm" color="#94a3b8">
-                          Your bid:{" "}
-                          <Text as="span" color="white" fontWeight="bold">
-                            ${bid.yourBid}
+            {activeBids.length === 0 ? (
+              <Text color="#94a3b8">No active bids. Start bidding to see them here!</Text>
+            ) : (
+              <VStack spacing={4} align="stretch">
+                {activeBids.map((bid) => (
+                  <Box
+                    key={bid.id}
+                    bg="#0f172a"
+                    p={4}
+                    borderRadius="lg"
+                    border="1px"
+                    borderColor="rgba(255,255,255,0.1)"
+                  >
+                    <HStack spacing={4}>
+                      <Image
+                        src={bid.artwork?.image_url || placeholderImg}
+                        alt={bid.artwork?.title}
+                        boxSize="60px"
+                        objectFit="cover"
+                        borderRadius="md"
+                      />
+                      <VStack align="start" spacing={1} flex={1}>
+                        <HStack justify="space-between" w="full">
+                          <Text fontWeight="semibold" color="white">
+                            {bid.artwork?.title}
                           </Text>
-                        </Text>
+                          <Badge colorScheme={bid.is_winning ? "green" : "red"}>
+                            {bid.is_winning ? "Winning" : "Outbid"}
+                          </Badge>
+                        </HStack>
                         <Text fontSize="sm" color="#94a3b8">
-                          Current:{" "}
-                          <Text
-                            as="span"
-                            color={bid.status === "winning" ? "green.400" : "red.400"}
-                            fontWeight="bold"
-                          >
-                            ${bid.currentHighest}
+                          by {bid.artwork?.seller?.name || "Unknown Artist"}
+                        </Text>
+                        <HStack spacing={4}>
+                          <Text fontSize="sm" color="#94a3b8">
+                            Your bid:{" "}
+                            <Text as="span" color="white" fontWeight="bold">
+                              ${bid.amount}
+                            </Text>
                           </Text>
-                        </Text>
-                        <Text fontSize="sm" color="#94a3b8">
-                          {bid.timeLeft} left
-                        </Text>
-                      </HStack>
-                    </VStack>
-                    <Button
-                      size="sm"
-                      background="linear-gradient(135deg, #6366f1 0%, #ec4899 100%)"
-                      color="white"
-                      onClick={() => navigate(`/artwork/${bid.artworkId}`)}
-                      _hover={{
-                        transform: "translateY(-1px)",
-                        boxShadow: "0 4px 15px rgba(99, 102, 241, 0.3)",
-                      }}
-                    >
-                      View
-                    </Button>
-                  </HStack>
-                </Box>
-              ))}
-            </VStack>
+                          <Text fontSize="sm" color="#94a3b8">
+                            Current:{" "}
+                            <Text
+                              as="span"
+                              color={bid.is_winning ? "green.400" : "red.400"}
+                              fontWeight="bold"
+                            >
+                              ${bid.artwork?.current_highest_bid || bid.amount}
+                            </Text>
+                          </Text>
+                        </HStack>
+                      </VStack>
+                      <Button
+                        size="sm"
+                        background="linear-gradient(135deg, #6366f1 0%, #ec4899 100%)"
+                        color="white"
+                        onClick={() => navigate(`/artwork/${bid.artwork?.id}`)}
+                        _hover={{
+                          transform: "translateY(-1px)",
+                          boxShadow: "0 4px 15px rgba(99, 102, 241, 0.3)",
+                        }}
+                      >
+                        View
+                      </Button>
+                    </HStack>
+                  </Box>
+                ))}
+              </VStack>
+            )}
           </Box>
 
           {/* Won Auctions */}
@@ -276,56 +249,60 @@ const UserDashboard = () => {
             <Heading size="md" color="white" mb={4}>
               Won Auctions
             </Heading>
-            <Box
-              display="grid"
-              gridTemplateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(3, 1fr)" }}
-              gap={4}
-            >
-              {wonAuctions.map((auction) => (
-                <Box
-                  key={auction.id}
-                  bg="#0f172a"
-                  borderRadius="lg"
-                  overflow="hidden"
-                  border="1px"
-                  borderColor="rgba(255,255,255,0.1)"
-                  cursor="pointer"
-                  onClick={() => navigate(`/artwork/${auction.artworkId}`)}
-                  _hover={{
-                    transform: "translateY(-2px)",
-                    boxShadow: "0 8px 25px rgba(0,0,0,0.3)",
-                  }}
-                  transition="all 0.2s"
-                >
-                  <Image
-                    src={auction.image}
-                    alt={auction.title}
-                    h="150px"
-                    w="full"
-                    objectFit="cover"
-                  />
-                  <Box p={4}>
-                    <VStack align="start" spacing={2}>
-                      <Badge colorScheme="green" variant="subtle">
-                        Won
-                      </Badge>
-                      <Text fontWeight="semibold" color="white">
-                        {auction.title}
-                      </Text>
-                      <Text fontSize="sm" color="#94a3b8">
-                        by {auction.artist}
-                      </Text>
-                      <Text fontSize="sm" color="green.400" fontWeight="bold">
-                        Won for ${auction.winningBid}
-                      </Text>
-                      <Text fontSize="xs" color="#94a3b8">
-                        Purchased: {auction.datePurchased}
-                      </Text>
-                    </VStack>
+            {wonAuctions.length === 0 ? (
+              <Text color="#94a3b8">No won auctions yet. Keep bidding!</Text>
+            ) : (
+              <Box
+                display="grid"
+                gridTemplateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(3, 1fr)" }}
+                gap={4}
+              >
+                {wonAuctions.map((bid) => (
+                  <Box
+                    key={bid.id}
+                    bg="#0f172a"
+                    borderRadius="lg"
+                    overflow="hidden"
+                    border="1px"
+                    borderColor="rgba(255,255,255,0.1)"
+                    cursor="pointer"
+                    onClick={() => navigate(`/artwork/${bid.artwork?.id}`)}
+                    _hover={{
+                      transform: "translateY(-2px)",
+                      boxShadow: "0 8px 25px rgba(0,0,0,0.3)",
+                    }}
+                    transition="all 0.2s"
+                  >
+                    <Image
+                      src={bid.artwork?.image_url || placeholderImg}
+                      alt={bid.artwork?.title}
+                      h="150px"
+                      w="full"
+                      objectFit="cover"
+                    />
+                    <Box p={4}>
+                      <VStack align="start" spacing={2}>
+                        <Badge colorScheme="green" variant="subtle">
+                          Won
+                        </Badge>
+                        <Text fontWeight="semibold" color="white">
+                          {bid.artwork?.title}
+                        </Text>
+                        <Text fontSize="sm" color="#94a3b8">
+                          by {bid.artwork?.seller?.name || "Unknown Artist"}
+                        </Text>
+                        <Text fontSize="sm" color="green.400" fontWeight="bold">
+                          Won for ${bid.amount}
+                        </Text>
+                        <Text fontSize="xs" color="#94a3b8">
+                          Purchased: {new Date(bid.created_at).toLocaleDateString()}
+                        </Text>
+                      </VStack>
+                    </Box>
                   </Box>
-                </Box>
-              ))}
-            </Box>
+                ))}
+              </Box>
+            )}
           </Box>
         </VStack>
       </Container>

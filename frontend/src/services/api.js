@@ -106,6 +106,7 @@ export const userService = {
   getById: (id) => api.get(`/users/${id}`),
   getCurrentUser: () => api.get("/auth/me"), // Token automatically added by interceptor
   register: (data) => api.post("/auth/register", data),
+  updateProfile: (data) => api.put("/users/me", data),
 };
 
 export const statsService = {
@@ -143,6 +144,10 @@ export const statsService = {
       };
     }
   },
+
+  getUserStats: () => api.get("/stats/user"),
+
+  getSellerStats: () => api.get("/stats/seller"),
 };
 
 export default api;

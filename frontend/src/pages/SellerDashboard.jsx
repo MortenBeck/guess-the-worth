@@ -8,63 +8,58 @@ import {
   HStack,
   Image,
   Badge,
+  Spinner,
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
-// Simple custom icon
+import { useQuery } from "@tanstack/react-query";
+import { statsService, artworkService } from "../services/api";
 const AddIcon = () => <span>➕</span>;
 import placeholderImg from "../assets/placeholder.jpg";
 
 const SellerDashboard = () => {
   const navigate = useNavigate();
 
-  // Mock data - replace with actual API calls
-  const stats = {
-    totalArtworks: 15,
-    activeAuctions: 8,
-    soldArtworks: 7,
-    totalEarnings: 3250,
+  // Fetch seller stats
+  const { data: stats, isLoading: statsLoading } = useQuery({
+    queryKey: ["seller-stats"],
+    queryFn: statsService.getSellerStats,
+    staleTime: 30000,
+  });
+
+  // Fetch seller's artworks
+  const { data: myArtworksData, isLoading: artworksLoading } = useQuery({
+    queryKey: ["my-artworks"],
+    queryFn: artworkService.getMyArtworks,
+    staleTime: 10000,
+  });
+
+  if (statsLoading || artworksLoading) {
+    return (
+      <Box bg="#0f172a" minH="100vh" color="white" display="flex" alignItems="center" justifyContent="center">
+        <Spinner size="xl" color="#6366f1" />
+      </Box>
+    );
+  }
+
+  const myArtworks = myArtworksData?.data || [];
+  const sellerStats = stats?.data || {
+    total_artworks: 0,
+    active_auctions: 0,
+    sold_artworks: 0,
+    total_earnings: 0,
   };
 
-  const artworks = [
-    {
-      id: 1,
-      title: "Sunset Dreams",
-      image: placeholderImg,
-      secretThreshold: 200,
-      currentBid: 175,
-      totalBids: 12,
-      timeLeft: "2 days",
-      status: "active",
-    },
-    {
-      id: 2,
-      title: "Ocean Waves",
-      image: placeholderImg,
-      secretThreshold: 350,
-      currentBid: 300,
-      totalBids: 8,
-      timeLeft: "5 hours",
-      status: "active",
-    },
-    {
-      id: 3,
-      title: "Mountain Peak",
-      image: placeholderImg,
-      secretThreshold: 400,
-      currentBid: 450,
-      totalBids: 23,
-      dateSold: "2024-01-15",
-      status: "sold",
-    },
-  ];
+  // Separate by status
+  const activeArtworks = myArtworks.filter(a => a.status === "ACTIVE");
+  const soldArtworks = myArtworks.filter(a => a.status === "SOLD");
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "active":
+      case "ACTIVE":
         return "green";
-      case "sold":
+      case "SOLD":
         return "blue";
-      case "ended":
+      case "ENDED":
         return "gray";
       default:
         return "gray";
@@ -120,7 +115,7 @@ const SellerDashboard = () => {
                 Total Artworks
               </Text>
               <Text fontSize="2xl" fontWeight="bold" color="white">
-                {stats.totalArtworks}
+                {sellerStats.total_artworks}
               </Text>
               <Text fontSize="xs" color="#64748b">
                 All time uploads
@@ -139,7 +134,7 @@ const SellerDashboard = () => {
                 Active Auctions
               </Text>
               <Text fontSize="2xl" fontWeight="bold" color="#3b82f6">
-                {stats.activeAuctions}
+                {sellerStats.active_auctions}
               </Text>
               <Text fontSize="xs" color="#64748b">
                 Currently live
@@ -158,7 +153,7 @@ const SellerDashboard = () => {
                 Sold Artworks
               </Text>
               <Text fontSize="2xl" fontWeight="bold" color="white">
-                {stats.soldArtworks}
+                {sellerStats.sold_artworks}
               </Text>
               <Text fontSize="xs" color="#64748b">
                 Successfully sold
@@ -177,7 +172,7 @@ const SellerDashboard = () => {
                 Total Earnings
               </Text>
               <Text fontSize="2xl" fontWeight="bold" color="#3b82f6">
-                ${stats.totalEarnings}
+                ${sellerStats.total_earnings}
               </Text>
               <Text fontSize="xs" color="#64748b">
                 From sales
@@ -197,83 +192,91 @@ const SellerDashboard = () => {
             <Heading size="md" color="white" mb={4}>
               My Artworks
             </Heading>
-            <VStack spacing={4} align="stretch">
-              {artworks.map((artwork) => (
-                <Box
-                  key={artwork.id}
-                  bg="#0f172a"
-                  p={4}
-                  borderRadius="lg"
-                  boxShadow="sm"
-                  border="1px"
-                  borderColor="rgba(255,255,255,0.1)"
-                >
-                  <HStack spacing={4}>
-                    <Image
-                      src={artwork.image}
-                      alt={artwork.title}
-                      w="80px"
-                      h="80px"
-                      objectFit="cover"
-                      borderRadius="md"
-                    />
-                    <VStack align="start" flex={1} spacing={1}>
-                      <Heading size="md" color="white">
-                        {artwork.title}
-                      </Heading>
-                      <HStack>
-                        <Text fontSize="sm" color="#94a3b8">
-                          Secret threshold:{" "}
-                        </Text>
-                        <Text fontSize="sm" fontWeight="bold" color="white">
-                          ${artwork.secretThreshold}
-                        </Text>
-                      </HStack>
-                      {artwork.status === "active" && (
-                        <>
-                          <HStack>
-                            <Text fontSize="sm" color="#94a3b8">
-                              Current bid:{" "}
-                            </Text>
-                            <Text
-                              fontSize="sm"
-                              fontWeight="bold"
-                              color={
-                                isThresholdMet(artwork.currentBid, artwork.secretThreshold)
-                                  ? "#22c55e"
-                                  : "#94a3b8"
-                              }
-                            >
-                              ${artwork.currentBid}
-                            </Text>
-                            {isThresholdMet(artwork.currentBid, artwork.secretThreshold) && (
-                              <Badge colorScheme="green" size="sm">
-                                Threshold Met!
-                              </Badge>
-                            )}
-                          </HStack>
+            {myArtworks.length === 0 ? (
+              <Text color="#94a3b8">
+                No artworks yet. Click "Add New Artwork" to get started!
+              </Text>
+            ) : (
+              <VStack spacing={4} align="stretch">
+                {myArtworks.map((artwork) => (
+                  <Box
+                    key={artwork.id}
+                    bg="#0f172a"
+                    p={4}
+                    borderRadius="lg"
+                    boxShadow="sm"
+                    border="1px"
+                    borderColor="rgba(255,255,255,0.1)"
+                  >
+                    <HStack spacing={4}>
+                      <Image
+                        src={artwork.image_url || placeholderImg}
+                        alt={artwork.title}
+                        w="80px"
+                        h="80px"
+                        objectFit="cover"
+                        borderRadius="md"
+                      />
+                      <VStack align="start" flex={1} spacing={1}>
+                        <Heading size="md" color="white">
+                          {artwork.title}
+                        </Heading>
+                        <HStack>
                           <Text fontSize="sm" color="#94a3b8">
-                            {artwork.totalBids} bids • {artwork.timeLeft} left
+                            Secret threshold:{" "}
                           </Text>
-                        </>
-                      )}
-                      {artwork.status === "sold" && (
-                        <Text fontSize="sm" color="#94a3b8">
-                          Sold on {new Date(artwork.dateSold).toLocaleDateString()} for $
-                          {artwork.currentBid}
-                        </Text>
-                      )}
-                    </VStack>
-                    <VStack align="center" spacing={2}>
-                      <Badge colorScheme={getStatusColor(artwork.status)}>{artwork.status}</Badge>
-                      <Button size="sm" variant="outline">
-                        View Details
-                      </Button>
-                    </VStack>
-                  </HStack>
-                </Box>
-              ))}
-            </VStack>
+                          <Text fontSize="sm" fontWeight="bold" color="white">
+                            ${artwork.secret_threshold}
+                          </Text>
+                        </HStack>
+                        {artwork.status === "ACTIVE" && (
+                          <>
+                            <HStack>
+                              <Text fontSize="sm" color="#94a3b8">
+                                Current bid:{" "}
+                              </Text>
+                              <Text
+                                fontSize="sm"
+                                fontWeight="bold"
+                                color={
+                                  isThresholdMet(artwork.current_highest_bid || 0, artwork.secret_threshold)
+                                    ? "#22c55e"
+                                    : "#94a3b8"
+                                }
+                              >
+                                ${artwork.current_highest_bid || 0}
+                              </Text>
+                              {isThresholdMet(artwork.current_highest_bid || 0, artwork.secret_threshold) && (
+                                <Badge colorScheme="green" size="sm">
+                                  Threshold Met!
+                                </Badge>
+                              )}
+                            </HStack>
+                          </>
+                        )}
+                        {artwork.status === "SOLD" && (
+                          <Text fontSize="sm" color="#94a3b8">
+                            Sold for ${artwork.current_highest_bid}
+                          </Text>
+                        )}
+                      </VStack>
+                      <VStack align="center" spacing={2}>
+                        <Badge colorScheme={getStatusColor(artwork.status)}>
+                          {artwork.status}
+                        </Badge>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => navigate(`/artwork/${artwork.id}`)}
+                        >
+                          View Details
+                        </Button>
+                      </VStack>
+                    </HStack>
+                  </Box>
+                ))}
+              </VStack>
+            )}
           </Box>
 
           {/* Active Auctions */}
@@ -288,10 +291,11 @@ const SellerDashboard = () => {
             <Heading size="md" color="white" mb={4}>
               Active Auctions
             </Heading>
-            <VStack spacing={4} align="stretch">
-              {artworks
-                .filter((a) => a.status === "active")
-                .map((artwork) => (
+            {activeArtworks.length === 0 ? (
+              <Text color="#94a3b8">No active auctions</Text>
+            ) : (
+              <VStack spacing={4} align="stretch">
+                {activeArtworks.map((artwork) => (
                   <Box
                     key={artwork.id}
                     bg="#0f172a"
@@ -303,7 +307,7 @@ const SellerDashboard = () => {
                   >
                     <HStack spacing={4}>
                       <Image
-                        src={artwork.image}
+                        src={artwork.image_url || placeholderImg}
                         alt={artwork.title}
                         w="80px"
                         h="80px"
@@ -316,30 +320,27 @@ const SellerDashboard = () => {
                         </Heading>
                         <HStack>
                           <Text fontSize="sm" color="#94a3b8">
-                            Current: ${artwork.currentBid}
+                            Current: ${artwork.current_highest_bid || 0}
                           </Text>
                           <Text fontSize="sm" color="#94a3b8">
                             •
                           </Text>
                           <Text fontSize="sm" color="#94a3b8">
-                            Target: ${artwork.secretThreshold}
+                            Target: ${artwork.secret_threshold}
                           </Text>
                         </HStack>
-                        <Text fontSize="sm" color="#94a3b8">
-                          {artwork.totalBids} bids • {artwork.timeLeft} left
-                        </Text>
                       </VStack>
                       <VStack align="center" spacing={2}>
                         <Text
                           fontSize="lg"
                           fontWeight="bold"
                           color={
-                            isThresholdMet(artwork.currentBid, artwork.secretThreshold)
+                            isThresholdMet(artwork.current_highest_bid || 0, artwork.secret_threshold)
                               ? "#22c55e"
                               : "#f97316"
                           }
                         >
-                          {Math.round((artwork.currentBid / artwork.secretThreshold) * 100)}%
+                          {Math.round(((artwork.current_highest_bid || 0) / artwork.secret_threshold) * 100)}%
                         </Text>
                         <Text fontSize="xs" color="#64748b">
                           to threshold
@@ -348,7 +349,8 @@ const SellerDashboard = () => {
                     </HStack>
                   </Box>
                 ))}
-            </VStack>
+              </VStack>
+            )}
           </Box>
 
           {/* Sales History */}
@@ -363,103 +365,32 @@ const SellerDashboard = () => {
             <Heading size="md" color="white" mb={4}>
               Sales History
             </Heading>
-            <VStack spacing={3}>
-              <HStack justify="space-between" w="full" p={3} bg="#0f172a" borderRadius="md">
-                <VStack align="start" spacing={0}>
-                  <Text fontWeight="bold" color="white">
-                    Mountain Peak
-                  </Text>
-                  <Text fontSize="sm" color="#94a3b8">
-                    Jan 15, 2024
-                  </Text>
-                </VStack>
-                <VStack align="end" spacing={0}>
-                  <Text fontSize="sm" color="#94a3b8">
-                    Threshold: $400
-                  </Text>
-                  <Text fontWeight="bold" color="white">
-                    Sold: $450
-                  </Text>
-                </VStack>
-              </HStack>
-              <HStack justify="space-between" w="full" p={3} bg="#0f172a" borderRadius="md">
-                <VStack align="start" spacing={0}>
-                  <Text fontWeight="bold" color="white">
-                    City Lights
-                  </Text>
-                  <Text fontSize="sm" color="#94a3b8">
-                    Jan 10, 2024
-                  </Text>
-                </VStack>
-                <VStack align="end" spacing={0}>
-                  <Text fontSize="sm" color="#94a3b8">
-                    Threshold: $300
-                  </Text>
-                  <Text fontWeight="bold" color="white">
-                    Sold: $320
-                  </Text>
-                </VStack>
-              </HStack>
-            </VStack>
-          </Box>
-
-          {/* Analytics */}
-          <Box display="grid" gridTemplateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={6}>
-            <Box
-              bg="#1e293b"
-              p={6}
-              borderRadius="lg"
-              boxShadow="sm"
-              border="1px"
-              borderColor="rgba(255,255,255,0.1)"
-            >
-              <Heading size="md" color="white" mb={4}>
-                Performance Metrics
-              </Heading>
-              <VStack spacing={4}>
-                <HStack justify="space-between" w="full">
-                  <Text color="#94a3b8">Average sale price</Text>
-                  <Text fontWeight="bold" color="white">
-                    $385
-                  </Text>
-                </HStack>
-                <HStack justify="space-between" w="full">
-                  <Text color="#94a3b8">Success rate</Text>
-                  <Text fontWeight="bold" color="white">
-                    78%
-                  </Text>
-                </HStack>
-                <HStack justify="space-between" w="full">
-                  <Text color="#94a3b8">Avg. threshold hit rate</Text>
-                  <Text fontWeight="bold" color="white">
-                    65%
-                  </Text>
-                </HStack>
+            {soldArtworks.length === 0 ? (
+              <Text color="#94a3b8">No sales yet</Text>
+            ) : (
+              <VStack spacing={3}>
+                {soldArtworks.map((artwork) => (
+                  <HStack key={artwork.id} justify="space-between" w="full" p={3} bg="#0f172a" borderRadius="md">
+                    <VStack align="start" spacing={0}>
+                      <Text fontWeight="bold" color="white">
+                        {artwork.title}
+                      </Text>
+                      <Text fontSize="sm" color="#94a3b8">
+                        {new Date(artwork.updated_at).toLocaleDateString()}
+                      </Text>
+                    </VStack>
+                    <VStack align="end" spacing={0}>
+                      <Text fontSize="sm" color="#94a3b8">
+                        Threshold: ${artwork.secret_threshold}
+                      </Text>
+                      <Text fontWeight="bold" color="white">
+                        Sold: ${artwork.current_highest_bid}
+                      </Text>
+                    </VStack>
+                  </HStack>
+                ))}
               </VStack>
-            </Box>
-            <Box
-              bg="#1e293b"
-              p={6}
-              borderRadius="lg"
-              boxShadow="sm"
-              border="1px"
-              borderColor="rgba(255,255,255,0.1)"
-            >
-              <Heading size="md" color="white" mb={4}>
-                Recent Activity
-              </Heading>
-              <VStack spacing={3} align="start">
-                <Text fontSize="sm" color="#94a3b8">
-                  New bid on "Sunset Dreams" - $175
-                </Text>
-                <Text fontSize="sm" color="#94a3b8">
-                  Threshold reached for "Ocean Waves"
-                </Text>
-                <Text fontSize="sm" color="#94a3b8">
-                  "Mountain Peak" sold for $450
-                </Text>
-              </VStack>
-            </Box>
+            )}
           </Box>
         </VStack>
       </Container>
