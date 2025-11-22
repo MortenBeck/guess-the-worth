@@ -5,7 +5,9 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from models import Artwork
+from models.user import User, UserRole
 from schemas import ArtworkCreate, ArtworkResponse
+from utils.auth import get_current_user, require_seller
 
 router = APIRouter()
 
@@ -27,25 +29,37 @@ async def get_artwork(artwork_id: int, db: Session = Depends(get_db)):
 @router.post("/", response_model=ArtworkResponse)
 async def create_artwork(
     artwork: ArtworkCreate,
-    seller_id: int = None,
+    current_user: User = Depends(require_seller),
     db: Session = Depends(get_db),
 ):
-    """Create a new artwork. Requires seller_id parameter."""
-    if seller_id is None:
-        raise HTTPException(status_code=400, detail="seller_id is required")
+    """
+    Create a new artwork.
 
-    # Verify seller exists
-    from models.user import User
-
-    seller = db.query(User).filter(User.id == seller_id).first()
-    if not seller:
-        raise HTTPException(status_code=404, detail="Seller not found")
-
-    db_artwork = Artwork(**artwork.dict(), seller_id=seller_id)
+    SECURITY: seller_id is extracted from the authenticated user's JWT token.
+    Only users with SELLER or ADMIN role can create artworks.
+    This prevents artwork creation with forged seller_id.
+    """
+    # Create artwork with authenticated user's ID
+    db_artwork = Artwork(**artwork.dict(), seller_id=current_user.id)
     db.add(db_artwork)
     db.commit()
     db.refresh(db_artwork)
     return db_artwork
+
+
+@router.get("/my-artworks", response_model=List[ArtworkResponse])
+async def get_my_artworks(
+    current_user: User = Depends(require_seller),
+    db: Session = Depends(get_db),
+):
+    """
+    Get all artworks owned by the authenticated seller.
+
+    SECURITY: Only returns artworks where seller_id matches the authenticated user.
+    Requires SELLER or ADMIN role.
+    """
+    artworks = db.query(Artwork).filter(Artwork.seller_id == current_user.id).all()
+    return artworks
 
 
 @router.post("/{artwork_id}/upload-image")
