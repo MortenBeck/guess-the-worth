@@ -266,7 +266,11 @@ const SellerDashboard = () => {
                     </VStack>
                     <VStack align="center" spacing={2}>
                       <Badge colorScheme={getStatusColor(artwork.status)}>{artwork.status}</Badge>
-                      <Button size="sm" variant="outline">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => navigate(`/artwork/${artwork.id}`)}
+                      >
                         View Details
                       </Button>
                     </VStack>
