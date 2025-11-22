@@ -5,7 +5,7 @@ from typing import List
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from PIL import Image
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from database import get_db
 from models import Artwork
@@ -25,6 +25,8 @@ async def get_artworks(skip: int = 0, limit: int = 20, db: Session = Depends(get
     Query parameters:
     - skip: Number of records to skip (default: 0)
     - limit: Maximum number of records to return (default: 20, max: 100)
+
+    Performance: Uses eager loading to prevent N+1 queries.
     """
     # Validate pagination parameters
     if skip < 0:
@@ -46,7 +48,14 @@ async def get_artworks(skip: int = 0, limit: int = 20, db: Session = Depends(get
             detail="Limit cannot exceed 100"
         )
 
-    artworks = db.query(Artwork).offset(skip).limit(limit).all()
+    # Eager load seller relationship to prevent N+1 queries
+    artworks = (
+        db.query(Artwork)
+        .options(joinedload(Artwork.seller))
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
     return artworks
 
 
@@ -122,8 +131,15 @@ async def get_my_artworks(
 
     SECURITY: Only returns artworks where seller_id matches the authenticated user.
     Requires SELLER or ADMIN role.
+    Performance: Uses eager loading to prevent N+1 queries.
     """
-    artworks = db.query(Artwork).filter(Artwork.seller_id == current_user.id).all()
+    # Eager load bids for each artwork to prevent N+1 queries
+    artworks = (
+        db.query(Artwork)
+        .options(joinedload(Artwork.bids))
+        .filter(Artwork.seller_id == current_user.id)
+        .all()
+    )
     return artworks
 
 

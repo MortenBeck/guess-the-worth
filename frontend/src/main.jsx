@@ -24,7 +24,10 @@ if (config.SENTRY_DSN) {
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 60000, // 1 minute - data is considered fresh for 1 minute
+      gcTime: 300000, // 5 minutes - cache time (formerly cacheTime)
+      refetchOnWindowFocus: false, // Don't refetch on window focus
+      refetchOnMount: false, // Don't refetch on component mount if data exists
       retry: (failureCount, error) => {
         // Don't retry on 4xx errors (client errors)
         if (error.status >= 400 && error.status < 500) {

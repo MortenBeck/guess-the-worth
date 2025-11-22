@@ -1,7 +1,7 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from database import get_db
 from models import Artwork, Bid
@@ -20,7 +20,18 @@ def get_sio():
 
 @router.get("/artwork/{artwork_id}", response_model=List[BidResponse])
 async def get_artwork_bids(artwork_id: int, db: Session = Depends(get_db)):
-    bids = db.query(Bid).filter(Bid.artwork_id == artwork_id).all()
+    """
+    Get all bids for a specific artwork.
+
+    Performance: Uses eager loading to prevent N+1 queries.
+    """
+    # Use eager loading to prevent N+1 queries
+    bids = (
+        db.query(Bid)
+        .options(joinedload(Bid.artwork), joinedload(Bid.bidder))
+        .filter(Bid.artwork_id == artwork_id)
+        .all()
+    )
     return bids
 
 
@@ -144,9 +155,12 @@ async def get_my_bids(
     Get all bids placed by the authenticated user.
 
     SECURITY: Only returns bids where bidder_id matches the authenticated user.
+    Performance: Uses eager loading to prevent N+1 queries.
     """
+    # Use eager loading to prevent N+1 queries
     bids = (
         db.query(Bid)
+        .options(joinedload(Bid.artwork))
         .filter(Bid.bidder_id == current_user.id)
         .order_by(Bid.created_at.desc())
         .all()

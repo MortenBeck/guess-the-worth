@@ -1,15 +1,21 @@
+import os
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool, QueuePool
 
 from config.settings import settings
 
+# Enable SQL query logging in development
+# Set ENVIRONMENT=development in .env to enable query logging
+echo_sql = os.getenv("ENVIRONMENT", "development") == "development"
+
 # Azure-optimized database configuration
 # Use connection pooling for production, NullPool for development
 engine_kwargs = {
     "pool_pre_ping": True,  # Verify connections before using them
     "pool_recycle": 3600,  # Recycle connections after 1 hour
-    "echo": False,  # Set to True for SQL query logging in development
+    "echo": echo_sql,  # Enable SQL query logging in development
 }
 
 # Configure connection pool based on environment

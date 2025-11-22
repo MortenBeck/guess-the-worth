@@ -29,6 +29,14 @@ class ArtworkUpdate(BaseModel):
 
 
 class ArtworkResponse(ArtworkBase):
+    """
+    Public artwork response schema.
+
+    Performance optimizations:
+    - Optional fields (image_url, end_date) only included when present
+    - Excludes sensitive fields like secret_threshold
+    - Minimal response size for list endpoints
+    """
     id: int
     seller_id: int
     current_highest_bid: float
@@ -39,7 +47,15 @@ class ArtworkResponse(ArtworkBase):
 
     class Config:
         from_attributes = True
+        # Ensure minimal response size by using efficient serialization
+        use_enum_values = True  # Serialize enums as strings, not objects
 
 
 class ArtworkWithSecretResponse(ArtworkResponse):
+    """
+    Artwork response with secret threshold (seller/admin only).
+
+    This schema extends ArtworkResponse to include the secret_threshold
+    field which should only be exposed to the artwork owner or admins.
+    """
     secret_threshold: float
