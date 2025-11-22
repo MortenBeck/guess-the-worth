@@ -57,10 +57,8 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Create non-root user for security
-RUN addgroup -g 1000 appuser && \
-    adduser -D -u 1000 -G appuser appuser && \
-    chown -R appuser:appuser /app
+# Create non-root user for security (use node user that already exists in alpine)
+RUN chown -R node:node /app
 
 # Copy production dependencies from dependencies stage
 COPY --from=dependencies /app/node_modules ./node_modules
@@ -69,10 +67,10 @@ COPY --from=dependencies /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 
 # Copy server file
-COPY --chown=appuser:appuser server.cjs ./
+COPY --chown=node:node server.cjs ./
 
 # Switch to non-root user
-USER appuser
+USER node
 
 # Expose port (Azure will override this with PORT env var)
 EXPOSE 8080

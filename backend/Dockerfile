@@ -14,7 +14,7 @@ COPY requirements.txt .
 
 # Install Python dependencies to /app/.venv
 RUN python -m venv /app/.venv && \
-    /app/.venv/bin/pip install --no-cache-dir --upgrade pip && \
+    /app/.venv/bin/pip install --no-cache-dir --upgrade pip>=25.3 && \
     /app/.venv/bin/pip install --no-cache-dir -r requirements.txt
 
 # Production stage - slim for compatibility with venv
