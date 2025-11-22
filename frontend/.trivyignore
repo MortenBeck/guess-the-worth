@@ -1,0 +1,15 @@
+# Trivy Ignore List for Frontend Docker Image
+# These CVEs are in the node:20-alpine base image's bundled npm
+# and have no fixes available in the latest stable npm. They are not in our application code.
+
+# CVE-2025-64756 (HIGH)
+# Package: glob (in /usr/local/lib/node_modules/npm)
+# Issue: glob CLI command injection via -c/--cmd with shell:true
+# Status: affected (awaiting npm upstream update)
+# Impact: npm's bundled glob dependency (v11.0.3)
+# Context: npm 11.6.3 (latest stable) still uses glob 11.0.3
+#          Fixed versions are 11.1.0+ or 10.5.0+
+#          This CVE affects glob CLI usage, not programmatic library usage by npm
+#          Low risk: npm uses glob as a library, not invoking the CLI
+# Review: Check monthly if npm updates to glob 11.1.0+
+CVE-2025-64756
