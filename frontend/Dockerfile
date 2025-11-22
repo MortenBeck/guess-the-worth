@@ -57,6 +57,9 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# Upgrade npm to fix CVE-2024-21538 (cross-spawn) and CVE-2025-64756 (glob)
+RUN npm install -g npm@latest
+
 # Create non-root user for security (use node user that already exists in alpine)
 RUN chown -R node:node /app
 
