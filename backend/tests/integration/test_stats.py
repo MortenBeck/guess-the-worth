@@ -8,7 +8,6 @@ These tests verify that stats endpoints return correct data:
 - Authorization requirements
 """
 
-import pytest
 from fastapi.testclient import TestClient
 
 from models.artwork import Artwork, ArtworkStatus

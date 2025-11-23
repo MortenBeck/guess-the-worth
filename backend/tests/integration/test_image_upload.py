@@ -10,14 +10,10 @@ These tests verify that image upload works correctly:
 """
 
 import os
-import tempfile
 from io import BytesIO
 
-import pytest
-from PIL import Image as PILImage
 from fastapi.testclient import TestClient
-
-from models.user import User
+from PIL import Image as PILImage
 
 
 class TestImageUploadPermissions:
@@ -83,9 +79,10 @@ class TestImageUploadPermissions:
     ):
         """Test that other sellers cannot upload to artwork they don't own."""
         # Create a different seller
+        from datetime import timedelta
+
         from models.user import User, UserRole
         from services.jwt_service import JWTService
-        from datetime import timedelta
 
         other_seller = User(
             auth0_sub="auth0|other_seller",

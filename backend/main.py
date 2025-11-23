@@ -8,12 +8,12 @@ from fastapi.staticfiles import StaticFiles
 
 from config.settings import settings
 from database import engine
+from middleware.rate_limit import setup_rate_limiting
+from middleware.security_headers import SecurityHeadersMiddleware
 from models.base import Base
 from routers import admin, artworks, auth, bids, health, stats, users
 from services.auth_service import AuthService
 from services.jwt_service import JWTService
-from middleware.rate_limit import setup_rate_limiting
-from middleware.security_headers import SecurityHeadersMiddleware
 
 # Initialize Sentry
 sentry_dsn = os.getenv("SENTRY_DSN")

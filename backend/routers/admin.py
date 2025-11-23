@@ -3,19 +3,20 @@ Admin router for platform management.
 Proof-of-concept implementation.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import func, desc
-from typing import List, Optional
 from datetime import datetime, timedelta
+from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import desc, func
+from sqlalchemy.orm import Session, joinedload
 
 from database import get_db
-from models.user import User, UserRole
 from models.artwork import Artwork, ArtworkStatus
-from models.bid import Bid
 from models.audit_log import AuditLog
-from utils.auth import get_current_user
+from models.bid import Bid
+from models.user import User, UserRole
 from services.audit_service import AuditService
+from utils.auth import get_current_user
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
@@ -98,7 +99,7 @@ async def get_user_details(
 
     total_spent = (
         db.query(func.sum(Bid.amount))
-        .filter(Bid.bidder_id == user_id, Bid.is_winning == True)
+        .filter(Bid.bidder_id == user_id, Bid.is_winning.is_(True))
         .scalar()
         or 0
     )
@@ -171,14 +172,14 @@ async def list_transactions(
     transactions = (
         db.query(Bid)
         .options(joinedload(Bid.artwork), joinedload(Bid.bidder))
-        .filter(Bid.is_winning == True)
+        .filter(Bid.is_winning.is_(True))
         .order_by(desc(Bid.created_at))
         .offset(skip)
         .limit(limit)
         .all()
     )
 
-    total = db.query(Bid).filter(Bid.is_winning == True).count()
+    total = db.query(Bid).filter(Bid.is_winning.is_(True)).count()
 
     return {
         "total": total,
@@ -220,9 +221,9 @@ async def get_platform_overview(
     active_auctions = db.query(Artwork).filter(Artwork.status == ArtworkStatus.ACTIVE).count()
 
     # Transaction stats
-    total_transactions = db.query(Bid).filter(Bid.is_winning == True).count()
+    total_transactions = db.query(Bid).filter(Bid.is_winning.is_(True)).count()
 
-    total_revenue = db.query(func.sum(Bid.amount)).filter(Bid.is_winning == True).scalar() or 0
+    total_revenue = db.query(func.sum(Bid.amount)).filter(Bid.is_winning.is_(True)).scalar() or 0
 
     # Platform fees (10% commission)
     platform_fees = float(total_revenue) * 0.10

@@ -33,7 +33,7 @@ async def get_user_stats(
         .join(Artwork)
         .filter(
             Bid.bidder_id == current_user.id,
-            Bid.is_winning == True,
+            Bid.is_winning.is_(True),
             Artwork.status == "SOLD",
         )
         .count()
@@ -45,7 +45,7 @@ async def get_user_stats(
         .join(Artwork)
         .filter(
             Bid.bidder_id == current_user.id,
-            Bid.is_winning == True,
+            Bid.is_winning.is_(True),
             Artwork.status == "SOLD",
         )
         .scalar()

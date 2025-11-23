@@ -2,12 +2,14 @@
 Audit logging service for tracking security-critical actions.
 """
 
+import logging
+from typing import Any, Dict, Optional
+
+from fastapi import Request
 from sqlalchemy.orm import Session
+
 from models.audit_log import AuditLog
 from models.user import User
-from fastapi import Request
-from typing import Optional, Dict, Any
-import logging
 
 logger = logging.getLogger(__name__)
 

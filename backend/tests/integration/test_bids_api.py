@@ -205,6 +205,7 @@ class TestGetArtworkBids:
     def test_get_bids_multiple(self, client, artwork, buyer_user, buyer_token, db_session):
         """Test getting multiple bids for an artwork."""
         from datetime import timedelta
+
         from models.user import User, UserRole
         from services.jwt_service import JWTService
 
@@ -379,6 +380,7 @@ class TestBidThresholdLogic:
     def test_multiple_users_bidding_race_condition(self, client, db_session, artwork):
         """Test concurrent bids from multiple users."""
         from datetime import timedelta
+
         from models.user import User, UserRole
         from services.jwt_service import JWTService
 
@@ -426,6 +428,7 @@ class TestBidThresholdLogic:
     def test_winning_bid_locks_artwork(self, client, db_session, artwork, buyer_user, buyer_token):
         """Test artwork is locked (SOLD) after first winning bid."""
         from datetime import timedelta
+
         from models.user import User, UserRole
         from services.jwt_service import JWTService
 

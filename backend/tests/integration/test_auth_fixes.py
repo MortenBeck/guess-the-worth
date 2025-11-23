@@ -9,7 +9,6 @@ security audit have been properly fixed:
 - WebSocket connections require authentication
 """
 
-import pytest
 from fastapi.testclient import TestClient
 
 from models.user import User
@@ -276,9 +275,7 @@ class TestRoleBasedAccess:
     ):
         """Test that sellers cannot delete other sellers' artworks."""
         # Create a second seller
-        from models.user import User, UserRole
-        from services.jwt_service import JWTService
-        from datetime import timedelta
+        from models.user import UserRole
 
         other_seller = User(
             auth0_sub="auth0|seller999",

@@ -2,9 +2,11 @@
 Audit log model for tracking security-critical actions.
 """
 
-from sqlalchemy import Column, Integer, String, DateTime, JSON, ForeignKey
-from sqlalchemy.orm import relationship
 from datetime import datetime
+
+from sqlalchemy import JSON, Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy.orm import relationship
+
 from models.base import Base
 
 

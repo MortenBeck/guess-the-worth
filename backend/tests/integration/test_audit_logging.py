@@ -3,21 +3,17 @@ Integration tests for audit logging.
 Tests that security-critical actions are logged to the audit_logs table.
 """
 
-import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from models.audit_log import AuditLog
 from models import Artwork
+from models.audit_log import AuditLog
 
 
 def test_bid_placement_creates_audit_log(
     client: TestClient, db_session: Session, artwork, buyer_user
 ):
     """Test that placing a bid creates an audit log entry."""
-    # Get initial audit log count
-    initial_count = db_session.query(AuditLog).count()
-
     # Place a bid
     response = client.post(
         "/api/bids/",

@@ -4,12 +4,12 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session, joinedload
 
 from database import get_db
+from middleware.rate_limit import limiter
 from models import Artwork, Bid
 from models.user import User
 from schemas import BidCreate, BidResponse
-from utils.auth import get_current_user
-from middleware.rate_limit import limiter
 from services.audit_service import AuditService
+from utils.auth import get_current_user
 
 router = APIRouter()
 

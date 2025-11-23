@@ -3,10 +3,10 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from database import get_db
+from middleware.rate_limit import limiter
 from models import User
 from schemas import UserCreate, UserResponse
 from utils.auth import get_current_user
-from middleware.rate_limit import limiter
 
 router = APIRouter()
 

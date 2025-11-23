@@ -2,13 +2,10 @@
 Tests for admin API endpoints.
 """
 
-import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from models.user import User, UserRole
-from models.artwork import Artwork, ArtworkStatus
-from models.bid import Bid
+from models.user import User
 
 
 def test_list_users_requires_admin(client: TestClient, buyer_token: str):
