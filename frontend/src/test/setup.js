@@ -1,6 +1,30 @@
 import "@testing-library/jest-dom";
 import { cleanup } from "@testing-library/react";
-import { afterEach, vi } from "vitest";
+import { afterEach, vi, beforeEach } from "vitest";
+
+// Mock localStorage
+const localStorageMock = (() => {
+  let store = {};
+  return {
+    getItem: (key) => store[key] || null,
+    setItem: (key, value) => {
+      store[key] = value?.toString() || value;
+    },
+    removeItem: (key) => {
+      delete store[key];
+    },
+    clear: () => {
+      store = {};
+    },
+  };
+})();
+
+global.localStorage = localStorageMock;
+
+// Clear localStorage before each test
+beforeEach(() => {
+  localStorage.clear();
+});
 
 // Cleanup after each test
 afterEach(() => {
