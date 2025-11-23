@@ -36,7 +36,14 @@ const UserDashboard = () => {
 
   if (statsLoading || bidsLoading) {
     return (
-      <Box bg="#0f172a" color="white" minH="100vh" display="flex" alignItems="center" justifyContent="center">
+      <Box
+        bg="#0f172a"
+        color="white"
+        minH="100vh"
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+      >
         <Spinner size="xl" color="#6366f1" />
       </Box>
     );
@@ -50,8 +57,8 @@ const UserDashboard = () => {
   };
 
   // Separate active bids and won auctions
-  const activeBids = myBids.filter(bid => bid.artwork?.status === "ACTIVE");
-  const wonAuctions = myBids.filter(bid => bid.is_winning && bid.artwork?.status === "SOLD");
+  const activeBids = myBids.filter((bid) => bid.artwork?.status === "ACTIVE");
+  const wonAuctions = myBids.filter((bid) => bid.is_winning && bid.artwork?.status === "SOLD");
 
   return (
     <Box bg="#0f172a" color="white" minH="100vh" pt={6}>

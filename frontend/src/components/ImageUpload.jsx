@@ -1,6 +1,6 @@
-import { useState, useRef } from 'react';
-import { Box, Button, Image, Text, Progress, useToast, VStack } from '@chakra-ui/react';
-import { artworkService } from '../services/api';
+import { useState, useRef } from "react";
+import { Box, Button, Image, Text, Progress, useToast, VStack } from "@chakra-ui/react";
+import { artworkService } from "../services/api";
 
 export default function ImageUpload({ artworkId, currentImageUrl, onUploadSuccess }) {
   const [uploading, setUploading] = useState(false);
@@ -13,12 +13,12 @@ export default function ImageUpload({ artworkId, currentImageUrl, onUploadSucces
     if (!file) return;
 
     // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
       toast({
-        title: 'Invalid file type',
-        description: 'Please upload a JPEG, PNG, or WebP image',
-        status: 'error',
+        title: "Invalid file type",
+        description: "Please upload a JPEG, PNG, or WebP image",
+        status: "error",
         duration: 5000,
         isClosable: true,
       });
@@ -28,9 +28,9 @@ export default function ImageUpload({ artworkId, currentImageUrl, onUploadSucces
     // Validate file size (5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast({
-        title: 'File too large',
-        description: 'Maximum file size is 5MB',
-        status: 'error',
+        title: "File too large",
+        description: "Maximum file size is 5MB",
+        status: "error",
         duration: 5000,
         isClosable: true,
       });
@@ -47,17 +47,17 @@ export default function ImageUpload({ artworkId, currentImageUrl, onUploadSucces
     try {
       const result = await artworkService.uploadImage(artworkId, file);
       toast({
-        title: 'Image uploaded successfully',
-        status: 'success',
+        title: "Image uploaded successfully",
+        status: "success",
         duration: 3000,
         isClosable: true,
       });
       if (onUploadSuccess) onUploadSuccess(result.data?.image_url);
     } catch (error) {
       toast({
-        title: 'Upload failed',
+        title: "Upload failed",
         description: error.response?.data?.detail || error.message,
-        status: 'error',
+        status: "error",
         duration: 5000,
         isClosable: true,
       });
@@ -87,13 +87,7 @@ export default function ImageUpload({ artworkId, currentImageUrl, onUploadSucces
         transition="all 0.2s"
       >
         {preview ? (
-          <Image
-            src={preview}
-            maxH="300px"
-            mx="auto"
-            borderRadius="md"
-            objectFit="cover"
-          />
+          <Image src={preview} maxH="300px" mx="auto" borderRadius="md" objectFit="cover" />
         ) : (
           <VStack spacing={2} py={8}>
             <Text fontSize="3xl">🖼️</Text>
@@ -109,18 +103,11 @@ export default function ImageUpload({ artworkId, currentImageUrl, onUploadSucces
         type="file"
         ref={fileInputRef}
         accept="image/jpeg,image/png,image/webp"
-        style={{ display: 'none' }}
+        style={{ display: "none" }}
         onChange={handleFileSelect}
       />
 
-      {uploading && (
-        <Progress
-          isIndeterminate
-          size="xs"
-          w="full"
-          colorScheme="blue"
-        />
-      )}
+      {uploading && <Progress isIndeterminate size="xs" w="full" colorScheme="blue" />}
 
       <Button
         size="sm"
@@ -132,7 +119,7 @@ export default function ImageUpload({ artworkId, currentImageUrl, onUploadSucces
           bg: "#f1f5f9",
         }}
       >
-        {preview ? 'Change Image' : 'Upload Image'}
+        {preview ? "Change Image" : "Upload Image"}
       </Button>
     </VStack>
   );

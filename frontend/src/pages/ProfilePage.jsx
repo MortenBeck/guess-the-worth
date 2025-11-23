@@ -92,7 +92,14 @@ const ProfilePage = () => {
 
   if (userLoading || statsLoading) {
     return (
-      <Box bg="#0f172a" minH="100vh" color="white" display="flex" alignItems="center" justifyContent="center">
+      <Box
+        bg="#0f172a"
+        minH="100vh"
+        color="white"
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+      >
         <Spinner size="xl" color="#6366f1" />
       </Box>
     );
@@ -172,19 +179,25 @@ const ProfilePage = () => {
               </Heading>
               <VStack spacing={3}>
                 <HStack justify="space-between" w="full">
-                  <Text fontSize="sm" color="#94a3b8">Member since</Text>
+                  <Text fontSize="sm" color="#94a3b8">
+                    Member since
+                  </Text>
                   <Text fontSize="sm" fontWeight="bold" color="white">
                     {new Date(currentUser?.created_at || Date.now()).toLocaleDateString()}
                   </Text>
                 </HStack>
                 <HStack justify="space-between" w="full">
-                  <Text fontSize="sm" color="#94a3b8">Total bids</Text>
+                  <Text fontSize="sm" color="#94a3b8">
+                    Total bids
+                  </Text>
                   <Text fontSize="sm" fontWeight="bold" color="white">
                     {userStats.active_bids}
                   </Text>
                 </HStack>
                 <HStack justify="space-between" w="full">
-                  <Text fontSize="sm" color="#94a3b8">Won auctions</Text>
+                  <Text fontSize="sm" color="#94a3b8">
+                    Won auctions
+                  </Text>
                   <Text fontSize="sm" fontWeight="bold" color="white">
                     {userStats.won_auctions}
                   </Text>

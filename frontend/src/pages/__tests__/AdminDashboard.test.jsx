@@ -1,12 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
-import { renderWithProviders } from '../../test/utils';
-import AdminDashboard from '../AdminDashboard';
-import * as adminApi from '../../services/adminApi';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { screen, waitFor } from "@testing-library/react";
+import { renderWithProviders } from "../../test/utils";
+import AdminDashboard from "../AdminDashboard";
+import * as adminApi from "../../services/adminApi";
 
-vi.mock('../../services/adminApi');
+vi.mock("../../services/adminApi");
 
-describe('AdminDashboard', () => {
+describe("AdminDashboard", () => {
   const mockStats = {
     users: { total: 100, new_last_30_days: 10 },
     auctions: { total: 50, active: 20 },
@@ -17,10 +17,10 @@ describe('AdminDashboard', () => {
     transactions: [
       {
         id: 1,
-        artwork_title: 'Test Art',
-        buyer: 'testuser',
+        artwork_title: "Test Art",
+        buyer: "testuser",
         amount: 1000,
-        status: 'completed',
+        status: "completed",
       },
     ],
   };
@@ -31,8 +31,8 @@ describe('AdminDashboard', () => {
     adminApi.default.getTransactions.mockResolvedValue(mockTransactions);
     adminApi.default.getUsers.mockResolvedValue({ users: [] });
     adminApi.default.getSystemHealth.mockResolvedValue({
-      status: 'healthy',
-      database: 'healthy',
+      status: "healthy",
+      database: "healthy",
       metrics: { bids_last_hour: 5, artworks_last_24h: 10 },
     });
     adminApi.default.getFlaggedAuctions.mockResolvedValue({
@@ -41,34 +41,34 @@ describe('AdminDashboard', () => {
     });
   });
 
-  it('displays platform statistics', async () => {
+  it("displays platform statistics", async () => {
     renderWithProviders(<AdminDashboard />);
 
     await waitFor(() => {
-      expect(screen.getByText('100')).toBeInTheDocument(); // Total users
-      expect(screen.getByText('20')).toBeInTheDocument(); // Active auctions
+      expect(screen.getByText("100")).toBeInTheDocument(); // Total users
+      expect(screen.getByText("20")).toBeInTheDocument(); // Active auctions
     });
   });
 
-  it('displays recent transactions', async () => {
+  it("displays recent transactions", async () => {
     renderWithProviders(<AdminDashboard />);
 
     await waitFor(() => {
-      expect(screen.getByText('Test Art')).toBeInTheDocument();
+      expect(screen.getByText("Test Art")).toBeInTheDocument();
       expect(screen.getByText(/testuser/i)).toBeInTheDocument();
     });
   });
 
-  it('shows system health status', async () => {
+  it("shows system health status", async () => {
     renderWithProviders(<AdminDashboard />);
 
     await waitFor(() => {
-      const healthyElements = screen.getAllByText('healthy');
+      const healthyElements = screen.getAllByText("healthy");
       expect(healthyElements.length).toBeGreaterThan(0);
     });
   });
 
-  it('shows no flagged auctions message', async () => {
+  it("shows no flagged auctions message", async () => {
     renderWithProviders(<AdminDashboard />);
 
     await waitFor(() => {

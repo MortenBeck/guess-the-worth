@@ -49,7 +49,8 @@ const createApiClient = () => {
         }
 
         if (response.status === 403) {
-          error.message = responseData?.detail || "You do not have permission to perform this action";
+          error.message =
+            responseData?.detail || "You do not have permission to perform this action";
         }
 
         if (response.status === 404) {

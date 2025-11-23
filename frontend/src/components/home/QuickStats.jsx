@@ -7,7 +7,11 @@ const QuickStats = () => {
   const { isAuthenticated } = useAuthStore();
 
   // Fetch platform stats
-  const { data: platformStats, isLoading: platformLoading, error: platformError } = useQuery({
+  const {
+    data: platformStats,
+    isLoading: platformLoading,
+    error: platformError,
+  } = useQuery({
     queryKey: ["platform-stats"],
     queryFn: () => statsService.getPlatformStats(),
     staleTime: 5 * 60 * 1000,
@@ -53,16 +57,39 @@ const QuickStats = () => {
   }
 
   const platformStatsData = [
-    { label: "Active Artworks", value: platformStats?.totalArtworks || 0, icon: "🎨", color: "#6366f1" },
-    { label: "Total Bids", value: `$${platformStats?.totalBids || 0}`, icon: "💎", color: "#10b981" },
+    {
+      label: "Active Artworks",
+      value: platformStats?.totalArtworks || 0,
+      icon: "🎨",
+      color: "#6366f1",
+    },
+    {
+      label: "Total Bids",
+      value: `$${platformStats?.totalBids || 0}`,
+      icon: "💎",
+      color: "#10b981",
+    },
     { label: "Artists", value: platformStats?.totalArtists || 0, icon: "👨‍🎨", color: "#f59e0b" },
-    { label: "Live Bidding", value: platformStats?.liveStatus || "24/7", icon: "⚡", color: "#ec4899" },
+    {
+      label: "Live Bidding",
+      value: platformStats?.liveStatus || "24/7",
+      icon: "⚡",
+      color: "#ec4899",
+    },
   ];
 
-  const personalStats = isAuthenticated && userStats ? [
-    { label: "Your Bids", value: userStats.active_bids || 0, icon: "💰", color: "#6366f1" },
-    { label: "Artworks Won", value: userStats.won_auctions || 0, icon: "🏆", color: "#10b981" },
-  ] : [];
+  const personalStats =
+    isAuthenticated && userStats
+      ? [
+          { label: "Your Bids", value: userStats.active_bids || 0, icon: "💰", color: "#6366f1" },
+          {
+            label: "Artworks Won",
+            value: userStats.won_auctions || 0,
+            icon: "🏆",
+            color: "#10b981",
+          },
+        ]
+      : [];
 
   return (
     <Box py={12}>

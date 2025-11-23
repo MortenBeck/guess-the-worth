@@ -33,7 +33,11 @@ const ArtworkPage = () => {
   useRealtimeBids(id);
 
   // Fetch artwork details
-  const { data: artwork, isLoading: artworkLoading, error: artworkError } = useQuery({
+  const {
+    data: artwork,
+    isLoading: artworkLoading,
+    error: artworkError,
+  } = useQuery({
     queryKey: ["artwork", id],
     queryFn: async () => {
       const response = await artworkService.getById(id);
@@ -54,10 +58,11 @@ const ArtworkPage = () => {
 
   // Place bid mutation
   const placeBidMutation = useMutation({
-    mutationFn: (amount) => bidService.create({
-      artwork_id: parseInt(id),
-      amount: parseFloat(amount),
-    }),
+    mutationFn: (amount) =>
+      bidService.create({
+        artwork_id: parseInt(id),
+        amount: parseFloat(amount),
+      }),
     onSuccess: (response) => {
       const { data: bid } = response;
       toast({
@@ -113,7 +118,8 @@ const ArtworkPage = () => {
     const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
 
-    if (days > 0) return `${days} day${days !== 1 ? "s" : ""} ${hours} hour${hours !== 1 ? "s" : ""}`;
+    if (days > 0)
+      return `${days} day${days !== 1 ? "s" : ""} ${hours} hour${hours !== 1 ? "s" : ""}`;
     return `${hours} hour${hours !== 1 ? "s" : ""}`;
   };
 

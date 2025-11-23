@@ -1,45 +1,38 @@
-import { useQuery } from '@tanstack/react-query';
-import {
-  Users,
-  Gavel,
-  DollarSign,
-  TrendingUp,
-  AlertTriangle,
-  Activity,
-} from 'lucide-react';
-import adminApi from '../services/adminApi';
-import StatCard from '../components/StatCard';
+import { useQuery } from "@tanstack/react-query";
+import { Users, Gavel, DollarSign, TrendingUp, AlertTriangle, Activity } from "lucide-react";
+import adminApi from "../services/adminApi";
+import StatCard from "../components/StatCard";
 
 export default function AdminDashboard() {
   // Fetch platform overview
   const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ['admin', 'overview'],
+    queryKey: ["admin", "overview"],
     queryFn: adminApi.getPlatformOverview,
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
   // Fetch recent transactions
   const { data: transactionsData, isLoading: transactionsLoading } = useQuery({
-    queryKey: ['admin', 'transactions'],
+    queryKey: ["admin", "transactions"],
     queryFn: () => adminApi.getTransactions({ limit: 10 }),
   });
 
   // Fetch recent users
   const { data: usersData, isLoading: usersLoading } = useQuery({
-    queryKey: ['admin', 'users'],
+    queryKey: ["admin", "users"],
     queryFn: () => adminApi.getUsers({ limit: 10 }),
   });
 
   // Fetch system health
   const { data: systemHealth, isLoading: healthLoading } = useQuery({
-    queryKey: ['admin', 'health'],
+    queryKey: ["admin", "health"],
     queryFn: adminApi.getSystemHealth,
     refetchInterval: 60000, // Refresh every minute
   });
 
   // Fetch flagged auctions
   const { data: flaggedData } = useQuery({
-    queryKey: ['admin', 'flagged'],
+    queryKey: ["admin", "flagged"],
     queryFn: adminApi.getFlaggedAuctions,
   });
 
@@ -56,9 +49,7 @@ export default function AdminDashboard() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-        <p className="text-gray-600 mt-1">
-          Platform management and monitoring
-        </p>
+        <p className="text-gray-600 mt-1">Platform management and monitoring</p>
       </div>
 
       {/* Stats Grid */}
@@ -109,11 +100,11 @@ export default function AdminDashboard() {
                   </div>
                   <span
                     className={`px-2 py-1 text-xs rounded ${
-                      user.role === 'ADMIN'
-                        ? 'bg-purple-100 text-purple-800'
-                        : user.role === 'SELLER'
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-green-100 text-green-800'
+                      user.role === "ADMIN"
+                        ? "bg-purple-100 text-purple-800"
+                        : user.role === "SELLER"
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-green-100 text-green-800"
                     }`}
                   >
                     {user.role}
@@ -138,14 +129,10 @@ export default function AdminDashboard() {
                 >
                   <div>
                     <p className="font-medium">{tx.artwork_title}</p>
-                    <p className="text-sm text-gray-500">
-                      Buyer: {tx.buyer}
-                    </p>
+                    <p className="text-sm text-gray-500">Buyer: {tx.buyer}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold text-green-600">
-                      ${tx.amount.toLocaleString()}
-                    </p>
+                    <p className="font-semibold text-green-600">${tx.amount.toLocaleString()}</p>
                     <p className="text-xs text-gray-500">{tx.status}</p>
                   </div>
                 </div>
@@ -171,35 +158,35 @@ export default function AdminDashboard() {
                 <span className="text-gray-600">Status</span>
                 <span
                   className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    systemHealth?.status === 'healthy'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-yellow-100 text-yellow-800'
+                    systemHealth?.status === "healthy"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-yellow-100 text-yellow-800"
                   }`}
                 >
-                  {systemHealth?.status || 'Unknown'}
+                  {systemHealth?.status || "Unknown"}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-600">Database</span>
                 <span
                   className={`px-3 py-1 rounded-full text-sm ${
-                    systemHealth?.database === 'healthy'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-red-100 text-red-800'
+                    systemHealth?.database === "healthy"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-red-100 text-red-800"
                   }`}
                 >
-                  {systemHealth?.database || 'Unknown'}
+                  {systemHealth?.database || "Unknown"}
                 </span>
               </div>
               <div className="pt-3 border-t">
                 <p className="text-sm text-gray-600">
-                  Bids (last hour):{' '}
+                  Bids (last hour):{" "}
                   <span className="font-semibold">
                     {systemHealth?.metrics?.bids_last_hour || 0}
                   </span>
                 </p>
                 <p className="text-sm text-gray-600">
-                  Artworks (last 24h):{' '}
+                  Artworks (last 24h):{" "}
                   <span className="font-semibold">
                     {systemHealth?.metrics?.artworks_last_24h || 0}
                   </span>
@@ -218,17 +205,12 @@ export default function AdminDashboard() {
           {flaggedData?.total === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <p>No flagged auctions</p>
-              <p className="text-sm mt-1">
-                {flaggedData?.message || 'All clear!'}
-              </p>
+              <p className="text-sm mt-1">{flaggedData?.message || "All clear!"}</p>
             </div>
           ) : (
             <div className="space-y-3">
               {flaggedData?.flagged_auctions?.map((auction) => (
-                <div
-                  key={auction.id}
-                  className="p-3 bg-yellow-50 border border-yellow-200 rounded"
-                >
+                <div key={auction.id} className="p-3 bg-yellow-50 border border-yellow-200 rounded">
                   <p className="font-medium">{auction.title}</p>
                   <p className="text-sm text-gray-600">{auction.reason}</p>
                 </div>

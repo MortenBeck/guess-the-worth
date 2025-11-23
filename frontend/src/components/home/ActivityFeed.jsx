@@ -105,7 +105,7 @@ const ActivityFeed = () => {
             color="#6366f1"
             fontSize="sm"
             cursor="pointer"
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate("/dashboard")}
             _hover={{
               color: "#ec4899",
               textDecoration: "underline",

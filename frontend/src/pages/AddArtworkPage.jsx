@@ -236,7 +236,7 @@ const AddArtworkPage = () => {
                   <input
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
-                    style={{ display: 'none' }}
+                    style={{ display: "none" }}
                     id="artwork-image-input"
                     onChange={handleImageSelect}
                   />
@@ -252,7 +252,7 @@ const AddArtworkPage = () => {
                       bg: "#f1f5f9",
                     }}
                   >
-                    {selectedImage ? 'Change Image' : 'Select Image'}
+                    {selectedImage ? "Change Image" : "Select Image"}
                   </Button>
                 </Box>
               </Box>
@@ -317,9 +317,7 @@ const AddArtworkPage = () => {
                     color: "white",
                   }}
                   value={newArtwork.artist_name}
-                  onChange={(e) =>
-                    setNewArtwork({ ...newArtwork, artist_name: e.target.value })
-                  }
+                  onChange={(e) => setNewArtwork({ ...newArtwork, artist_name: e.target.value })}
                   placeholder="Enter artist name"
                 />
               </Box>

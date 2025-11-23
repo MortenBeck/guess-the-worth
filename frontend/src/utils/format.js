@@ -4,10 +4,10 @@
  * @returns {string} Formatted currency string
  */
 export function formatCurrency(amount) {
-  if (amount === null || amount === undefined) return '$0.00';
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
+  if (amount === null || amount === undefined) return "$0.00";
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
   }).format(amount);
 }
 
@@ -17,12 +17,12 @@ export function formatCurrency(amount) {
  * @returns {string} Formatted date string
  */
 export function formatDate(dateString) {
-  if (!dateString) return '';
+  if (!dateString) return "";
   const date = new Date(dateString);
-  return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
+  return new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
   }).format(date);
 }
 
@@ -32,21 +32,21 @@ export function formatDate(dateString) {
  * @returns {string} Time ago string
  */
 export function formatTimeAgo(dateString) {
-  if (!dateString) return '';
+  if (!dateString) return "";
   const date = new Date(dateString);
   const now = new Date();
   const seconds = Math.floor((now - date) / 1000);
 
-  if (seconds < 60) return 'just now';
+  if (seconds < 60) return "just now";
 
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+  if (minutes < 60) return `${minutes} minute${minutes > 1 ? "s" : ""} ago`;
 
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+  if (hours < 24) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
 
   const days = Math.floor(hours / 24);
-  return `${days} day${days > 1 ? 's' : ''} ago`;
+  return `${days} day${days > 1 ? "s" : ""} ago`;
 }
 
 /**
@@ -56,9 +56,9 @@ export function formatTimeAgo(dateString) {
  * @returns {string} Truncated string with ellipsis if needed
  */
 export function truncate(str, maxLength = 100) {
-  if (!str) return '';
+  if (!str) return "";
   if (str.length <= maxLength) return str;
-  return str.slice(0, maxLength) + '...';
+  return str.slice(0, maxLength) + "...";
 }
 
 /**
@@ -67,6 +67,6 @@ export function truncate(str, maxLength = 100) {
  * @returns {string} Capitalized string
  */
 export function capitalize(str) {
-  if (!str) return '';
+  if (!str) return "";
   return str.charAt(0).toUpperCase() + str.slice(1);
 }

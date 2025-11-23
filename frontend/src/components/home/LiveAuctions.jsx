@@ -1,5 +1,16 @@
 import { useState } from "react";
-import { Box, Container, Heading, Text, VStack, SimpleGrid, Badge, HStack, Image, Skeleton } from "@chakra-ui/react";
+import {
+  Box,
+  Container,
+  Heading,
+  Text,
+  VStack,
+  SimpleGrid,
+  Badge,
+  HStack,
+  Image,
+  Skeleton,
+} from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { artworkService } from "../../services/api";
@@ -153,11 +164,7 @@ const LiveAuctions = () => {
                 transition="all 0.3s ease"
               >
                 {/* Optimized image component with lazy loading */}
-                <ArtworkImage
-                  imageUrl={artwork.image_url}
-                  title={artwork.title}
-                  index={index}
-                />
+                <ArtworkImage imageUrl={artwork.image_url} title={artwork.title} index={index} />
 
                 <Box p={4}>
                   <VStack align="start" spacing={3}>

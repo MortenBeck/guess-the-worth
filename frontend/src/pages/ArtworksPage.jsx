@@ -24,7 +24,11 @@ const ArtworksPage = () => {
   const [filterCategory, setFilterCategory] = useState("all");
 
   // Fetch artworks from API
-  const { data: artworks = [], isLoading, error } = useQuery({
+  const {
+    data: artworks = [],
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["artworks"],
     queryFn: async () => {
       const response = await artworkService.getAll();
@@ -45,7 +49,8 @@ const ArtworksPage = () => {
     const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
 
-    if (days > 0) return `${days} day${days !== 1 ? "s" : ""} ${hours} hour${hours !== 1 ? "s" : ""}`;
+    if (days > 0)
+      return `${days} day${days !== 1 ? "s" : ""} ${hours} hour${hours !== 1 ? "s" : ""}`;
     return `${hours} hour${hours !== 1 ? "s" : ""}`;
   };
 
@@ -53,7 +58,8 @@ const ArtworksPage = () => {
     .filter((artwork) => {
       const matchesSearch =
         artwork.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (artwork.artist_name && artwork.artist_name.toLowerCase().includes(searchTerm.toLowerCase()));
+        (artwork.artist_name &&
+          artwork.artist_name.toLowerCase().includes(searchTerm.toLowerCase()));
       const matchesCategory = filterCategory === "all" || artwork.category === filterCategory;
       return matchesSearch && matchesCategory;
     })
@@ -73,7 +79,7 @@ const ArtworksPage = () => {
     });
 
   // Extract unique categories from artworks
-  const categories = ["all", ...new Set(artworks.map(a => a.category).filter(Boolean))];
+  const categories = ["all", ...new Set(artworks.map((a) => a.category).filter(Boolean))];
 
   // Loading state
   if (isLoading) {

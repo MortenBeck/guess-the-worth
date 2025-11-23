@@ -35,7 +35,14 @@ const SellerDashboard = () => {
 
   if (statsLoading || artworksLoading) {
     return (
-      <Box bg="#0f172a" minH="100vh" color="white" display="flex" alignItems="center" justifyContent="center">
+      <Box
+        bg="#0f172a"
+        minH="100vh"
+        color="white"
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+      >
         <Spinner size="xl" color="#6366f1" />
       </Box>
     );
@@ -50,8 +57,8 @@ const SellerDashboard = () => {
   };
 
   // Separate by status
-  const activeArtworks = myArtworks.filter(a => a.status === "ACTIVE");
-  const soldArtworks = myArtworks.filter(a => a.status === "SOLD");
+  const activeArtworks = myArtworks.filter((a) => a.status === "ACTIVE");
+  const soldArtworks = myArtworks.filter((a) => a.status === "SOLD");
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -193,9 +200,7 @@ const SellerDashboard = () => {
               My Artworks
             </Heading>
             {myArtworks.length === 0 ? (
-              <Text color="#94a3b8">
-                No artworks yet. Click "Add New Artwork" to get started!
-              </Text>
+              <Text color="#94a3b8">No artworks yet. Click "Add New Artwork" to get started!</Text>
             ) : (
               <VStack spacing={4} align="stretch">
                 {myArtworks.map((artwork) => (
@@ -239,14 +244,20 @@ const SellerDashboard = () => {
                                 fontSize="sm"
                                 fontWeight="bold"
                                 color={
-                                  isThresholdMet(artwork.current_highest_bid || 0, artwork.secret_threshold)
+                                  isThresholdMet(
+                                    artwork.current_highest_bid || 0,
+                                    artwork.secret_threshold
+                                  )
                                     ? "#22c55e"
                                     : "#94a3b8"
                                 }
                               >
                                 ${artwork.current_highest_bid || 0}
                               </Text>
-                              {isThresholdMet(artwork.current_highest_bid || 0, artwork.secret_threshold) && (
+                              {isThresholdMet(
+                                artwork.current_highest_bid || 0,
+                                artwork.secret_threshold
+                              ) && (
                                 <Badge colorScheme="green" size="sm">
                                   Threshold Met!
                                 </Badge>
@@ -261,9 +272,7 @@ const SellerDashboard = () => {
                         )}
                       </VStack>
                       <VStack align="center" spacing={2}>
-                        <Badge colorScheme={getStatusColor(artwork.status)}>
-                          {artwork.status}
-                        </Badge>
+                        <Badge colorScheme={getStatusColor(artwork.status)}>{artwork.status}</Badge>
                         <Button
                           size="sm"
                           variant="outline"
@@ -335,12 +344,18 @@ const SellerDashboard = () => {
                           fontSize="lg"
                           fontWeight="bold"
                           color={
-                            isThresholdMet(artwork.current_highest_bid || 0, artwork.secret_threshold)
+                            isThresholdMet(
+                              artwork.current_highest_bid || 0,
+                              artwork.secret_threshold
+                            )
                               ? "#22c55e"
                               : "#f97316"
                           }
                         >
-                          {Math.round(((artwork.current_highest_bid || 0) / artwork.secret_threshold) * 100)}%
+                          {Math.round(
+                            ((artwork.current_highest_bid || 0) / artwork.secret_threshold) * 100
+                          )}
+                          %
                         </Text>
                         <Text fontSize="xs" color="#64748b">
                           to threshold
@@ -370,7 +385,14 @@ const SellerDashboard = () => {
             ) : (
               <VStack spacing={3}>
                 {soldArtworks.map((artwork) => (
-                  <HStack key={artwork.id} justify="space-between" w="full" p={3} bg="#0f172a" borderRadius="md">
+                  <HStack
+                    key={artwork.id}
+                    justify="space-between"
+                    w="full"
+                    p={3}
+                    bg="#0f172a"
+                    borderRadius="md"
+                  >
                     <VStack align="start" spacing={0}>
                       <Text fontWeight="bold" color="white">
                         {artwork.title}

@@ -1,4 +1,4 @@
-import api from './api';
+import api from "./api";
 
 /**
  * Admin API service functions
@@ -6,13 +6,13 @@ import api from './api';
 export const adminApi = {
   // Platform overview
   getPlatformOverview: async () => {
-    const response = await api.get('/api/admin/stats/overview');
+    const response = await api.get("/api/admin/stats/overview");
     return response.data;
   },
 
   // User management
   getUsers: async (params = {}) => {
-    const response = await api.get('/api/admin/users', { params });
+    const response = await api.get("/api/admin/users", { params });
     return response.data;
   },
 
@@ -22,35 +22,31 @@ export const adminApi = {
   },
 
   banUser: async (userId, reason) => {
-    const response = await api.put(
-      `/api/admin/users/${userId}/ban`,
-      null,
-      { params: { reason } }
-    );
+    const response = await api.put(`/api/admin/users/${userId}/ban`, null, { params: { reason } });
     return response.data;
   },
 
   // Transactions
   getTransactions: async (params = {}) => {
-    const response = await api.get('/api/admin/transactions', { params });
+    const response = await api.get("/api/admin/transactions", { params });
     return response.data;
   },
 
   // System health
   getSystemHealth: async () => {
-    const response = await api.get('/api/admin/system/health');
+    const response = await api.get("/api/admin/system/health");
     return response.data;
   },
 
   // Flagged auctions
   getFlaggedAuctions: async () => {
-    const response = await api.get('/api/admin/flagged-auctions');
+    const response = await api.get("/api/admin/flagged-auctions");
     return response.data;
   },
 
   // Audit logs
   getAuditLogs: async (params = {}) => {
-    const response = await api.get('/api/admin/audit-logs', { params });
+    const response = await api.get("/api/admin/audit-logs", { params });
     return response.data;
   },
 };

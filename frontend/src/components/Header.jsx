@@ -85,7 +85,7 @@ const Header = () => {
                   }}
                   transition="all 0.2s"
                   onClick={() => handleNavClick(item.path)}
-                  data-testid={`nav-${item.label.toLowerCase().replace(/ /g, '-')}`}
+                  data-testid={`nav-${item.label.toLowerCase().replace(/ /g, "-")}`}
                 >
                   {item.label}
                 </Text>
