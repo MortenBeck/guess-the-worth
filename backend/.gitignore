@@ -37,3 +37,6 @@ uploads/
 
 # Logs
 *.log
+
+# Database backups
+backups/
