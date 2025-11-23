@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@chakra-ui/react";
 import socketService from "../services/socket";
 import useBiddingStore from "../store/biddingStore";
-import { toaster } from "../components/ui/toaster";
 
 /**
  * Custom hook to enable real-time bid updates for a specific artwork.
@@ -15,6 +15,7 @@ import { toaster } from "../components/ui/toaster";
 export function useRealtimeBids(artworkId) {
   const queryClient = useQueryClient();
   const { updateBid, markArtworkSold } = useBiddingStore();
+  const toast = useToast();
 
   useEffect(() => {
     if (!artworkId) return;
@@ -34,11 +35,12 @@ export function useRealtimeBids(artworkId) {
       queryClient.invalidateQueries({ queryKey: ["artwork", artworkId] });
 
       // Show toast notification
-      toaster.create({
+      toast({
         title: "New bid placed!",
         description: `$${data.bid.amount.toLocaleString()}`,
-        type: "info",
+        status: "info",
         duration: 3000,
+        isClosable: true,
       });
     };
 
@@ -54,11 +56,12 @@ export function useRealtimeBids(artworkId) {
       queryClient.invalidateQueries({ queryKey: ["artworks"] });
 
       // Show success message
-      toaster.create({
+      toast({
         title: "Auction Ended!",
         description: `Sold for $${data.winning_bid.toLocaleString()}`,
-        type: "success",
+        status: "success",
         duration: 5000,
+        isClosable: true,
       });
     };
 
