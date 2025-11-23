@@ -31,32 +31,17 @@ async def get_artworks(skip: int = 0, limit: int = 20, db: Session = Depends(get
     """
     # Validate pagination parameters
     if skip < 0:
-        raise HTTPException(
-            status_code=400,
-            detail="Skip parameter must be non-negative"
-        )
+        raise HTTPException(status_code=400, detail="Skip parameter must be non-negative")
 
     if limit < 1:
-        raise HTTPException(
-            status_code=400,
-            detail="Limit parameter must be at least 1"
-        )
+        raise HTTPException(status_code=400, detail="Limit parameter must be at least 1")
 
     # Enforce maximum limit to prevent resource exhaustion
     if limit > 100:
-        raise HTTPException(
-            status_code=400,
-            detail="Limit cannot exceed 100"
-        )
+        raise HTTPException(status_code=400, detail="Limit cannot exceed 100")
 
     # Eager load seller relationship to prevent N+1 queries
-    artworks = (
-        db.query(Artwork)
-        .options(joinedload(Artwork.seller))
-        .offset(skip)
-        .limit(limit)
-        .all()
-    )
+    artworks = db.query(Artwork).options(joinedload(Artwork.seller)).offset(skip).limit(limit).all()
     return artworks
 
 
@@ -85,36 +70,21 @@ async def create_artwork(
     """
     # Validate secret_threshold
     if artwork.secret_threshold < 0:
-        raise HTTPException(
-            status_code=400,
-            detail="Secret threshold must be non-negative"
-        )
+        raise HTTPException(status_code=400, detail="Secret threshold must be non-negative")
 
     # Validate title length
     if len(artwork.title) < 3:
-        raise HTTPException(
-            status_code=400,
-            detail="Title must be at least 3 characters long"
-        )
+        raise HTTPException(status_code=400, detail="Title must be at least 3 characters long")
     if len(artwork.title) > 200:
-        raise HTTPException(
-            status_code=400,
-            detail="Title cannot exceed 200 characters"
-        )
+        raise HTTPException(status_code=400, detail="Title cannot exceed 200 characters")
 
     # Validate description length if provided
     if artwork.description and len(artwork.description) > 2000:
-        raise HTTPException(
-            status_code=400,
-            detail="Description cannot exceed 2000 characters"
-        )
+        raise HTTPException(status_code=400, detail="Description cannot exceed 2000 characters")
 
     # Validate end_date is in future if provided
     if artwork.end_date and artwork.end_date < datetime.utcnow():
-        raise HTTPException(
-            status_code=400,
-            detail="End date must be in the future"
-        )
+        raise HTTPException(status_code=400, detail="End date must be in the future")
 
     # Create artwork with authenticated user's ID
     db_artwork = Artwork(**artwork.dict(), seller_id=current_user.id)
@@ -165,42 +135,33 @@ async def update_artwork(
 
     # Check ownership
     if artwork.seller_id != current_user.id and current_user.role != UserRole.ADMIN:
-        raise HTTPException(
-            status_code=403, detail="Not authorized to update this artwork"
-        )
+        raise HTTPException(status_code=403, detail="Not authorized to update this artwork")
 
     # Validate updated fields
     update_data = artwork_update.dict(exclude_unset=True)
 
     if "secret_threshold" in update_data and update_data["secret_threshold"] < 0:
-        raise HTTPException(
-            status_code=400,
-            detail="Secret threshold must be non-negative"
-        )
+        raise HTTPException(status_code=400, detail="Secret threshold must be non-negative")
 
     if "title" in update_data:
         if len(update_data["title"]) < 3:
-            raise HTTPException(
-                status_code=400,
-                detail="Title must be at least 3 characters long"
-            )
+            raise HTTPException(status_code=400, detail="Title must be at least 3 characters long")
         if len(update_data["title"]) > 200:
-            raise HTTPException(
-                status_code=400,
-                detail="Title cannot exceed 200 characters"
-            )
+            raise HTTPException(status_code=400, detail="Title cannot exceed 200 characters")
 
-    if "description" in update_data and update_data["description"] and len(update_data["description"]) > 2000:
-        raise HTTPException(
-            status_code=400,
-            detail="Description cannot exceed 2000 characters"
-        )
+    if (
+        "description" in update_data
+        and update_data["description"]
+        and len(update_data["description"]) > 2000
+    ):
+        raise HTTPException(status_code=400, detail="Description cannot exceed 2000 characters")
 
-    if "end_date" in update_data and update_data["end_date"] and update_data["end_date"] < datetime.utcnow():
-        raise HTTPException(
-            status_code=400,
-            detail="End date must be in the future"
-        )
+    if (
+        "end_date" in update_data
+        and update_data["end_date"]
+        and update_data["end_date"] < datetime.utcnow()
+    ):
+        raise HTTPException(status_code=400, detail="End date must be in the future")
 
     # Update fields
     for field, value in update_data.items():
@@ -229,15 +190,11 @@ async def delete_artwork(
 
     # Check ownership
     if artwork.seller_id != current_user.id and current_user.role != UserRole.ADMIN:
-        raise HTTPException(
-            status_code=403, detail="Not authorized to delete this artwork"
-        )
+        raise HTTPException(status_code=403, detail="Not authorized to delete this artwork")
 
     # Check if artwork is sold
     if artwork.status == "SOLD":
-        raise HTTPException(
-            status_code=400, detail="Cannot delete sold artwork"
-        )
+        raise HTTPException(status_code=400, detail="Cannot delete sold artwork")
 
     db.delete(artwork)
     db.commit()

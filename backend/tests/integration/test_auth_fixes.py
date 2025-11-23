@@ -29,9 +29,7 @@ class TestAuthenticationRequirements:
 
     def test_create_bid_requires_auth(self, client: TestClient, artwork):
         """Test that placing bid requires authentication."""
-        response = client.post(
-            "/api/bids/", json={"artwork_id": artwork.id, "amount": 150.0}
-        )
+        response = client.post("/api/bids/", json={"artwork_id": artwork.id, "amount": 150.0})
         assert response.status_code == 401
 
     def test_get_my_artworks_requires_auth(self, client: TestClient):
@@ -46,9 +44,7 @@ class TestAuthenticationRequirements:
 
     def test_update_artwork_requires_auth(self, client: TestClient, artwork):
         """Test that updating artwork requires authentication."""
-        response = client.put(
-            f"/api/artworks/{artwork.id}", json={"title": "Updated Title"}
-        )
+        response = client.put(f"/api/artworks/{artwork.id}", json={"title": "Updated Title"})
         assert response.status_code == 401
 
     def test_delete_artwork_requires_auth(self, client: TestClient, artwork):
@@ -221,9 +217,7 @@ class TestSellerBiddingRestriction:
 class TestRoleBasedAccess:
     """Test role-based access control."""
 
-    def test_buyer_cannot_create_artwork(
-        self, client: TestClient, buyer_token: str
-    ):
+    def test_buyer_cannot_create_artwork(self, client: TestClient, buyer_token: str):
         """Test that buyers cannot create artworks."""
         response = client.post(
             "/api/artworks/",
@@ -238,9 +232,7 @@ class TestRoleBasedAccess:
         # Should be rejected (forbidden or method not allowed)
         assert response.status_code == 403
 
-    def test_seller_can_create_artwork(
-        self, client: TestClient, seller_token: str
-    ):
+    def test_seller_can_create_artwork(self, client: TestClient, seller_token: str):
         """Test that sellers can create artworks."""
         response = client.post(
             "/api/artworks/",
@@ -254,9 +246,7 @@ class TestRoleBasedAccess:
 
         assert response.status_code == 200
 
-    def test_admin_can_create_artwork(
-        self, client: TestClient, admin_token: str
-    ):
+    def test_admin_can_create_artwork(self, client: TestClient, admin_token: str):
         """Test that admins can create artworks."""
         response = client.post(
             "/api/artworks/",
@@ -329,9 +319,7 @@ class TestCurrentUserEndpoint:
         self, client: TestClient, buyer_token: str, buyer_user: User
     ):
         """Test that current user is retrieved from token, not query param."""
-        response = client.get(
-            "/api/auth/me", headers={"Authorization": f"Bearer {buyer_token}"}
-        )
+        response = client.get("/api/auth/me", headers={"Authorization": f"Bearer {buyer_token}"})
 
         assert response.status_code == 200
         data = response.json()
@@ -376,9 +364,7 @@ class TestTokenValidation:
 
         assert response.status_code == 401
 
-    def test_missing_bearer_prefix_rejected(
-        self, client: TestClient, buyer_token: str
-    ):
+    def test_missing_bearer_prefix_rejected(self, client: TestClient, buyer_token: str):
         """Test that tokens without 'Bearer' prefix are rejected."""
         response = client.post(
             "/api/artworks/",

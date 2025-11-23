@@ -2,6 +2,7 @@
 Integration tests for rate limiting middleware.
 Tests rate limiting behavior on various endpoints.
 """
+
 import pytest
 from fastapi.testclient import TestClient
 

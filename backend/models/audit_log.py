@@ -1,13 +1,16 @@
 """
 Audit log model for tracking security-critical actions.
 """
+
 from sqlalchemy import Column, Integer, String, DateTime, JSON, ForeignKey
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from models.base import Base
 
+
 class AuditLog(Base):
     """Audit log for security-critical actions."""
+
     __tablename__ = "audit_logs"
 
     id = Column(Integer, primary_key=True, index=True)

@@ -1,6 +1,7 @@
 """
 Audit logging service for tracking security-critical actions.
 """
+
 from sqlalchemy.orm import Session
 from models.audit_log import AuditLog
 from models.user import User
@@ -9,6 +10,7 @@ from typing import Optional, Dict, Any
 import logging
 
 logger = logging.getLogger(__name__)
+
 
 class AuditService:
     """Service for logging security-critical actions."""

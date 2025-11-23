@@ -30,23 +30,14 @@ async def get_users(
     """
     # Validate pagination parameters
     if skip < 0:
-        raise HTTPException(
-            status_code=400,
-            detail="Skip parameter must be non-negative"
-        )
+        raise HTTPException(status_code=400, detail="Skip parameter must be non-negative")
 
     if limit < 1:
-        raise HTTPException(
-            status_code=400,
-            detail="Limit parameter must be at least 1"
-        )
+        raise HTTPException(status_code=400, detail="Limit parameter must be at least 1")
 
     # Enforce maximum limit to prevent resource exhaustion
     if limit > 100:
-        raise HTTPException(
-            status_code=400,
-            detail="Limit cannot exceed 100"
-        )
+        raise HTTPException(status_code=400, detail="Limit cannot exceed 100")
 
     # If credentials provided, validate them
     if credentials:

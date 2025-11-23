@@ -2,6 +2,7 @@
 Rate limiting middleware using SlowAPI.
 Prevents DoS attacks and API abuse.
 """
+
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.middleware import SlowAPIMiddleware
@@ -21,15 +22,10 @@ limiter = Limiter(
     storage_uri="memory://",  # Change to redis:// in production
 )
 
-async def rate_limit_exceeded_handler(
-    request: Request,
-    exc: RateLimitExceeded
-) -> JSONResponse:
+
+async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
     """Custom handler for rate limit exceeded errors."""
-    logger.warning(
-        f"Rate limit exceeded for {request.client.host} "
-        f"on {request.url.path}"
-    )
+    logger.warning(f"Rate limit exceeded for {request.client.host} " f"on {request.url.path}")
     return JSONResponse(
         status_code=429,
         content={
@@ -39,6 +35,7 @@ async def rate_limit_exceeded_handler(
         },
         headers={"Retry-After": str(exc.detail)},
     )
+
 
 def setup_rate_limiting(app):
     """Configure rate limiting for the application."""

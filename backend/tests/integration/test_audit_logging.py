@@ -2,6 +2,7 @@
 Integration tests for audit logging.
 Tests that security-critical actions are logged to the audit_logs table.
 """
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -10,7 +11,9 @@ from models.audit_log import AuditLog
 from models import Artwork
 
 
-def test_bid_placement_creates_audit_log(client: TestClient, db_session: Session, artwork, buyer_user):
+def test_bid_placement_creates_audit_log(
+    client: TestClient, db_session: Session, artwork, buyer_user
+):
     """Test that placing a bid creates an audit log entry."""
     # Get initial audit log count
     initial_count = db_session.query(AuditLog).count()
@@ -26,9 +29,7 @@ def test_bid_placement_creates_audit_log(client: TestClient, db_session: Session
     assert response.status_code == 200
 
     # Check that audit log was created
-    audit_logs = db_session.query(AuditLog).filter(
-        AuditLog.action == "bid_placed"
-    ).all()
+    audit_logs = db_session.query(AuditLog).filter(AuditLog.action == "bid_placed").all()
 
     assert len(audit_logs) > 0, "No audit log created for bid placement"
 
@@ -43,7 +44,9 @@ def test_bid_placement_creates_audit_log(client: TestClient, db_session: Session
     assert latest_log.details["artwork_id"] == artwork.id
 
 
-def test_artwork_sold_creates_audit_log(client: TestClient, db_session: Session, artwork, buyer_user):
+def test_artwork_sold_creates_audit_log(
+    client: TestClient, db_session: Session, artwork, buyer_user
+):
     """Test that a winning bid creates an audit log for artwork sold."""
     # Place a winning bid (at or above threshold)
     response = client.post(
@@ -56,14 +59,10 @@ def test_artwork_sold_creates_audit_log(client: TestClient, db_session: Session,
     assert response.status_code == 200
 
     # Check that audit logs were created (both bid_placed and artwork_sold)
-    bid_logs = db_session.query(AuditLog).filter(
-        AuditLog.action == "bid_placed"
-    ).all()
+    bid_logs = db_session.query(AuditLog).filter(AuditLog.action == "bid_placed").all()
     assert len(bid_logs) > 0, "No audit log created for bid placement"
 
-    sold_logs = db_session.query(AuditLog).filter(
-        AuditLog.action == "artwork_sold"
-    ).all()
+    sold_logs = db_session.query(AuditLog).filter(AuditLog.action == "artwork_sold").all()
     assert len(sold_logs) > 0, "No audit log created for artwork sold"
 
     # Verify the artwork_sold audit log
@@ -79,7 +78,9 @@ def test_artwork_sold_creates_audit_log(client: TestClient, db_session: Session,
     assert "buyer_id" in latest_sold_log.details
 
 
-def test_audit_log_contains_request_metadata(client: TestClient, db_session: Session, artwork, buyer_user):
+def test_audit_log_contains_request_metadata(
+    client: TestClient, db_session: Session, artwork, buyer_user
+):
     """Test that audit logs contain request metadata (IP, user agent)."""
     # Place a bid
     response = client.post(
@@ -93,9 +94,12 @@ def test_audit_log_contains_request_metadata(client: TestClient, db_session: Ses
     assert response.status_code == 200
 
     # Get the latest audit log
-    audit_log = db_session.query(AuditLog).filter(
-        AuditLog.action == "bid_placed"
-    ).order_by(AuditLog.timestamp.desc()).first()
+    audit_log = (
+        db_session.query(AuditLog)
+        .filter(AuditLog.action == "bid_placed")
+        .order_by(AuditLog.timestamp.desc())
+        .first()
+    )
 
     assert audit_log is not None
     # IP address should be captured (testclient uses testclient)
@@ -117,20 +121,25 @@ def test_audit_log_timestamps_are_set(client: TestClient, db_session: Session, a
     assert response.status_code == 200
 
     # Get the latest audit log
-    audit_log = db_session.query(AuditLog).filter(
-        AuditLog.action == "bid_placed"
-    ).order_by(AuditLog.timestamp.desc()).first()
+    audit_log = (
+        db_session.query(AuditLog)
+        .filter(AuditLog.action == "bid_placed")
+        .order_by(AuditLog.timestamp.desc())
+        .first()
+    )
 
     assert audit_log is not None
     assert audit_log.timestamp is not None
 
 
-def test_losing_bid_does_not_create_artwork_sold_log(client: TestClient, db_session: Session, artwork, buyer_user):
+def test_losing_bid_does_not_create_artwork_sold_log(
+    client: TestClient, db_session: Session, artwork, buyer_user
+):
     """Test that a losing bid does not create an artwork_sold audit log."""
     # Get initial count of artwork_sold logs
-    initial_sold_count = db_session.query(AuditLog).filter(
-        AuditLog.action == "artwork_sold"
-    ).count()
+    initial_sold_count = (
+        db_session.query(AuditLog).filter(AuditLog.action == "artwork_sold").count()
+    )
 
     # Place a losing bid (below threshold)
     response = client.post(
@@ -147,16 +156,14 @@ def test_losing_bid_does_not_create_artwork_sold_log(client: TestClient, db_sess
     assert artwork.status.value == "ACTIVE"
 
     # Check that no new artwork_sold log was created
-    final_sold_count = db_session.query(AuditLog).filter(
-        AuditLog.action == "artwork_sold"
-    ).count()
+    final_sold_count = db_session.query(AuditLog).filter(AuditLog.action == "artwork_sold").count()
 
-    assert final_sold_count == initial_sold_count, "Artwork_sold log should not be created for losing bid"
+    assert (
+        final_sold_count == initial_sold_count
+    ), "Artwork_sold log should not be created for losing bid"
 
     # But bid_placed log should exist
-    bid_logs = db_session.query(AuditLog).filter(
-        AuditLog.action == "bid_placed"
-    ).all()
+    bid_logs = db_session.query(AuditLog).filter(AuditLog.action == "bid_placed").all()
     assert len(bid_logs) > 0, "Bid_placed log should be created even for losing bid"
 
 
@@ -176,9 +183,7 @@ def test_audit_log_queryable_by_user(db_session: Session, buyer_user):
     )
 
     # Query logs by user
-    user_logs = db_session.query(AuditLog).filter(
-        AuditLog.user_id == buyer_user.id
-    ).all()
+    user_logs = db_session.query(AuditLog).filter(AuditLog.user_id == buyer_user.id).all()
 
     assert len(user_logs) > 0, "Should be able to query audit logs by user"
 
@@ -199,8 +204,6 @@ def test_audit_log_queryable_by_action(db_session: Session, buyer_user):
     )
 
     # Query logs by action
-    action_logs = db_session.query(AuditLog).filter(
-        AuditLog.action == "specific_test_action"
-    ).all()
+    action_logs = db_session.query(AuditLog).filter(AuditLog.action == "specific_test_action").all()
 
     assert len(action_logs) > 0, "Should be able to query audit logs by action"

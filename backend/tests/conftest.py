@@ -49,6 +49,7 @@ def reset_rate_limiter():
     """Reset rate limiter state between tests to prevent interference."""
     try:
         from middleware.rate_limit import limiter
+
         # Clear the rate limiter storage before each test
         limiter.reset()
     except Exception:

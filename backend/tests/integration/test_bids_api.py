@@ -15,9 +15,7 @@ class TestCreateBid:
         payload = {"artwork_id": artwork.id, "amount": 75.0}
 
         response = client.post(
-            "/api/bids/",
-            json=payload,
-            headers={"Authorization": f"Bearer {buyer_token}"}
+            "/api/bids/", json=payload, headers={"Authorization": f"Bearer {buyer_token}"}
         )
 
         assert response.status_code == 200
@@ -37,9 +35,7 @@ class TestCreateBid:
         payload = {"artwork_id": artwork.id, "amount": 100.0}  # Exactly at threshold
 
         response = client.post(
-            "/api/bids/",
-            json=payload,
-            headers={"Authorization": f"Bearer {buyer_token}"}
+            "/api/bids/", json=payload, headers={"Authorization": f"Bearer {buyer_token}"}
         )
 
         assert response.status_code == 200
@@ -57,9 +53,7 @@ class TestCreateBid:
         payload = {"artwork_id": artwork.id, "amount": 150.0}  # Above threshold
 
         response = client.post(
-            "/api/bids/",
-            json=payload,
-            headers={"Authorization": f"Bearer {buyer_token}"}
+            "/api/bids/", json=payload, headers={"Authorization": f"Bearer {buyer_token}"}
         )
 
         assert response.status_code == 200
@@ -76,7 +70,9 @@ class TestCreateBid:
         """Test bidding on already sold artwork returns error."""
         payload = {"artwork_id": sold_artwork.id, "amount": 200.0}
 
-        response = client.post("/api/bids/", json=payload, headers={"Authorization": f"Bearer {buyer_token}"})
+        response = client.post(
+            "/api/bids/", json=payload, headers={"Authorization": f"Bearer {buyer_token}"}
+        )
 
         assert response.status_code == 400
         assert (
@@ -88,15 +84,21 @@ class TestCreateBid:
         """Test bidding on non-existent artwork returns 404."""
         payload = {"artwork_id": 99999, "amount": 100.0}
 
-        response = client.post("/api/bids/", json=payload, headers={"Authorization": f"Bearer {buyer_token}"})
+        response = client.post(
+            "/api/bids/", json=payload, headers={"Authorization": f"Bearer {buyer_token}"}
+        )
 
         assert response.status_code == 404
 
-    def test_create_bid_updates_current_highest_bid(self, client, db_session, artwork, buyer_user, buyer_token):
+    def test_create_bid_updates_current_highest_bid(
+        self, client, db_session, artwork, buyer_user, buyer_token
+    ):
         """Test bid correctly updates artwork's current_highest_bid."""
         # Create first bid
         response1 = client.post(
-            "/api/bids/", json={"artwork_id": artwork.id, "amount": 50.0}, headers={"Authorization": f"Bearer {buyer_token}"}
+            "/api/bids/",
+            json={"artwork_id": artwork.id, "amount": 50.0},
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
         assert response1.status_code == 200
 
@@ -105,7 +107,9 @@ class TestCreateBid:
 
         # Create higher bid
         response2 = client.post(
-            "/api/bids/", json={"artwork_id": artwork.id, "amount": 75.0}, headers={"Authorization": f"Bearer {buyer_token}"}
+            "/api/bids/",
+            json={"artwork_id": artwork.id, "amount": 75.0},
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
         assert response2.status_code == 200
 
@@ -121,14 +125,18 @@ class TestCreateBid:
         ]
 
         for bid_data in bids:
-            response = client.post("/api/bids/", json=bid_data, headers={"Authorization": f"Bearer {buyer_token}"})
+            response = client.post(
+                "/api/bids/", json=bid_data, headers={"Authorization": f"Bearer {buyer_token}"}
+            )
             assert response.status_code == 200
 
     def test_create_bid_missing_amount(self, client, artwork, buyer_user, buyer_token):
         """Test creating bid without amount fails."""
         payload = {"artwork_id": artwork.id}
 
-        response = client.post("/api/bids/", json=payload, headers={"Authorization": f"Bearer {buyer_token}"})
+        response = client.post(
+            "/api/bids/", json=payload, headers={"Authorization": f"Bearer {buyer_token}"}
+        )
 
         assert response.status_code == 422
 
@@ -136,7 +144,9 @@ class TestCreateBid:
         """Test creating bid without artwork_id fails."""
         payload = {"amount": 100.0}
 
-        response = client.post("/api/bids/", json=payload, headers={"Authorization": f"Bearer {buyer_token}"})
+        response = client.post(
+            "/api/bids/", json=payload, headers={"Authorization": f"Bearer {buyer_token}"}
+        )
 
         assert response.status_code == 422
 
@@ -144,7 +154,9 @@ class TestCreateBid:
         """Test creating bid with negative amount."""
         payload = {"artwork_id": artwork.id, "amount": -50.0}
 
-        response = client.post("/api/bids/", json=payload, headers={"Authorization": f"Bearer {buyer_token}"})
+        response = client.post(
+            "/api/bids/", json=payload, headers={"Authorization": f"Bearer {buyer_token}"}
+        )
 
         # Should be rejected by business logic
         assert response.status_code in [400, 422]
@@ -153,7 +165,9 @@ class TestCreateBid:
         """Test creating bid with zero amount."""
         payload = {"artwork_id": artwork.id, "amount": 0.0}
 
-        response = client.post("/api/bids/", json=payload, headers={"Authorization": f"Bearer {buyer_token}"})
+        response = client.post(
+            "/api/bids/", json=payload, headers={"Authorization": f"Bearer {buyer_token}"}
+        )
 
         # Business logic should determine if this is valid
         assert response.status_code in [200, 400, 422]
@@ -175,7 +189,9 @@ class TestGetArtworkBids:
         """Test getting bids with one bid."""
         # Create a bid
         client.post(
-            "/api/bids/", json={"artwork_id": artwork.id, "amount": 50.0}, headers={"Authorization": f"Bearer {buyer_token}"}
+            "/api/bids/",
+            json={"artwork_id": artwork.id, "amount": 50.0},
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
 
         response = client.get(f"/api/bids/artwork/{artwork.id}")
@@ -214,13 +230,19 @@ class TestGetArtworkBids:
 
         # Create bids from different users
         client.post(
-            "/api/bids/", json={"artwork_id": artwork.id, "amount": 30.0}, headers={"Authorization": f"Bearer {buyer_token}"}
+            "/api/bids/",
+            json={"artwork_id": artwork.id, "amount": 30.0},
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
         client.post(
-            "/api/bids/", json={"artwork_id": artwork.id, "amount": 50.0}, headers={"Authorization": f"Bearer {buyer2_token}"}
+            "/api/bids/",
+            json={"artwork_id": artwork.id, "amount": 50.0},
+            headers={"Authorization": f"Bearer {buyer2_token}"},
         )
         client.post(
-            "/api/bids/", json={"artwork_id": artwork.id, "amount": 70.0}, headers={"Authorization": f"Bearer {buyer3_token}"}
+            "/api/bids/",
+            json={"artwork_id": artwork.id, "amount": 70.0},
+            headers={"Authorization": f"Bearer {buyer3_token}"},
         )
 
         response = client.get(f"/api/bids/artwork/{artwork.id}")
@@ -243,7 +265,9 @@ class TestGetArtworkBids:
     def test_get_bids_includes_bidder_info(self, client, artwork, buyer_user, buyer_token):
         """Test bid response includes bidder information."""
         client.post(
-            "/api/bids/", json={"artwork_id": artwork.id, "amount": 50.0}, headers={"Authorization": f"Bearer {buyer_token}"}
+            "/api/bids/",
+            json={"artwork_id": artwork.id, "amount": 50.0},
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
 
         response = client.get(f"/api/bids/artwork/{artwork.id}")
@@ -252,11 +276,15 @@ class TestGetArtworkBids:
         data = response.json()
         assert data[0]["bidder_id"] == buyer_user.id
 
-    def test_get_bids_includes_is_winning_flag(self, client, db_session, artwork, buyer_user, buyer_token):
+    def test_get_bids_includes_is_winning_flag(
+        self, client, db_session, artwork, buyer_user, buyer_token
+    ):
         """Test bid response includes is_winning flag."""
         # Create bid below threshold
         client.post(
-            "/api/bids/", json={"artwork_id": artwork.id, "amount": 50.0}, headers={"Authorization": f"Bearer {buyer_token}"}
+            "/api/bids/",
+            json={"artwork_id": artwork.id, "amount": 50.0},
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
 
         response = client.get(f"/api/bids/artwork/{artwork.id}")
@@ -274,7 +302,7 @@ class TestGetArtworkBids:
             client.post(
                 "/api/bids/",
                 json={"artwork_id": artwork.id, "amount": amount},
-                headers={"Authorization": f"Bearer {buyer_token}"}
+                headers={"Authorization": f"Bearer {buyer_token}"},
             )
 
         response = client.get(f"/api/bids/artwork/{artwork.id}")
@@ -293,10 +321,14 @@ class TestBidThresholdLogic:
         """Test only bids >= threshold are marked as winning."""
         # Create bids below and at threshold
         below = client.post(
-            "/api/bids/", json={"artwork_id": artwork.id, "amount": 99.0}, headers={"Authorization": f"Bearer {buyer_token}"}
+            "/api/bids/",
+            json={"artwork_id": artwork.id, "amount": 99.0},
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
         at = client.post(
-            "/api/bids/", json={"artwork_id": artwork.id, "amount": 100.0}, headers={"Authorization": f"Bearer {buyer_token}"}
+            "/api/bids/",
+            json={"artwork_id": artwork.id, "amount": 100.0},
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
 
         below_data = below.json()
@@ -305,23 +337,31 @@ class TestBidThresholdLogic:
         assert below_data["is_winning"] is False
         assert at_data["is_winning"] is True
 
-    def test_artwork_sold_after_winning_bid(self, client, db_session, artwork, buyer_user, buyer_token):
+    def test_artwork_sold_after_winning_bid(
+        self, client, db_session, artwork, buyer_user, buyer_token
+    ):
         """Test artwork automatically marked as sold after winning bid."""
         assert artwork.status == ArtworkStatus.ACTIVE
 
         # Place winning bid
         client.post(
-            "/api/bids/", json={"artwork_id": artwork.id, "amount": 100.0}, headers={"Authorization": f"Bearer {buyer_token}"}
+            "/api/bids/",
+            json={"artwork_id": artwork.id, "amount": 100.0},
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
 
         db_session.refresh(artwork)
         assert artwork.status == ArtworkStatus.SOLD
 
-    def test_cannot_bid_after_artwork_sold(self, client, db_session, artwork, buyer_user, buyer_token):
+    def test_cannot_bid_after_artwork_sold(
+        self, client, db_session, artwork, buyer_user, buyer_token
+    ):
         """Test cannot place bid after artwork is sold."""
         # Place winning bid
         client.post(
-            "/api/bids/", json={"artwork_id": artwork.id, "amount": 100.0}, headers={"Authorization": f"Bearer {buyer_token}"}
+            "/api/bids/",
+            json={"artwork_id": artwork.id, "amount": 100.0},
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
 
         db_session.refresh(artwork)
@@ -329,7 +369,9 @@ class TestBidThresholdLogic:
 
         # Try to bid again
         response = client.post(
-            "/api/bids/", json={"artwork_id": artwork.id, "amount": 150.0}, headers={"Authorization": f"Bearer {buyer_token}"}
+            "/api/bids/",
+            json={"artwork_id": artwork.id, "amount": 150.0},
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
 
         assert response.status_code == 400
@@ -369,7 +411,7 @@ class TestBidThresholdLogic:
             response = client.post(
                 "/api/bids/",
                 json={"artwork_id": artwork.id, "amount": 10.0 * (i + 1)},
-                headers={"Authorization": f"Bearer {token}"}
+                headers={"Authorization": f"Bearer {token}"},
             )
             responses.append(response)
 
@@ -402,13 +444,17 @@ class TestBidThresholdLogic:
 
         # First buyer wins
         response1 = client.post(
-            "/api/bids/", json={"artwork_id": artwork.id, "amount": 100.0}, headers={"Authorization": f"Bearer {buyer_token}"}
+            "/api/bids/",
+            json={"artwork_id": artwork.id, "amount": 100.0},
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
         assert response1.json()["is_winning"] is True
 
         # Second buyer tries to bid
         response2 = client.post(
-            "/api/bids/", json={"artwork_id": artwork.id, "amount": 150.0}, headers={"Authorization": f"Bearer {buyer2_token}"}
+            "/api/bids/",
+            json={"artwork_id": artwork.id, "amount": 150.0},
+            headers={"Authorization": f"Bearer {buyer2_token}"},
         )
         assert response2.status_code == 400
 
@@ -420,7 +466,9 @@ class TestBidValidation:
         """Test bid with very large amount."""
         payload = {"artwork_id": artwork.id, "amount": 999999999.99}
 
-        response = client.post("/api/bids/", json=payload, headers={"Authorization": f"Bearer {buyer_token}"})
+        response = client.post(
+            "/api/bids/", json=payload, headers={"Authorization": f"Bearer {buyer_token}"}
+        )
 
         assert response.status_code == 200
 
@@ -428,7 +476,9 @@ class TestBidValidation:
         """Test bid with many decimal places."""
         payload = {"artwork_id": artwork.id, "amount": 99.999999}
 
-        response = client.post("/api/bids/", json=payload, headers={"Authorization": f"Bearer {buyer_token}"})
+        response = client.post(
+            "/api/bids/", json=payload, headers={"Authorization": f"Bearer {buyer_token}"}
+        )
 
         # Should round or accept
         assert response.status_code in [200, 422]
@@ -437,7 +487,9 @@ class TestBidValidation:
         """Test seller cannot bid on their own artwork."""
         payload = {"artwork_id": artwork.id, "amount": 100.0}
 
-        response = client.post("/api/bids/", json=payload, headers={"Authorization": f"Bearer {seller_token}"})
+        response = client.post(
+            "/api/bids/", json=payload, headers={"Authorization": f"Bearer {seller_token}"}
+        )
 
         # This validation may or may not be implemented
         # If implemented, should return 400/403
@@ -447,25 +499,33 @@ class TestBidValidation:
     def test_bid_includes_timestamp(self, client, artwork, buyer_user, buyer_token):
         """Test bid response includes timestamp."""
         response = client.post(
-            "/api/bids/", json={"artwork_id": artwork.id, "amount": 50.0}, headers={"Authorization": f"Bearer {buyer_token}"}
+            "/api/bids/",
+            json={"artwork_id": artwork.id, "amount": 50.0},
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
 
         assert response.status_code == 200
         data = response.json()
         assert "created_at" in data
 
-    def test_sequential_bids_have_increasing_timestamps(self, client, artwork, buyer_user, buyer_token):
+    def test_sequential_bids_have_increasing_timestamps(
+        self, client, artwork, buyer_user, buyer_token
+    ):
         """Test bids placed sequentially have increasing timestamps."""
         import time
 
         response1 = client.post(
-            "/api/bids/", json={"artwork_id": artwork.id, "amount": 30.0}, headers={"Authorization": f"Bearer {buyer_token}"}
+            "/api/bids/",
+            json={"artwork_id": artwork.id, "amount": 30.0},
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
 
         time.sleep(0.1)  # Small delay
 
         response2 = client.post(
-            "/api/bids/", json={"artwork_id": artwork.id, "amount": 60.0}, headers={"Authorization": f"Bearer {buyer_token}"}
+            "/api/bids/",
+            json={"artwork_id": artwork.id, "amount": 60.0},
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
 
         bid1_time = response1.json()["created_at"]
@@ -478,7 +538,9 @@ class TestBidValidation:
 class TestBidEdgeCases:
     """Test edge cases and error scenarios."""
 
-    def test_bid_on_archived_artwork(self, client, db_session, seller_user, buyer_user, buyer_token):
+    def test_bid_on_archived_artwork(
+        self, client, db_session, seller_user, buyer_user, buyer_token
+    ):
         """Test bidding on archived artwork."""
         from models.artwork import Artwork
 
@@ -492,7 +554,9 @@ class TestBidEdgeCases:
         db_session.commit()
 
         response = client.post(
-            "/api/bids/", json={"artwork_id": archived.id, "amount": 50.0}, headers={"Authorization": f"Bearer {buyer_token}"}
+            "/api/bids/",
+            json={"artwork_id": archived.id, "amount": 50.0},
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
 
         assert response.status_code == 400
@@ -500,7 +564,9 @@ class TestBidEdgeCases:
     def test_bid_with_invalid_bidder_id(self, client, artwork):
         """Test bid with invalid authentication token."""
         response = client.post(
-            "/api/bids/", json={"artwork_id": artwork.id, "amount": 50.0}, headers={"Authorization": "Bearer invalid_token"}
+            "/api/bids/",
+            json={"artwork_id": artwork.id, "amount": 50.0},
+            headers={"Authorization": "Bearer invalid_token"},
         )
 
         assert response.status_code in [401, 403]
@@ -513,7 +579,7 @@ class TestBidEdgeCases:
             response = client.post(
                 "/api/bids/",
                 json={"artwork_id": artwork.id, "amount": amount},
-                headers={"Authorization": f"Bearer {buyer_token}"}
+                headers={"Authorization": f"Bearer {buyer_token}"},
             )
             # All non-winning bids should succeed
             if amount < 100.0:

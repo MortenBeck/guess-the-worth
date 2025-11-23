@@ -2,6 +2,7 @@
 Admin router for platform management.
 Proof-of-concept implementation.
 """
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, desc
@@ -18,15 +19,18 @@ from services.audit_service import AuditService
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
+
 def require_admin(current_user: User = Depends(get_current_user)) -> User:
     """Ensure user is an admin."""
     if current_user.role != UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Admin access required")
     return current_user
 
+
 # ============================================================================
 # USER MANAGEMENT
 # ============================================================================
+
 
 @router.get("/users")
 async def list_users(
@@ -50,10 +54,7 @@ async def list_users(
     # Search by name or email
     if search:
         search_pattern = f"%{search}%"
-        query = query.filter(
-            (User.name.ilike(search_pattern)) |
-            (User.email.ilike(search_pattern))
-        )
+        query = query.filter((User.name.ilike(search_pattern)) | (User.email.ilike(search_pattern)))
 
     # Get total count
     total = query.count()
@@ -78,6 +79,7 @@ async def list_users(
         "limit": limit,
     }
 
+
 @router.get("/users/{user_id}")
 async def get_user_details(
     user_id: int,
@@ -90,16 +92,16 @@ async def get_user_details(
         raise HTTPException(status_code=404, detail="User not found")
 
     # Get user statistics
-    artworks_count = db.query(Artwork).filter(
-        Artwork.seller_id == user_id
-    ).count()
+    artworks_count = db.query(Artwork).filter(Artwork.seller_id == user_id).count()
 
     bids_count = db.query(Bid).filter(Bid.bidder_id == user_id).count()
 
-    total_spent = db.query(func.sum(Bid.amount)).filter(
-        Bid.bidder_id == user_id,
-        Bid.is_winning == True
-    ).scalar() or 0
+    total_spent = (
+        db.query(func.sum(Bid.amount))
+        .filter(Bid.bidder_id == user_id, Bid.is_winning == True)
+        .scalar()
+        or 0
+    )
 
     return {
         "id": user.id,
@@ -113,6 +115,7 @@ async def get_user_details(
             "total_spent": float(total_spent),
         },
     }
+
 
 @router.put("/users/{user_id}/ban")
 async def ban_user(
@@ -147,9 +150,11 @@ async def ban_user(
         "reason": reason,
     }
 
+
 # ============================================================================
 # TRANSACTION MONITORING
 # ============================================================================
+
 
 @router.get("/transactions")
 async def list_transactions(
@@ -165,10 +170,7 @@ async def list_transactions(
     # Get winning bids (representing transactions)
     transactions = (
         db.query(Bid)
-        .options(
-            joinedload(Bid.artwork),
-            joinedload(Bid.bidder)
-        )
+        .options(joinedload(Bid.artwork), joinedload(Bid.bidder))
         .filter(Bid.is_winning == True)
         .order_by(desc(Bid.created_at))
         .offset(skip)
@@ -195,9 +197,11 @@ async def list_transactions(
         "limit": limit,
     }
 
+
 # ============================================================================
 # PLATFORM STATISTICS
 # ============================================================================
+
 
 @router.get("/stats/overview")
 async def get_platform_overview(
@@ -207,24 +211,18 @@ async def get_platform_overview(
     """Get comprehensive platform statistics."""
     # User stats
     total_users = db.query(User).count()
-    users_last_30_days = db.query(User).filter(
-        User.created_at >= datetime.utcnow() - timedelta(days=30)
-    ).count()
+    users_last_30_days = (
+        db.query(User).filter(User.created_at >= datetime.utcnow() - timedelta(days=30)).count()
+    )
 
     # Artwork stats
     total_artworks = db.query(Artwork).count()
-    active_auctions = db.query(Artwork).filter(
-        Artwork.status == ArtworkStatus.ACTIVE
-    ).count()
+    active_auctions = db.query(Artwork).filter(Artwork.status == ArtworkStatus.ACTIVE).count()
 
     # Transaction stats
-    total_transactions = db.query(Bid).filter(
-        Bid.is_winning == True
-    ).count()
+    total_transactions = db.query(Bid).filter(Bid.is_winning == True).count()
 
-    total_revenue = db.query(func.sum(Bid.amount)).filter(
-        Bid.is_winning == True
-    ).scalar() or 0
+    total_revenue = db.query(func.sum(Bid.amount)).filter(Bid.is_winning == True).scalar() or 0
 
     # Platform fees (10% commission)
     platform_fees = float(total_revenue) * 0.10
@@ -245,9 +243,11 @@ async def get_platform_overview(
         },
     }
 
+
 # ============================================================================
 # FLAGGED CONTENT
 # ============================================================================
+
 
 @router.get("/flagged-auctions")
 async def list_flagged_auctions(
@@ -266,9 +266,11 @@ async def list_flagged_auctions(
         "message": "No flagged auctions (feature not implemented in POC)",
     }
 
+
 # ============================================================================
 # SYSTEM HEALTH
 # ============================================================================
+
 
 @router.get("/system/health")
 async def get_system_health(
@@ -287,13 +289,15 @@ async def get_system_health(
         db_status = f"unhealthy: {str(e)}"
 
     # Get recent activity
-    recent_bids = db.query(Bid).filter(
-        Bid.created_at >= datetime.utcnow() - timedelta(hours=1)
-    ).count()
+    recent_bids = (
+        db.query(Bid).filter(Bid.created_at >= datetime.utcnow() - timedelta(hours=1)).count()
+    )
 
-    recent_artworks = db.query(Artwork).filter(
-        Artwork.created_at >= datetime.utcnow() - timedelta(hours=24)
-    ).count()
+    recent_artworks = (
+        db.query(Artwork)
+        .filter(Artwork.created_at >= datetime.utcnow() - timedelta(hours=24))
+        .count()
+    )
 
     return {
         "status": "healthy" if db_status == "healthy" else "degraded",
@@ -305,9 +309,11 @@ async def get_system_health(
         "timestamp": datetime.utcnow().isoformat(),
     }
 
+
 # ============================================================================
 # AUDIT LOGS
 # ============================================================================
+
 
 @router.get("/audit-logs")
 async def get_audit_logs(

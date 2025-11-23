@@ -21,17 +21,13 @@ class AuctionService:
 
         # Find active artworks past end_date
         expired_artworks = (
-            db.query(Artwork)
-            .filter(Artwork.status == "ACTIVE", Artwork.end_date < now)
-            .all()
+            db.query(Artwork).filter(Artwork.status == "ACTIVE", Artwork.end_date < now).all()
         )
 
         for artwork in expired_artworks:
             # Find winning bid
             winning_bid = (
-                db.query(Bid)
-                .filter(Bid.artwork_id == artwork.id, Bid.is_winning == True)
-                .first()
+                db.query(Bid).filter(Bid.artwork_id == artwork.id, Bid.is_winning == True).first()
             )
 
             if winning_bid:

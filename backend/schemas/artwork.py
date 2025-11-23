@@ -37,6 +37,7 @@ class ArtworkResponse(ArtworkBase):
     - Excludes sensitive fields like secret_threshold
     - Minimal response size for list endpoints
     """
+
     id: int
     seller_id: int
     current_highest_bid: float
@@ -58,4 +59,5 @@ class ArtworkWithSecretResponse(ArtworkResponse):
     This schema extends ArtworkResponse to include the secret_threshold
     field which should only be exposed to the artwork owner or admins.
     """
+
     secret_threshold: float

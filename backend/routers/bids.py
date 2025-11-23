@@ -13,10 +13,12 @@ from services.audit_service import AuditService
 
 router = APIRouter()
 
+
 # Import socket.io server for real-time events
 # This import is placed after router definition to avoid circular imports
 def get_sio():
     from main import sio
+
     return sio
 
 
@@ -54,18 +56,12 @@ async def create_bid(
     """
     # Validate bid amount is positive
     if bid.amount <= 0:
-        raise HTTPException(
-            status_code=400,
-            detail="Bid amount must be greater than zero"
-        )
+        raise HTTPException(status_code=400, detail="Bid amount must be greater than zero")
 
     # Validate bid amount is reasonable (prevent overflow/ridiculous values)
     MAX_BID_AMOUNT = 1_000_000_000  # 1 billion
     if bid.amount > MAX_BID_AMOUNT:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Bid amount cannot exceed ${MAX_BID_AMOUNT:,}"
-        )
+        raise HTTPException(status_code=400, detail=f"Bid amount cannot exceed ${MAX_BID_AMOUNT:,}")
 
     # Get artwork to check threshold and ownership
     artwork = db.query(Artwork).filter(Artwork.id == bid.artwork_id).first()
@@ -79,15 +75,13 @@ async def create_bid(
 
     # SECURITY: Prevent seller from bidding on their own artwork
     if artwork.seller_id == current_user.id:
-        raise HTTPException(
-            status_code=403, detail="You cannot bid on your own artwork"
-        )
+        raise HTTPException(status_code=403, detail="You cannot bid on your own artwork")
 
     # Validate bid is higher than current highest bid (if any)
     if artwork.current_highest_bid and bid.amount <= artwork.current_highest_bid:
         raise HTTPException(
             status_code=400,
-            detail=f"Bid must be higher than current highest bid (${artwork.current_highest_bid})"
+            detail=f"Bid must be higher than current highest bid (${artwork.current_highest_bid})",
         )
 
     # Check if bid meets threshold

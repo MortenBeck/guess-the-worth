@@ -137,13 +137,11 @@ class TestDatabaseIndexes:
         artwork_indexes = inspector.get_indexes("artworks")
 
         # Check for status index
-        status_indexed = any(
-            "status" in idx.get("column_names", []) for idx in artwork_indexes
-        )
+        status_indexed = any("status" in idx.get("column_names", []) for idx in artwork_indexes)
 
-        assert (
-            status_indexed or "ix_artworks_status" in [idx["name"] for idx in artwork_indexes]
-        ), "status should be indexed"
+        assert status_indexed or "ix_artworks_status" in [
+            idx["name"] for idx in artwork_indexes
+        ], "status should be indexed"
 
     def test_bid_artwork_id_index_exists(self, db_session):
         """Test that index exists on bids.artwork_id."""
@@ -151,13 +149,11 @@ class TestDatabaseIndexes:
         bid_indexes = inspector.get_indexes("bids")
 
         # Check for artwork_id index
-        artwork_id_indexed = any(
-            "artwork_id" in idx.get("column_names", []) for idx in bid_indexes
-        )
+        artwork_id_indexed = any("artwork_id" in idx.get("column_names", []) for idx in bid_indexes)
 
-        assert (
-            artwork_id_indexed or "ix_bids_artwork_id" in [idx["name"] for idx in bid_indexes]
-        ), "artwork_id should be indexed"
+        assert artwork_id_indexed or "ix_bids_artwork_id" in [
+            idx["name"] for idx in bid_indexes
+        ], "artwork_id should be indexed"
 
     def test_bid_bidder_id_index_exists(self, db_session):
         """Test that index exists on bids.bidder_id."""
@@ -165,13 +161,11 @@ class TestDatabaseIndexes:
         bid_indexes = inspector.get_indexes("bids")
 
         # Check for bidder_id index
-        bidder_id_indexed = any(
-            "bidder_id" in idx.get("column_names", []) for idx in bid_indexes
-        )
+        bidder_id_indexed = any("bidder_id" in idx.get("column_names", []) for idx in bid_indexes)
 
-        assert (
-            bidder_id_indexed or "ix_bids_bidder_id" in [idx["name"] for idx in bid_indexes]
-        ), "bidder_id should be indexed"
+        assert bidder_id_indexed or "ix_bids_bidder_id" in [
+            idx["name"] for idx in bid_indexes
+        ], "bidder_id should be indexed"
 
 
 class TestForeignKeyRelationships:
@@ -196,9 +190,7 @@ class TestForeignKeyRelationships:
 
     def test_bid_artwork_relationship(self, db_session, artwork, buyer_user):
         """Test that bid.artwork relationship works."""
-        bid = Bid(
-            artwork_id=artwork.id, bidder_id=buyer_user.id, amount=50.0, is_winning=False
-        )
+        bid = Bid(artwork_id=artwork.id, bidder_id=buyer_user.id, amount=50.0, is_winning=False)
         db_session.add(bid)
         db_session.commit()
         db_session.refresh(bid)
@@ -210,9 +202,7 @@ class TestForeignKeyRelationships:
 
     def test_bid_bidder_relationship(self, db_session, artwork, buyer_user):
         """Test that bid.bidder relationship works."""
-        bid = Bid(
-            artwork_id=artwork.id, bidder_id=buyer_user.id, amount=50.0, is_winning=False
-        )
+        bid = Bid(artwork_id=artwork.id, bidder_id=buyer_user.id, amount=50.0, is_winning=False)
         db_session.add(bid)
         db_session.commit()
         db_session.refresh(bid)
@@ -225,12 +215,8 @@ class TestForeignKeyRelationships:
     def test_artwork_bids_collection(self, db_session, artwork, buyer_user):
         """Test that artwork.bids collection relationship works."""
         # Create multiple bids
-        bid1 = Bid(
-            artwork_id=artwork.id, bidder_id=buyer_user.id, amount=50.0, is_winning=False
-        )
-        bid2 = Bid(
-            artwork_id=artwork.id, bidder_id=buyer_user.id, amount=75.0, is_winning=False
-        )
+        bid1 = Bid(artwork_id=artwork.id, bidder_id=buyer_user.id, amount=50.0, is_winning=False)
+        bid2 = Bid(artwork_id=artwork.id, bidder_id=buyer_user.id, amount=75.0, is_winning=False)
         db_session.add_all([bid1, bid2])
         db_session.commit()
 
