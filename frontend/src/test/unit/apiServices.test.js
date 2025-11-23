@@ -280,9 +280,8 @@ describe("API Services", () => {
     });
 
     describe("getCurrentUser", () => {
-      it("should fetch current user by auth0 sub", async () => {
-        const auth0Sub = "auth0|user123";
-        const mockUser = { id: 1, auth0_sub: auth0Sub, email: "test@example.com" };
+      it("should fetch current user", async () => {
+        const mockUser = { id: 1, auth0_sub: "auth0|user123", email: "test@example.com" };
 
         fetch.mockResolvedValueOnce({
           ok: true,
@@ -290,12 +289,13 @@ describe("API Services", () => {
           json: async () => mockUser,
         });
 
-        const result = await userService.getCurrentUser(auth0Sub);
+        const result = await userService.getCurrentUser();
 
-        expect(fetch).toHaveBeenCalledWith(expect.stringContaining("/auth/me"), expect.any(Object));
         expect(fetch).toHaveBeenCalledWith(
-          expect.stringContaining(`auth0_sub=${encodeURIComponent(auth0Sub)}`),
-          expect.any(Object)
+          expect.stringContaining("/auth/me"),
+          expect.objectContaining({
+            method: "GET",
+          })
         );
         expect(result.data).toEqual(mockUser);
       });
@@ -387,7 +387,7 @@ describe("API Services", () => {
         status: 401,
       });
 
-      await expect(artworkService.getAll()).rejects.toThrow("Unauthorized");
+      await expect(artworkService.getAll()).rejects.toThrow("Your session has expired. Please log in again.");
       expect(localStorage.getItem("access_token")).toBeNull();
     });
 
@@ -397,7 +397,7 @@ describe("API Services", () => {
         status: 500,
       });
 
-      await expect(artworkService.getAll()).rejects.toThrow("HTTP error! status: 500");
+      await expect(artworkService.getAll()).rejects.toThrow("Server error. Please try again later.");
     });
 
     it("should throw error for network failures", async () => {
