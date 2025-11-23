@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from config.settings import settings
 from database import engine
 from models.base import Base
-from routers import artworks, auth, bids, health, stats, users
+from routers import admin, artworks, auth, bids, health, stats, users
 from services.auth_service import AuthService
 from services.jwt_service import JWTService
 from middleware.rate_limit import setup_rate_limiting
@@ -52,6 +52,7 @@ app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(artworks.router, prefix="/api/artworks", tags=["artworks"])
 app.include_router(bids.router, prefix="/api/bids", tags=["bids"])
 app.include_router(stats.router, prefix="/api/stats", tags=["stats"])
+app.include_router(admin.router)
 
 # Mount static files for image uploads
 # Create uploads directory if it doesn't exist
