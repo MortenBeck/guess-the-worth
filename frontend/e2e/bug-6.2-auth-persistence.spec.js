@@ -24,7 +24,7 @@ test.describe('Bug 6.2: Stay Logged In on Refresh', () => {
       // If spinner exists, wait for it to disappear
       await spinner.waitFor({ state: 'hidden', timeout: 5000 });
       console.log('✓ Loading spinner cleared successfully');
-    } catch (error) {
+    } catch {
       // If still visible after 5 seconds, we have an infinite loop
       const isVisible = await spinner.isVisible().catch(() => false);
       if (isVisible) {
@@ -54,7 +54,7 @@ test.describe('Bug 6.2: Stay Logged In on Refresh', () => {
     try {
       await spinner.waitFor({ state: 'hidden', timeout: 5000 });
       console.log('✓ Loading completed despite API failure');
-    } catch (error) {
+    } catch {
       const isVisible = await spinner.isVisible().catch(() => false);
       if (isVisible) {
         throw new Error('INFINITE LOOP: Page stuck loading after API failure');

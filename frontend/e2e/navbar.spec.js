@@ -31,7 +31,7 @@ test.describe('Bug 6.1: Navbar Buttons Updates', () => {
     }
   });
 
-  test('should show role-based navigation items', async ({ page }) => {
+  test('should show role-based navigation items', async () => {
     // This test will verify conditional rendering based on user role
     // We'll need to mock authentication state for this
     // For now, we document the expected behavior:
@@ -57,7 +57,7 @@ test.describe('Bug 6.1: Navbar Buttons Updates', () => {
     // This may require implementing a hamburger menu
   });
 
-  test('View All Activity button should navigate to dashboard', async ({ page }) => {
+  test('View All Activity button should navigate to dashboard', async () => {
     // This tests Bug 6.4 as well
     // Navigate to a page that has the "View all activity" button
     // Click it and verify it goes to /dashboard

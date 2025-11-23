@@ -4,7 +4,6 @@ import { Box, Container, Heading, Text, Button, VStack, HStack, useToast } from 
 import { useNavigate } from "react-router-dom";
 import { artworkService } from "../services/api";
 import useAuthStore from "../store/authStore";
-import ImageUpload from "../components/ImageUpload";
 
 const AddArtworkPage = () => {
   const navigate = useNavigate();
@@ -22,33 +21,12 @@ const AddArtworkPage = () => {
   });
 
   const [selectedImage, setSelectedImage] = useState(null);
-  const [createdArtworkId, setCreatedArtworkId] = useState(null);
-
-  // Check if user is allowed to create artwork
-  if (!isSeller() && !isAdmin()) {
-    return (
-      <Box bg="#0f172a" minH="100vh" color="white">
-        <Container maxW="container.md" py={8}>
-          <Box textAlign="center" p={8}>
-            <Heading size="lg" color="white" mb={4}>
-              Access Denied
-            </Heading>
-            <Text color="#94a3b8" mb={6}>
-              You must be a seller to create artworks.
-            </Text>
-            <Button onClick={() => navigate("/")}>Go Home</Button>
-          </Box>
-        </Container>
-      </Box>
-    );
-  }
 
   // Create artwork mutation
   const createArtworkMutation = useMutation({
     mutationFn: (artworkData) => artworkService.create(artworkData),
     onSuccess: async (response) => {
       const { data: artwork } = response;
-      setCreatedArtworkId(artwork.id);
 
       // If user selected image, upload it
       if (selectedImage) {
@@ -94,6 +72,25 @@ const AddArtworkPage = () => {
       });
     },
   });
+
+  // Check if user is allowed to create artwork
+  if (!isSeller() && !isAdmin()) {
+    return (
+      <Box bg="#0f172a" minH="100vh" color="white">
+        <Container maxW="container.md" py={8}>
+          <Box textAlign="center" p={8}>
+            <Heading size="lg" color="white" mb={4}>
+              Access Denied
+            </Heading>
+            <Text color="#94a3b8" mb={6}>
+              You must be a seller to create artworks.
+            </Text>
+            <Button onClick={() => navigate("/")}>Go Home</Button>
+          </Box>
+        </Container>
+      </Box>
+    );
+  }
 
   const handleImageSelect = (e) => {
     const file = e.target.files[0];
