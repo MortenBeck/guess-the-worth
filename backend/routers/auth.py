@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -6,12 +6,14 @@ from database import get_db
 from models import User
 from schemas import UserCreate, UserResponse
 from utils.auth import get_current_user
+from middleware.rate_limit import limiter
 
 router = APIRouter()
 
 
 @router.post("/register", response_model=UserResponse)
-async def register_user(user: UserCreate, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")  # Only 5 registrations per minute per IP
+async def register_user(request: Request, user: UserCreate, db: Session = Depends(get_db)):
     # Check for duplicate auth0_sub
     db_user = db.query(User).filter(User.auth0_sub == user.auth0_sub).first()
     if db_user:

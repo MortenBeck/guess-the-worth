@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session, joinedload
 
 from database import get_db
@@ -8,6 +8,8 @@ from models import Artwork, Bid
 from models.user import User
 from schemas import BidCreate, BidResponse
 from utils.auth import get_current_user
+from middleware.rate_limit import limiter
+from services.audit_service import AuditService
 
 router = APIRouter()
 
@@ -36,7 +38,9 @@ async def get_artwork_bids(artwork_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/", response_model=BidResponse)
+@limiter.limit("20/minute")  # Max 20 bids per minute per user
 async def create_bid(
+    request: Request,
     bid: BidCreate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -109,6 +113,21 @@ async def create_bid(
     db.commit()
     db.refresh(db_bid)
 
+    # Add audit log for bid placement
+    AuditService.log_action(
+        db=db,
+        action="bid_placed",
+        resource_type="bid",
+        resource_id=db_bid.id,
+        user=current_user,
+        details={
+            "amount": float(bid.amount),
+            "artwork_id": bid.artwork_id,
+            "is_winning": db_bid.is_winning,
+        },
+        request=request,
+    )
+
     # Emit socket event for real-time bidding
     sio = get_sio()
     await sio.emit(
@@ -141,6 +160,21 @@ async def create_bid(
                 "winner_id": current_user.id,
             },
             room=f"artwork_{artwork.id}",
+        )
+
+        # Add audit log for artwork sale
+        AuditService.log_action(
+            db=db,
+            action="artwork_sold",
+            resource_type="artwork",
+            resource_id=artwork.id,
+            user=current_user,
+            details={
+                "final_bid": float(bid.amount),
+                "seller_id": artwork.seller_id,
+                "buyer_id": current_user.id,
+            },
+            request=request,
         )
 
     return db_bid

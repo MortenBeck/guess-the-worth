@@ -12,6 +12,8 @@ from models.base import Base
 from routers import artworks, auth, bids, health, stats, users
 from services.auth_service import AuthService
 from services.jwt_service import JWTService
+from middleware.rate_limit import setup_rate_limiting
+from middleware.security_headers import SecurityHeadersMiddleware
 
 # Initialize Sentry
 sentry_dsn = os.getenv("SENTRY_DSN")
@@ -33,6 +35,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Configure rate limiting
+setup_rate_limiting(app)
+
+# Add security headers middleware
+app.add_middleware(SecurityHeadersMiddleware)
 
 sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins=settings.allowed_origins)
 

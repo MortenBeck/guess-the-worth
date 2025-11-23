@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime
 from typing import List
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from PIL import Image
 from sqlalchemy.orm import Session, joinedload
 
@@ -13,6 +13,7 @@ from models.user import User, UserRole
 from schemas import ArtworkCreate, ArtworkResponse, ArtworkUpdate
 from services.auction_service import AuctionService
 from utils.auth import get_current_user, require_admin, require_seller
+from middleware.rate_limit import limiter
 
 router = APIRouter()
 
@@ -68,7 +69,9 @@ async def get_artwork(artwork_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/", response_model=ArtworkResponse)
+@limiter.limit("10/hour")  # Max 10 artwork uploads per hour
 async def create_artwork(
+    request: Request,
     artwork: ArtworkCreate,
     current_user: User = Depends(require_seller),
     db: Session = Depends(get_db),
@@ -242,7 +245,9 @@ async def delete_artwork(
 
 
 @router.post("/{artwork_id}/upload-image")
+@limiter.limit("20/hour")  # Max 20 image uploads per hour
 async def upload_artwork_image(
+    request: Request,
     artwork_id: int,
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
