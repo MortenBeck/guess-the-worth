@@ -45,7 +45,6 @@ const ProfilePage = () => {
   const userStats = userStatsData?.data || {
     active_bids: 0,
     won_auctions: 0,
-    watchlist: 0,
   };
 
   const [formData, setFormData] = useState({
@@ -188,12 +187,6 @@ const ProfilePage = () => {
                   <Text fontSize="sm" color="#94a3b8">Won auctions</Text>
                   <Text fontSize="sm" fontWeight="bold" color="white">
                     {userStats.won_auctions}
-                  </Text>
-                </HStack>
-                <HStack justify="space-between" w="full">
-                  <Text fontSize="sm" color="#94a3b8">Watchlist</Text>
-                  <Text fontSize="sm" fontWeight="bold" color="white">
-                    {userStats.watchlist}
                   </Text>
                 </HStack>
               </VStack>

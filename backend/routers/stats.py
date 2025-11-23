@@ -52,14 +52,10 @@ async def get_user_stats(
         or 0
     )
 
-    # Watchlist count (placeholder - would need favorites table)
-    watchlist = 0
-
     return {
         "active_bids": active_bids,
         "won_auctions": won_auctions,
         "total_spent": float(total_spent),
-        "watchlist": watchlist,
     }
 
 

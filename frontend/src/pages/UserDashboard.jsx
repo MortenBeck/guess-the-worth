@@ -47,7 +47,6 @@ const UserDashboard = () => {
     active_bids: 0,
     won_auctions: 0,
     total_spent: 0,
-    watchlist: 0,
   };
 
   // Separate active bids and won auctions
@@ -71,7 +70,7 @@ const UserDashboard = () => {
           {/* Stats Overview */}
           <Box
             display="grid"
-            gridTemplateColumns={{ base: "repeat(2, 1fr)", md: "repeat(4, 1fr)" }}
+            gridTemplateColumns={{ base: "repeat(1, 1fr)", md: "repeat(3, 1fr)" }}
             gap={6}
           >
             <Box
@@ -131,26 +130,6 @@ const UserDashboard = () => {
                 </Text>
                 <Text fontSize="xs" color="#94a3b8">
                   On artwork purchases
-                </Text>
-              </VStack>
-            </Box>
-            <Box
-              bg="#1e293b"
-              p={6}
-              borderRadius="lg"
-              border="1px"
-              borderColor="rgba(255,255,255,0.1)"
-              textAlign="center"
-            >
-              <VStack spacing={3}>
-                <Text fontSize="sm" color="#94a3b8">
-                  Watchlist
-                </Text>
-                <Text fontSize="2xl" fontWeight="bold" color="#f59e0b">
-                  {userStats.watchlist}
-                </Text>
-                <Text fontSize="xs" color="#94a3b8">
-                  Items watching
                 </Text>
               </VStack>
             </Box>

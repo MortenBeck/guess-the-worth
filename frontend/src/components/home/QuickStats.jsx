@@ -62,7 +62,6 @@ const QuickStats = () => {
   const personalStats = isAuthenticated && userStats ? [
     { label: "Your Bids", value: userStats.active_bids || 0, icon: "💰", color: "#6366f1" },
     { label: "Artworks Won", value: userStats.won_auctions || 0, icon: "🏆", color: "#10b981" },
-    { label: "Watchlist", value: userStats.watchlist || 0, icon: "❤️", color: "#ec4899" },
   ] : [];
 
   return (

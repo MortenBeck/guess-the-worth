@@ -39,7 +39,6 @@ class TestUserStats:
         assert "active_bids" in data
         assert "won_auctions" in data
         assert "total_spent" in data
-        assert "watchlist" in data or "favorite_count" in data
 
         # Values should be zero or empty
         assert data["active_bids"] == 0
