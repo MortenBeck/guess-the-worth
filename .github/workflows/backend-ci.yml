@@ -96,18 +96,33 @@ jobs:
         run: |
           # Create tests directory if it doesn't exist
           mkdir -p tests
-          # Run pytest (will fail if tests fail)
-          pytest tests/ --cov --cov-report=xml --cov-report=term
+          # Run pytest with minimum coverage threshold
+          # This will FAIL if coverage < 80%
+          pytest tests/ \
+            --cov \
+            --cov-report=xml \
+            --cov-report=term \
+            --cov-report=html \
+            --cov-fail-under=80
 
       - name: Upload coverage reports
+        if: always()  # Upload even if tests fail
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./backend/coverage.xml
           flags: backend
-          fail_ci_if_error: false
+          fail_ci_if_error: true
           disable_file_fixes: true
           verbose: true
+
+      - name: Upload coverage HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage-report
+          path: backend/htmlcov/
+          retention-days: 30
 
   security:
     name: Backend Security
