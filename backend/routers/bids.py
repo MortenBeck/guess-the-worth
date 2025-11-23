@@ -139,7 +139,7 @@ async def create_bid(
                 "bidder_id": db_bid.bidder_id,
                 "amount": float(db_bid.amount),
                 "is_winning": db_bid.is_winning,
-                "bid_time": db_bid.bid_time.isoformat(),
+                "created_at": db_bid.created_at.isoformat(),
             },
             "artwork": {
                 "id": artwork.id,

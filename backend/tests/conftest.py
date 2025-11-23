@@ -44,6 +44,19 @@ def set_sqlite_pragma(dbapi_conn, connection_record):
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
+@pytest.fixture(autouse=True)
+def reset_rate_limiter():
+    """Reset rate limiter state between tests to prevent interference."""
+    try:
+        from middleware.rate_limit import limiter
+        # Clear the rate limiter storage before each test
+        limiter.reset()
+    except Exception:
+        # If limiter doesn't have reset or isn't initialized, just pass
+        pass
+    yield
+
+
 @pytest.fixture(scope="function")
 def db_session() -> Generator:
     """

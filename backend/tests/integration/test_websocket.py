@@ -156,7 +156,7 @@ class TestEventPayloads:
         #     "bidder_id": int,
         #     "amount": float,
         #     "is_winning": bool,
-        #     "bid_time": str (ISO format)
+        #     "created_at": str (ISO format)
         #   },
         #   "artwork": {
         #     "id": int,
@@ -171,7 +171,7 @@ class TestEventPayloads:
         assert "bidder_id" in bid_data
         assert "amount" in bid_data
         assert "is_winning" in bid_data
-        assert "created_at" in bid_data or "bid_time" in bid_data
+        assert "created_at" in bid_data
 
     def test_artwork_sold_event_payload_structure(
         self, client: TestClient, buyer_token: str, artwork, buyer_user, db_session

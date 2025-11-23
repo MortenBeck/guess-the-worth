@@ -247,7 +247,7 @@ class TestBidModel:
         assert bid.bidder_id == buyer_user.id
         assert bid.amount == 150.0
         assert bid.is_winning is False
-        assert isinstance(bid.bid_time, datetime)
+        assert isinstance(bid.created_at, datetime)
 
     def test_bid_default_is_winning(self, db_session, artwork, buyer_user):
         """Test bid defaults is_winning to False."""
