@@ -1305,4 +1305,190 @@ main (production)
 
 ---
 
-**Last Updated**: 2025-10-30
+## 🚀 Production Deployment
+
+### Pre-Deployment Checklist
+
+Before deploying to production, ensure all requirements are met:
+
+- [ ] All tests passing (`pytest` and `npm test`)
+- [ ] Test coverage ≥80% backend, ≥70% frontend
+- [ ] Database backup created
+- [ ] Environment variables configured (`.env` files)
+- [ ] Migration rollback tested
+- [ ] Security scan passed (no HIGH/CRITICAL vulnerabilities)
+- [ ] Rate limiting configured
+- [ ] Audit logging enabled
+- [ ] No secrets committed to git
+
+📋 See [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md) for complete checklist.
+
+### Environment Variables
+
+**Backend** (`backend/.env`):
+```bash
+DATABASE_URL=postgresql://user:password@host:port/dbname
+AUTH0_DOMAIN=your-domain.auth0.com
+AUTH0_CLIENT_ID=your-client-id
+AUTH0_CLIENT_SECRET=your-client-secret
+AUTH0_AUDIENCE=https://api.yourdomain.com
+JWT_SECRET_KEY=your-secret-key  # Generate with: openssl rand -hex 32
+STRIPE_SECRET_KEY=sk_live_...   # Optional, for payments
+```
+
+**Frontend** (`frontend/.env`):
+```bash
+VITE_API_BASE_URL=https://api.yourdomain.com
+VITE_AUTH0_DOMAIN=your-domain.auth0.com
+VITE_AUTH0_CLIENT_ID=your-client-id
+VITE_AUTH0_AUDIENCE=https://api.yourdomain.com
+```
+
+### Database Migrations
+
+```bash
+# 1. Create backup first
+cd backend
+./scripts/backup_database_docker.sh  # For Docker environments
+# OR
+./scripts/backup_database.sh         # For local PostgreSQL
+
+# 2. Run migrations
+alembic upgrade head
+
+# 3. Verify migration applied
+alembic current
+
+# 4. If issues occur, rollback:
+alembic downgrade -1
+```
+
+See [backend/docs/MIGRATIONS.md](backend/docs/MIGRATIONS.md) for detailed migration guide.
+
+### Testing Coverage
+
+**Backend:**
+```bash
+cd backend
+pytest --cov --cov-report=html --cov-fail-under=80
+```
+
+**Frontend:**
+```bash
+cd frontend
+npm run test:coverage
+```
+
+### Deployment Steps
+
+1. **Build Docker images:**
+   ```bash
+   docker-compose build
+   ```
+
+2. **Run database migrations:**
+   ```bash
+   docker exec guess_the_worth_backend alembic upgrade head
+   ```
+
+3. **Verify health endpoints:**
+   ```bash
+   curl http://localhost:8000/health
+   curl http://localhost:8000/api/admin/system/health
+   ```
+
+4. **Deploy to production** (example for Docker/Azure):
+   ```bash
+   # Push images to registry
+   docker push your-registry/backend:latest
+   docker push your-registry/frontend:latest
+
+   # Deploy via CI/CD or Azure CLI
+   # See .github/workflows/deploy-azure.yml
+   ```
+
+## 🔒 Security
+
+The application implements multiple security layers:
+
+- ✅ **Authentication**: JWT token-based authentication with Auth0
+- ✅ **Authorization**: Role-based access control (RBAC) - ADMIN, SELLER, BUYER
+- ✅ **Rate Limiting**: Protect critical endpoints from abuse
+- ✅ **Audit Logging**: Track security-critical actions
+- ✅ **Input Validation**: Pydantic schemas for backend, Zod for frontend
+- ✅ **CORS Protection**: Configured allowed origins
+- ✅ **Security Headers**: CSP, XSS protection
+- ✅ **Database Security**: Prepared statements, foreign key constraints
+
+See [SECURITY.md](SECURITY.md) for security policy and vulnerability reporting.
+
+## 📊 Monitoring
+
+### Audit Logs
+
+View security-critical actions in the database:
+```sql
+SELECT * FROM audit_logs
+ORDER BY timestamp DESC
+LIMIT 100;
+```
+
+Or via admin API:
+```bash
+GET /api/admin/audit-logs
+Authorization: Bearer <admin_token>
+```
+
+### System Health
+
+Check system status via admin endpoint:
+```bash
+GET /api/admin/system/health
+Authorization: Bearer <admin_token>
+```
+
+Returns:
+```json
+{
+  "status": "healthy",
+  "database": "connected",
+  "timestamp": "2025-11-23T13:45:00Z"
+}
+```
+
+## 🧪 Testing
+
+### Run All Tests
+
+**Backend:**
+```bash
+cd backend
+pytest -v --cov                    # All tests with coverage
+pytest tests/e2e/ -v              # E2E tests only
+pytest tests/integration/ -v       # Integration tests
+pytest tests/unit/ -v             # Unit tests
+```
+
+**Frontend:**
+```bash
+cd frontend
+npm test                          # All tests
+npm test -- --watch              # Watch mode
+npm test -- --coverage           # With coverage
+```
+
+**Migration Testing:**
+```bash
+cd backend
+./scripts/test_migrations.sh     # Test rollback/upgrade
+```
+
+### Test Coverage Reports
+
+After running tests with coverage:
+- **Backend**: Open `backend/htmlcov/index.html`
+- **Frontend**: Open `frontend/coverage/index.html`
+
+---
+
+**Last Updated**: 2025-11-23

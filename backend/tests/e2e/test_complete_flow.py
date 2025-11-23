@@ -484,3 +484,125 @@ class TestEdgeCaseFlows:
 
             if bid.status_code == 200:
                 assert bid.json()["is_winning"] is True
+
+
+class TestAdminOversightFlow:
+    """Test admin monitoring and oversight of platform activity."""
+
+    def test_complete_auction_with_admin_oversight(
+        self, client, seller_user, buyer_user, admin_user, seller_token, buyer_token, admin_token
+    ):
+        """
+        Complete flow with admin oversight:
+        1. Seller creates artwork
+        2. Buyer places bids
+        3. Artwork is sold
+        4. Admin views transaction
+        5. Admin verifies audit logs
+        """
+        # Step 1: Seller creates artwork
+        artwork_payload = {
+            "title": "Admin Oversight Test",
+            "description": "Testing admin monitoring",
+            "artist_name": "Test Artist",
+            "category": "painting",
+            "secret_threshold": 500.0,
+        }
+        artwork_response = client.post(
+            "/api/artworks/",
+            json=artwork_payload,
+            headers={"Authorization": f"Bearer {seller_token}"},
+        )
+        assert artwork_response.status_code == 200
+        artwork = artwork_response.json()
+        artwork_id = artwork["id"]
+
+        # Step 2: Buyer places losing bid
+        losing_bid_response = client.post(
+            "/api/bids/",
+            json={"artwork_id": artwork_id, "amount": 200.0},
+            headers={"Authorization": f"Bearer {buyer_token}"},
+        )
+        assert losing_bid_response.status_code == 200
+        assert losing_bid_response.json()["is_winning"] is False
+
+        # Step 3: Buyer places winning bid
+        winning_bid_response = client.post(
+            "/api/bids/",
+            json={"artwork_id": artwork_id, "amount": 600.0},
+            headers={"Authorization": f"Bearer {buyer_token}"},
+        )
+        assert winning_bid_response.status_code == 200
+        assert winning_bid_response.json()["is_winning"] is True
+
+        # Step 4: Admin views transactions
+        transactions_response = client.get(
+            "/api/admin/transactions",
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
+        assert transactions_response.status_code == 200
+        transactions = transactions_response.json()
+        assert len(transactions) > 0
+        # Verify our transaction is in the list
+        assert any(
+            t.get("artwork_id") == artwork_id or t.get("title") == "Admin Oversight Test"
+            for t in transactions
+        )
+
+        # Step 5: Admin views audit logs
+        audit_logs_response = client.get(
+            "/api/admin/audit-logs",
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
+        assert audit_logs_response.status_code == 200
+        logs = audit_logs_response.json()
+        assert len(logs) > 0
+        # Verify bid-related audit logs exist
+        assert any(log.get("action") in ["bid_placed", "artwork_sold"] for log in logs)
+
+        # Step 6: Admin views platform stats
+        stats_response = client.get(
+            "/api/admin/stats/overview",
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
+        assert stats_response.status_code == 200
+        stats = stats_response.json()
+        assert "total_users" in stats
+        assert "total_artworks" in stats
+
+    def test_admin_user_management(self, client, buyer_user, admin_user, buyer_token, admin_token):
+        """Test admin user management capabilities."""
+        # Step 1: Admin lists all users
+        users_response = client.get(
+            "/api/admin/users", headers={"Authorization": f"Bearer {admin_token}"}
+        )
+        assert users_response.status_code == 200
+        users = users_response.json()
+        assert len(users) >= 2  # At least buyer and admin
+
+        # Step 2: Admin gets specific user details
+        user_details_response = client.get(
+            f"/api/admin/users/{buyer_user.id}",
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
+        assert user_details_response.status_code == 200
+        user_details = user_details_response.json()
+        assert user_details["id"] == buyer_user.id
+        assert "stats" in user_details
+
+        # Step 3: Verify non-admin cannot access admin endpoints
+        unauthorized_response = client.get(
+            "/api/admin/users", headers={"Authorization": f"Bearer {buyer_token}"}
+        )
+        assert unauthorized_response.status_code == 403
+
+    def test_admin_system_health_monitoring(self, client, admin_token):
+        """Test admin can monitor system health."""
+        health_response = client.get(
+            "/api/admin/system/health",
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
+        assert health_response.status_code == 200
+        health = health_response.json()
+        assert "database" in health
+        assert "status" in health
