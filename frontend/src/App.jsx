@@ -8,6 +8,7 @@ import { userService } from "./services/api";
 import Header from "./components/Header";
 import NotificationSystem from "./components/NotificationSystem";
 import SocketStatus from "./components/SocketStatus";
+import AdminRoute from "./components/AdminRoute";
 
 // Eager load critical pages for better initial performance
 import HomePage from "./pages/HomePage";
@@ -88,7 +89,14 @@ function App() {
             <Route path="/dashboard" element={<UserDashboard />} />
             <Route path="/seller-dashboard" element={<SellerDashboard />} />
             <Route path="/add-artwork" element={<AddArtworkPage />} />
-            <Route path="/admin-dashboard" element={<AdminDashboard />} />
+            <Route
+              path="/admin-dashboard"
+              element={
+                <AdminRoute>
+                  <AdminDashboard />
+                </AdminRoute>
+              }
+            />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/favourites" element={<FavouritesPage />} />
             <Route path="/help" element={<HelpPage />} />
