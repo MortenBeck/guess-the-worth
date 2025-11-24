@@ -10,12 +10,12 @@ import {
   Image,
   Badge,
   Spinner,
-  useToast,
 } from "@chakra-ui/react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { userService, statsService } from "../services/api";
 import useAuthStore from "../store/authStore";
 import placeholderImg from "../assets/placeholder.jpg";
+import { toaster } from "../components/ui/toaster";
 
 const EditIcon = () => <span>✏️</span>;
 const CheckIcon = () => <span>✓</span>;
@@ -24,7 +24,6 @@ const CloseIcon = () => <span>✕</span>;
 const ProfilePage = () => {
   const { user, updateUser } = useAuthStore();
   const queryClient = useQueryClient();
-  const toast = useToast();
   const [isEditing, setIsEditing] = useState(false);
 
   // Fetch current user data
@@ -66,11 +65,10 @@ const ProfilePage = () => {
   const updateUserMutation = useMutation({
     mutationFn: (userData) => userService.updateProfile(userData),
     onSuccess: (response) => {
-      toast({
+      toaster.create({
         title: "Profile updated successfully",
-        status: "success",
+        type: "success",
         duration: 3000,
-        isClosable: true,
       });
       queryClient.invalidateQueries(["current-user"]);
       // Update auth store with new user data
@@ -80,12 +78,11 @@ const ProfilePage = () => {
       setIsEditing(false);
     },
     onError: (error) => {
-      toast({
+      toaster.create({
         title: "Update failed",
         description: error.message || "Failed to update profile",
-        status: "error",
+        type: "error",
         duration: 5000,
-        isClosable: true,
       });
     },
   });

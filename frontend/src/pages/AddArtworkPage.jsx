@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Box, Container, Heading, Text, Button, VStack, HStack, useToast } from "@chakra-ui/react";
+import { Box, Container, Heading, Text, Button, VStack, HStack } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import { artworkService } from "../services/api";
 import useAuthStore from "../store/authStore";
+import { toaster } from "../components/ui/toaster";
 
 const AddArtworkPage = () => {
   const navigate = useNavigate();
-  const toast = useToast();
   const queryClient = useQueryClient();
   const { isSeller, isAdmin } = useAuthStore();
 
@@ -32,29 +32,26 @@ const AddArtworkPage = () => {
       if (selectedImage) {
         try {
           await artworkService.uploadImage(artwork.id, selectedImage);
-          toast({
+          toaster.create({
             title: "Artwork created successfully",
             description: `Your artwork "${artwork.title}" has been listed with image.`,
-            status: "success",
+            type: "success",
             duration: 5000,
-            isClosable: true,
           });
         } catch (error) {
-          toast({
+          toaster.create({
             title: "Artwork created but image upload failed",
             description: error.message,
-            status: "warning",
+            type: "warning",
             duration: 5000,
-            isClosable: true,
           });
         }
       } else {
-        toast({
+        toaster.create({
           title: "Artwork created successfully",
           description: `Your artwork "${artwork.title}" has been listed.`,
-          status: "success",
+          type: "success",
           duration: 5000,
-          isClosable: true,
         });
       }
 
@@ -63,12 +60,11 @@ const AddArtworkPage = () => {
       navigate(`/artwork/${artwork.id}`);
     },
     onError: (error) => {
-      toast({
+      toaster.create({
         title: "Failed to create artwork",
         description: error.response?.data?.detail || error.message,
-        status: "error",
+        type: "error",
         duration: 5000,
-        isClosable: true,
       });
     },
   });
@@ -102,10 +98,10 @@ const AddArtworkPage = () => {
   const handleSubmitArtwork = () => {
     // Validate required fields
     if (!newArtwork.title || !newArtwork.secretThreshold) {
-      toast({
+      toaster.create({
         title: "Missing required fields",
         description: "Please fill in title and secret threshold",
-        status: "warning",
+        type: "warning",
         duration: 3000,
       });
       return;
@@ -113,20 +109,20 @@ const AddArtworkPage = () => {
 
     // Validate title length
     if (newArtwork.title.length < 3) {
-      toast({
+      toaster.create({
         title: "Invalid title",
         description: "Title must be at least 3 characters long",
-        status: "warning",
+        type: "warning",
         duration: 3000,
       });
       return;
     }
 
     if (newArtwork.title.length > 200) {
-      toast({
+      toaster.create({
         title: "Invalid title",
         description: "Title cannot exceed 200 characters",
-        status: "warning",
+        type: "warning",
         duration: 3000,
       });
       return;
@@ -134,10 +130,10 @@ const AddArtworkPage = () => {
 
     // Validate description length
     if (newArtwork.description && newArtwork.description.length > 2000) {
-      toast({
+      toaster.create({
         title: "Invalid description",
         description: "Description cannot exceed 2000 characters",
-        status: "warning",
+        type: "warning",
         duration: 3000,
       });
       return;
@@ -146,10 +142,10 @@ const AddArtworkPage = () => {
     // Validate secret threshold
     const threshold = parseFloat(newArtwork.secretThreshold);
     if (isNaN(threshold) || threshold < 0) {
-      toast({
+      toaster.create({
         title: "Invalid secret threshold",
         description: "Secret threshold must be a non-negative number",
-        status: "warning",
+        type: "warning",
         duration: 3000,
       });
       return;
@@ -160,10 +156,10 @@ const AddArtworkPage = () => {
       const endDate = new Date(newArtwork.end_date);
       const now = new Date();
       if (endDate <= now) {
-        toast({
+        toaster.create({
           title: "Invalid end date",
           description: "End date must be in the future",
-          status: "warning",
+          type: "warning",
           duration: 3000,
         });
         return;

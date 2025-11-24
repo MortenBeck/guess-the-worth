@@ -1,12 +1,12 @@
 import { useState, useRef } from "react";
-import { Box, Button, Image, Text, Progress, useToast, VStack } from "@chakra-ui/react";
+import { Box, Button, Image, Text, Progress, VStack } from "@chakra-ui/react";
 import { artworkService } from "../services/api";
+import { toaster } from "./ui/toaster";
 
 export default function ImageUpload({ artworkId, currentImageUrl, onUploadSuccess }) {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState(currentImageUrl);
   const fileInputRef = useRef(null);
-  const toast = useToast();
 
   const handleFileSelect = async (e) => {
     const file = e.target.files[0];
@@ -15,24 +15,22 @@ export default function ImageUpload({ artworkId, currentImageUrl, onUploadSucces
     // Validate file type
     const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
-      toast({
+      toaster.create({
         title: "Invalid file type",
         description: "Please upload a JPEG, PNG, or WebP image",
-        status: "error",
+        type: "error",
         duration: 5000,
-        isClosable: true,
       });
       return;
     }
 
     // Validate file size (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast({
+      toaster.create({
         title: "File too large",
         description: "Maximum file size is 5MB",
-        status: "error",
+        type: "error",
         duration: 5000,
-        isClosable: true,
       });
       return;
     }
@@ -46,20 +44,18 @@ export default function ImageUpload({ artworkId, currentImageUrl, onUploadSucces
     setUploading(true);
     try {
       const result = await artworkService.uploadImage(artworkId, file);
-      toast({
+      toaster.create({
         title: "Image uploaded successfully",
-        status: "success",
+        type: "success",
         duration: 3000,
-        isClosable: true,
       });
       if (onUploadSuccess) onUploadSuccess(result.data?.image_url);
     } catch (error) {
-      toast({
+      toaster.create({
         title: "Upload failed",
         description: error.response?.data?.detail || error.message,
-        status: "error",
+        type: "error",
         duration: 5000,
-        isClosable: true,
       });
       // Revert preview on error
       setPreview(currentImageUrl);

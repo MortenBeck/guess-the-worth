@@ -12,7 +12,6 @@ import {
   Badge,
   Spinner,
   Center,
-  useToast,
 } from "@chakra-ui/react";
 import { useParams } from "react-router-dom";
 import { artworkService, bidService } from "../services/api";
@@ -20,13 +19,13 @@ import useAuthStore from "../store/authStore";
 import useFavoritesStore from "../store/favoritesStore";
 import { useRealtimeBids } from "../hooks/useRealtimeBids";
 import placeholderImg from "../assets/placeholder.jpg";
+import { toaster } from "../components/ui/toaster";
 
 const ArtworkPage = () => {
   const { id } = useParams();
   const { isAuthenticated } = useAuthStore();
   const { toggleFavorite, isFavorite } = useFavoritesStore();
   const [bidAmount, setBidAmount] = useState("");
-  const toast = useToast();
   const queryClient = useQueryClient();
 
   // Enable real-time bid updates for this artwork
@@ -65,14 +64,13 @@ const ArtworkPage = () => {
       }),
     onSuccess: (response) => {
       const { data: bid } = response;
-      toast({
+      toaster.create({
         title: bid.is_winning ? "Congratulations! You won!" : "Bid placed successfully",
         description: bid.is_winning
           ? `Your bid of $${bid.amount} met the threshold!`
           : `Your bid of $${bid.amount} has been recorded.`,
-        status: bid.is_winning ? "success" : "info",
+        type: bid.is_winning ? "success" : "info",
         duration: 5000,
-        isClosable: true,
       });
 
       // Refresh artwork and bids
@@ -82,22 +80,21 @@ const ArtworkPage = () => {
       setBidAmount("");
     },
     onError: (error) => {
-      toast({
+      toaster.create({
         title: "Bid failed",
         description: error.response?.data?.detail || error.message,
-        status: "error",
+        type: "error",
         duration: 5000,
-        isClosable: true,
       });
     },
   });
 
   const handleBidSubmit = async () => {
     if (!bidAmount || parseFloat(bidAmount) <= 0) {
-      toast({
+      toaster.create({
         title: "Invalid bid amount",
         description: "Please enter a valid bid amount",
-        status: "warning",
+        type: "warning",
         duration: 3000,
       });
       return;
