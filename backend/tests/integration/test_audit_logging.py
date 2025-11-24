@@ -226,3 +226,35 @@ def test_audit_log_queryable_by_action(db_session: Session, buyer_user):
     action_logs = db_session.query(AuditLog).filter(AuditLog.action == "specific_test_action").all()
 
     assert len(action_logs) > 0, "Should be able to query audit logs by action"
+
+
+def test_audit_service_handles_database_errors_gracefully(db_session: Session, buyer_user):
+    """Test that AuditService returns None when database errors occur without crashing."""
+    from unittest.mock import MagicMock
+
+    from services.audit_service import AuditService
+
+    # Mock db.add to raise an exception
+    original_add = db_session.add
+    db_session.add = MagicMock(side_effect=Exception("Database connection error"))
+
+    # Call log_action - should not raise exception
+    result = AuditService.log_action(
+        db=db_session,
+        action="test_action",
+        resource_type="test",
+        resource_id=1,
+        user=buyer_user,
+        details={"test": "data"},
+        request=None,
+    )
+
+    # Restore original add method
+    db_session.add = original_add
+
+    # Should return None when error occurs
+    assert result is None, "AuditService should return None when database errors occur"
+
+    # Verify no audit log was created
+    logs = db_session.query(AuditLog).filter(AuditLog.action == "test_action").all()
+    assert len(logs) == 0, "No audit log should be created when error occurs"
