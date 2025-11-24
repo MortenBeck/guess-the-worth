@@ -7,7 +7,7 @@ from database import get_db
 router = APIRouter()
 
 
-@router.get("/", status_code=status.HTTP_200_OK)
+@router.api_route("/", methods=["GET", "HEAD"], status_code=status.HTTP_200_OK)
 async def health_check():
     """Basic health check endpoint"""
     return {
@@ -16,7 +16,7 @@ async def health_check():
     }
 
 
-@router.get("/db", status_code=status.HTTP_200_OK)
+@router.api_route("/db", methods=["GET", "HEAD"], status_code=status.HTTP_200_OK)
 async def database_health_check(db: Session = Depends(get_db)):
     """Health check that verifies database connectivity"""
     try:
