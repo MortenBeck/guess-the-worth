@@ -517,10 +517,10 @@ class TestArtworkValidation:
 
     def test_create_artwork_end_date_in_past(self, client, seller_token):
         """Test that end_date in the past is rejected."""
-        from datetime import datetime, timedelta
+        from datetime import datetime, timedelta, UTC
 
         headers = {"Authorization": f"Bearer {seller_token}"}
-        past_date = (datetime.utcnow() - timedelta(days=1)).isoformat()
+        past_date = (datetime.now(UTC) - timedelta(days=1)).isoformat()
         payload = {"title": "Valid Title", "secret_threshold": 100.0, "end_date": past_date}
 
         response = client.post("/api/artworks/", json=payload, headers=headers)
@@ -586,10 +586,10 @@ class TestUpdateArtwork:
 
     def test_update_artwork_end_date_in_past(self, client, artwork, seller_token):
         """Test that update rejects end_date in past."""
-        from datetime import datetime, timedelta
+        from datetime import datetime, timedelta, UTC
 
         headers = {"Authorization": f"Bearer {seller_token}"}
-        past_date = (datetime.utcnow() - timedelta(days=1)).isoformat()
+        past_date = (datetime.now(UTC) - timedelta(days=1)).isoformat()
         payload = {"end_date": past_date}
 
         response = client.put(f"/api/artworks/{artwork.id}", json=payload, headers=headers)

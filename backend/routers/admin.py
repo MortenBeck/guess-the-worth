@@ -3,7 +3,7 @@ Admin router for platform management.
 Proof-of-concept implementation.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -213,7 +213,7 @@ async def get_platform_overview(
     # User stats
     total_users = db.query(User).count()
     users_last_30_days = (
-        db.query(User).filter(User.created_at >= datetime.utcnow() - timedelta(days=30)).count()
+        db.query(User).filter(User.created_at >= datetime.now(UTC) - timedelta(days=30)).count()
     )
 
     # Artwork stats
@@ -291,12 +291,12 @@ async def get_system_health(
 
     # Get recent activity
     recent_bids = (
-        db.query(Bid).filter(Bid.created_at >= datetime.utcnow() - timedelta(hours=1)).count()
+        db.query(Bid).filter(Bid.created_at >= datetime.now(UTC) - timedelta(hours=1)).count()
     )
 
     recent_artworks = (
         db.query(Artwork)
-        .filter(Artwork.created_at >= datetime.utcnow() - timedelta(hours=24))
+        .filter(Artwork.created_at >= datetime.now(UTC) - timedelta(hours=24))
         .count()
     )
 
@@ -307,7 +307,7 @@ async def get_system_health(
             "bids_last_hour": recent_bids,
             "artworks_last_24h": recent_artworks,
         },
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
 
 

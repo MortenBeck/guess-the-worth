@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from models.artwork import ArtworkStatus
 
@@ -46,10 +46,11 @@ class ArtworkResponse(ArtworkBase):
     end_date: Optional[datetime] = None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(
+        from_attributes=True,
         # Ensure minimal response size by using efficient serialization
-        use_enum_values = True  # Serialize enums as strings, not objects
+        use_enum_values=True  # Serialize enums as strings, not objects
+    )
 
 
 class ArtworkWithSecretResponse(ArtworkResponse):

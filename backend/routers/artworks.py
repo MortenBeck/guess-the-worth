@@ -1,6 +1,6 @@
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import List
 
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
@@ -83,7 +83,7 @@ async def create_artwork(
         raise HTTPException(status_code=400, detail="Description cannot exceed 2000 characters")
 
     # Validate end_date is in future if provided
-    if artwork.end_date and artwork.end_date < datetime.utcnow():
+    if artwork.end_date and artwork.end_date < datetime.now(UTC):
         raise HTTPException(status_code=400, detail="End date must be in the future")
 
     # Create artwork with authenticated user's ID
@@ -159,7 +159,7 @@ async def update_artwork(
     if (
         "end_date" in update_data
         and update_data["end_date"]
-        and update_data["end_date"] < datetime.utcnow()
+        and update_data["end_date"] < datetime.now(UTC)
     ):
         raise HTTPException(status_code=400, detail="End date must be in the future")
 

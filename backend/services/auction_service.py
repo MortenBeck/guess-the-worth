@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, UTC
 
 from sqlalchemy.orm import Session
 
@@ -17,7 +17,7 @@ class AuctionService:
 
         Returns the number of auctions closed.
         """
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
 
         # Find active artworks past end_date
         expired_artworks = (
