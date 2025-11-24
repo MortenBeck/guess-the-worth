@@ -142,7 +142,9 @@ describe("AdminDashboard", () => {
     renderWithProviders(<AdminDashboard />);
 
     await waitFor(() => {
-      expect(screen.getByText("0")).toBeInTheDocument();
+      // Check that fallback values are displayed (multiple zeros exist)
+      const zeroElements = screen.getAllByText("0");
+      expect(zeroElements.length).toBeGreaterThan(0);
     });
   });
 });
