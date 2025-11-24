@@ -388,7 +388,9 @@ describe("API Services", () => {
         json: async () => ({}),
       });
 
-      await expect(artworkService.getAll()).rejects.toThrow("Your session has expired. Please log in again.");
+      await expect(artworkService.getAll()).rejects.toThrow(
+        "Your session has expired. Please log in again."
+      );
       expect(localStorage.getItem("access_token")).toBeNull();
     });
 
@@ -429,7 +431,9 @@ describe("API Services", () => {
         json: async () => ({}),
       });
 
-      await expect(artworkService.getAll()).rejects.toThrow("Server error. Please try again later.");
+      await expect(artworkService.getAll()).rejects.toThrow(
+        "Server error. Please try again later."
+      );
     });
 
     it("should throw error for network failures", async () => {

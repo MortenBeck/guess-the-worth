@@ -16,7 +16,11 @@ from services.auction_service import AuctionService
 
 
 @pytest.fixture
-def expired_artwork_with_winner(db_session: Session, seller_user: User, buyer_user: User) -> Artwork:
+def expired_artwork_with_winner(
+    db_session: Session,
+    seller_user: User,
+    buyer_user: User,
+) -> Artwork:
     """Create an expired artwork with a winning bid."""
     artwork = Artwork(
         seller_id=seller_user.id,

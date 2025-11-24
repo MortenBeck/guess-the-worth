@@ -4,6 +4,7 @@ This ensures all E2E tests can properly authenticate API requests.
 """
 
 from datetime import timedelta
+
 from services.jwt_service import JWTService
 
 
@@ -19,8 +20,7 @@ def create_token_for_user(auth0_sub: str, role: str) -> str:
         JWT token string
     """
     return JWTService.create_access_token(
-        data={"sub": auth0_sub, "role": role},
-        expires_delta=timedelta(hours=1)
+        data={"sub": auth0_sub, "role": role}, expires_delta=timedelta(hours=1)
     )
 
 
