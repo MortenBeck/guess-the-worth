@@ -587,3 +587,86 @@ class TestBidEdgeCases:
             # All non-winning bids should succeed
             if amount < 100.0:
                 assert response.status_code == 200
+
+
+class TestBidAmountValidation:
+    """Test bid amount validation limits."""
+
+    def test_bid_exceeds_maximum_amount(self, client, artwork, buyer_token):
+        """Test that bid exceeding 1 billion is rejected."""
+        headers = {"Authorization": f"Bearer {buyer_token}"}
+        payload = {"artwork_id": artwork.id, "amount": 1_000_000_001}
+
+        response = client.post("/api/bids/", json=payload, headers=headers)
+        assert response.status_code == 400
+        assert "exceed" in response.json()["detail"].lower()
+
+    def test_bid_not_higher_than_current_bid(self, client, db_session, artwork, buyer_user, buyer_token):
+        """Test that bid must be higher than current highest bid."""
+        from models.bid import Bid
+
+        # Set current highest bid
+        artwork.current_highest_bid = 100.0
+        db_session.commit()
+
+        # Create existing bid
+        existing_bid = Bid(artwork_id=artwork.id, bidder_id=buyer_user.id, amount=100.0)
+        db_session.add(existing_bid)
+        db_session.commit()
+
+        # Try to bid same or lower amount
+        headers = {"Authorization": f"Bearer {buyer_token}"}
+        payload = {"artwork_id": artwork.id, "amount": 100.0}
+
+        response = client.post("/api/bids/", json=payload, headers=headers)
+        assert response.status_code == 400
+        assert "higher" in response.json()["detail"].lower()
+
+
+class TestGetMyBids:
+    """Test GET /api/bids/my-bids endpoint."""
+
+    def test_get_my_bids_requires_auth(self, client):
+        """Test that getting own bids requires authentication."""
+        response = client.get("/api/bids/my-bids")
+        assert response.status_code == 401
+
+    def test_get_my_bids_empty(self, client, buyer_token):
+        """Test getting own bids when user has none."""
+        headers = {"Authorization": f"Bearer {buyer_token}"}
+        response = client.get("/api/bids/my-bids", headers=headers)
+        assert response.status_code == 200
+        assert isinstance(response.json(), list)
+        assert len(response.json()) == 0
+
+    def test_get_my_bids_returns_only_own(self, client, db_session, artwork, buyer_user, buyer_token):
+        """Test that my-bids only returns user's own bids."""
+        from models.bid import Bid
+        from models.user import User, UserRole
+
+        # Create another buyer
+        other_buyer = User(
+            auth0_sub="auth0|otherbuyer",
+            email="other@buyer.com",
+            name="Other Buyer",
+            role=UserRole.BUYER,
+        )
+        db_session.add(other_buyer)
+        db_session.commit()
+
+        # Create bids for both buyers
+        my_bid = Bid(artwork_id=artwork.id, bidder_id=buyer_user.id, amount=50.0)
+        other_bid = Bid(artwork_id=artwork.id, bidder_id=other_buyer.id, amount=75.0)
+        db_session.add(my_bid)
+        db_session.add(other_bid)
+        db_session.commit()
+
+        # Get my bids
+        headers = {"Authorization": f"Bearer {buyer_token}"}
+        response = client.get("/api/bids/my-bids", headers=headers)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data) == 1
+        assert data[0]["amount"] == 50.0
+        assert data[0]["bidder_id"] == buyer_user.id

@@ -396,3 +396,25 @@ class TestModelRelationships:
         for buyer in buyers:
             db_session.refresh(buyer)
             assert len(buyer.bids) == 2
+
+
+class TestAuditLogModel:
+    """Test AuditLog model."""
+
+    def test_audit_log_repr(self, db_session, buyer_user):
+        """Test AuditLog __repr__ method."""
+        from models.audit_log import AuditLog
+
+        audit_log = AuditLog(
+            user_id=buyer_user.id,
+            action="test_action",
+            resource_type="test",
+            resource_id=1,
+        )
+        db_session.add(audit_log)
+        db_session.commit()
+
+        repr_str = repr(audit_log)
+        assert "AuditLog" in repr_str
+        assert "test_action" in repr_str
+        assert str(buyer_user.id) in repr_str
