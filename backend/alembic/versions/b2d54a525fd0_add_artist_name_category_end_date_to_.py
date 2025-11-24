@@ -1,7 +1,7 @@
 """Add artist_name, category, end_date to artworks; rename bid_time to created_at; add indexes
 
 Revision ID: b2d54a525fd0
-Revises: 
+Revises: ff6c8a0c2122
 Create Date: 2025-11-22 12:10:03.322065
 
 """
@@ -13,7 +13,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = 'b2d54a525fd0'
-down_revision: Union[str, None] = None
+down_revision: Union[str, None] = 'ff6c8a0c2122'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
