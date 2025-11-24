@@ -43,7 +43,7 @@ def upgrade() -> None:
         sa.Column('auth0_sub', sa.String(), nullable=False),
         sa.Column('email', sa.String(), nullable=False),
         sa.Column('name', sa.String(), nullable=False),
-        sa.Column('role', postgresql.ENUM('BUYER', 'SELLER', 'ADMIN', name='userole'), nullable=False),
+        sa.Column('role', postgresql.ENUM('BUYER', 'SELLER', 'ADMIN', name='userole', create_type=False), nullable=False),
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
         sa.PrimaryKeyConstraint('id')
     )
@@ -61,7 +61,7 @@ def upgrade() -> None:
         sa.Column('current_highest_bid', sa.Float(), nullable=True, default=0.0),
         sa.Column('description', sa.String(), nullable=True),
         sa.Column('image_url', sa.String(), nullable=True),
-        sa.Column('status', postgresql.ENUM('ACTIVE', 'SOLD', 'ARCHIVED', name='artworkstatus'), nullable=False),
+        sa.Column('status', postgresql.ENUM('ACTIVE', 'SOLD', 'ARCHIVED', name='artworkstatus', create_type=False), nullable=False),
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
         sa.ForeignKeyConstraint(['seller_id'], ['users.id']),
         sa.PrimaryKeyConstraint('id')

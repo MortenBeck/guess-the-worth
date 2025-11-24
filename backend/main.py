@@ -1,4 +1,5 @@
 import os
+from contextlib import asynccontextmanager
 
 import sentry_sdk
 import socketio
@@ -26,7 +27,16 @@ if sentry_dsn:
         environment=os.getenv("ENVIRONMENT", "production"),
     )
 
-app = FastAPI(title="Guess The Worth API", version="1.0.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Create database tables
+    Base.metadata.create_all(bind=engine)
+    yield
+    # Shutdown: cleanup if needed (none required currently)
+
+
+app = FastAPI(title="Guess The Worth API", version="1.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -58,11 +68,6 @@ app.include_router(admin.router)
 # Create uploads directory if it doesn't exist
 os.makedirs("uploads", exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
-
-
-@app.on_event("startup")
-async def startup_event():
-    Base.metadata.create_all(bind=engine)
 
 
 @app.get("/")

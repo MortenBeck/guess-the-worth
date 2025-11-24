@@ -1,5 +1,6 @@
 from typing import List, Optional
 
+from pydantic import ConfigDict
 from pydantic_settings import BaseSettings
 
 
@@ -39,10 +40,7 @@ class Settings(BaseSettings):
     # Environment
     environment: str = "development"
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        extra = "ignore"
+    model_config = ConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
