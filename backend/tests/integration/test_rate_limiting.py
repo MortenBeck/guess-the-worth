@@ -3,6 +3,8 @@ Integration tests for rate limiting middleware.
 Tests rate limiting behavior on various endpoints.
 """
 
+from unittest.mock import patch
+
 from fastapi.testclient import TestClient
 
 
@@ -35,11 +37,17 @@ def test_rate_limiting_on_registration(client: TestClient):
     assert "rate limit" in response.json()["error"].lower()
 
 
-def test_rate_limiting_on_bid_creation(client: TestClient, artwork, buyer_user):
+@patch("services.auth_service.AuthService.verify_auth0_token")
+def test_rate_limiting_on_bid_creation(mock_verify, client: TestClient, artwork, buyer_user, buyer_token):
     """Test rate limiting on bid creation endpoint (20/minute)."""
+    # Mock Auth0 to fallback to JWT
+    mock_verify.side_effect = Exception("Auth0 not available")
+
     # Create multiple bids rapidly
     successful_bids = 0
     rate_limited = False
+
+    headers = {"Authorization": f"Bearer {buyer_token}"}
 
     for i in range(25):
         response = client.post(
@@ -48,6 +56,7 @@ def test_rate_limiting_on_bid_creation(client: TestClient, artwork, buyer_user):
                 "artwork_id": artwork.id,
                 "amount": 100 + i,
             },
+            headers=headers,
         )
 
         if response.status_code == 200:
@@ -61,11 +70,17 @@ def test_rate_limiting_on_bid_creation(client: TestClient, artwork, buyer_user):
     assert rate_limited or successful_bids == 20, "Rate limit not enforced"
 
 
-def test_rate_limiting_on_artwork_creation(client: TestClient, seller_user):
+@patch("services.auth_service.AuthService.verify_auth0_token")
+def test_rate_limiting_on_artwork_creation(mock_verify, client: TestClient, seller_user, seller_token):
     """Test rate limiting on artwork creation endpoint (10/hour)."""
+    # Mock Auth0 to fallback to JWT
+    mock_verify.side_effect = Exception("Auth0 not available")
+
     # Create multiple artworks rapidly
     successful_artworks = 0
     rate_limited = False
+
+    headers = {"Authorization": f"Bearer {seller_token}"}
 
     for i in range(15):
         response = client.post(
@@ -75,6 +90,7 @@ def test_rate_limiting_on_artwork_creation(client: TestClient, seller_user):
                 "description": "Test description",
                 "secret_threshold": 1000,
             },
+            headers=headers,
         )
 
         if response.status_code == 200:

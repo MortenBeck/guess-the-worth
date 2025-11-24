@@ -8,11 +8,22 @@ These tests verify that stats endpoints return correct data:
 - Authorization requirements
 """
 
+from unittest.mock import patch
+
+import pytest
 from fastapi.testclient import TestClient
 
 from models.artwork import Artwork, ArtworkStatus
 from models.bid import Bid
 from models.user import User
+
+
+@pytest.fixture(autouse=True)
+def mock_auth0():
+    """Mock Auth0 verification for all tests in this module to use JWT fallback."""
+    with patch("services.auth_service.AuthService.verify_auth0_token") as mock:
+        mock.side_effect = Exception("Auth0 not available - using JWT")
+        yield mock
 
 
 class TestUserStats:
