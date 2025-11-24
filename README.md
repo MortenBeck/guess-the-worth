@@ -67,12 +67,12 @@ See `.env.example` files for all required variables.
 - **Image Upload** - File validation, optimization, and storage
 - **Admin Dashboard** - User management, artwork oversight
 - **Security** - Rate limiting, security headers, input validation, RBAC
+- **Documentation** - Complete project documentation (CONTRIBUTING.md, CHANGELOG.md, ARCHITECTURE.md)
 
 ### ❌ Pending Implementation
 
 - **Stripe Payment Integration** - Infrastructure ready, payment flow needs implementation
 - **Database Seeding System** - No seed scripts for development/demo data
-- **Documentation** - Missing CONTRIBUTING.md, CHANGELOG.md, architecture docs
 
 ---
 
@@ -89,6 +89,8 @@ See `.env.example` files for all required variables.
 ```
 Browser → Frontend (React + Zustand) → Backend (FastAPI + Socket.IO) → PostgreSQL | Auth0 | Stripe
 ```
+
+For detailed architecture documentation, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ### Database Schema
 
@@ -147,6 +149,8 @@ See [SECURITY.md](SECURITY.md) for security policy.
 
 **Commit Convention**: `feat:`, `fix:`, `test:`, `docs:`, `chore:`, `refactor:`, `perf:`
 
+**Contributing**: See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development guidelines.
+
 **Running Locally**:
 ```bash
 # Backend
@@ -187,10 +191,14 @@ npm run dev
    - Development seed data
    - Test users and sample artworks
 
-3. **Documentation**
-   - CONTRIBUTING.md
-   - CHANGELOG.md
-   - Architecture documentation
+---
+
+## 📚 Documentation
+
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines and development workflow
+- **[CHANGELOG.md](CHANGELOG.md)** - Complete project history and release notes
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Detailed technical architecture documentation
+- **[SECURITY.md](SECURITY.md)** - Security policy and known vulnerabilities
 
 ---
 
