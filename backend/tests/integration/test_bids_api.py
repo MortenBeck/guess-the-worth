@@ -601,7 +601,14 @@ class TestBidAmountValidation:
         assert response.status_code == 400
         assert "exceed" in response.json()["detail"].lower()
 
-    def test_bid_not_higher_than_current_bid(self, client, db_session, artwork, buyer_user, buyer_token):
+    def test_bid_not_higher_than_current_bid(
+        self,
+        client,
+        db_session,
+        artwork,
+        buyer_user,
+        buyer_token,
+    ):
         """Test that bid must be higher than current highest bid."""
         from models.bid import Bid
 
@@ -637,9 +644,17 @@ class TestGetMyBids:
         response = client.get("/api/bids/my-bids", headers=headers)
         assert response.status_code == 200
         assert isinstance(response.json(), list)
-        assert len(response.json()) == 0
+        bids = response.json()
+        assert len(bids) == 0
 
-    def test_get_my_bids_returns_only_own(self, client, db_session, artwork, buyer_user, buyer_token):
+    def test_get_my_bids_returns_only_own(
+        self,
+        client,
+        db_session,
+        artwork,
+        buyer_user,
+        buyer_token,
+    ):
         """Test that my-bids only returns user's own bids."""
         from models.bid import Bid
         from models.user import User, UserRole

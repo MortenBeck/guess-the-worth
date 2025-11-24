@@ -3,7 +3,6 @@ Unit tests for custom error classes.
 Tests that each custom exception returns the correct status code and error message.
 """
 
-import pytest
 from fastapi import status
 
 from utils.errors import (

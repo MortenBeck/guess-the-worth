@@ -41,8 +41,6 @@ class TestCompleteUserFlow:
         }
         buyer_response = client.post("/api/auth/register", json=buyer_payload)
         assert buyer_response.status_code == 200
-        buyer_data = buyer_response.json()
-        buyer_id = buyer_data["id"]
 
         # Create buyer token
         buyer_token = JWTService.create_access_token(
@@ -58,8 +56,6 @@ class TestCompleteUserFlow:
         }
         seller_response = client.post("/api/auth/register", json=seller_payload)
         assert seller_response.status_code == 200
-        seller_data = seller_response.json()
-        seller_id = seller_data["id"]
 
         # Create seller token
         seller_token = JWTService.create_access_token(
@@ -145,8 +141,7 @@ class TestMultipleUsersCompetingFlow:
             "auth0_sub": "auth0|compete_seller",
             "role": "SELLER",
         }
-        seller_response = client.post("/api/auth/register", json=seller_payload)
-        seller_id = seller_response.json()["id"]
+        client.post("/api/auth/register", json=seller_payload)
 
         # Create seller token
         seller_token = JWTService.create_access_token(
@@ -245,8 +240,7 @@ class TestSellerMultipleArtworksFlow:
             "auth0_sub": "auth0|multi_seller",
             "role": "SELLER",
         }
-        seller_response = client.post("/api/auth/register", json=seller_payload)
-        seller_id = seller_response.json()["id"]
+        client.post("/api/auth/register", json=seller_payload)
 
         # Create seller token
         seller_token = JWTService.create_access_token(
@@ -261,8 +255,7 @@ class TestSellerMultipleArtworksFlow:
             "auth0_sub": "auth0|multi_buyer",
             "role": "BUYER",
         }
-        buyer_response = client.post("/api/auth/register", json=buyer_payload)
-        buyer_id = buyer_response.json()["id"]
+        client.post("/api/auth/register", json=buyer_payload)
 
         # Create buyer token
         buyer_token = JWTService.create_access_token(
@@ -327,8 +320,7 @@ class TestErrorRecoveryFlow:
             "auth0_sub": "auth0|error_seller",
             "role": "SELLER",
         }
-        seller_response = client.post("/api/auth/register", json=seller_payload)
-        seller_id = seller_response.json()["id"]
+        client.post("/api/auth/register", json=seller_payload)
 
         # Create seller token
         seller_token = JWTService.create_access_token(
@@ -342,8 +334,7 @@ class TestErrorRecoveryFlow:
             "auth0_sub": "auth0|error_buyer",
             "role": "BUYER",
         }
-        buyer_response = client.post("/api/auth/register", json=buyer_payload)
-        buyer_id = buyer_response.json()["id"]
+        client.post("/api/auth/register", json=buyer_payload)
 
         # Create buyer token
         buyer_token = JWTService.create_access_token(
@@ -528,7 +519,7 @@ class TestEdgeCaseFlows:
         from services.jwt_service import JWTService
 
         # Setup
-        seller = client.post(
+        client.post(
             "/api/auth/register",
             json={
                 "email": "instant@seller.com",
@@ -536,7 +527,7 @@ class TestEdgeCaseFlows:
                 "auth0_sub": "auth0|instant_seller",
                 "role": "SELLER",
             },
-        ).json()
+        )
 
         # Create seller token
         seller_token = JWTService.create_access_token(
@@ -544,7 +535,7 @@ class TestEdgeCaseFlows:
             expires_delta=timedelta(hours=1),
         )
 
-        buyer = client.post(
+        client.post(
             "/api/auth/register",
             json={
                 "email": "instant@buyer.com",
@@ -552,7 +543,7 @@ class TestEdgeCaseFlows:
                 "auth0_sub": "auth0|instant_buyer",
                 "role": "BUYER",
             },
-        ).json()
+        )
 
         # Create buyer token
         buyer_token = JWTService.create_access_token(
@@ -684,10 +675,7 @@ class TestAdminOversightFlow:
         transactions = response_data["transactions"]
         assert len(transactions) > 0
         # Verify our transaction is in the list (check artwork_title field)
-        assert any(
-            t.get("artwork_title") == "Admin Oversight Test"
-            for t in transactions
-        )
+        assert any(t.get("artwork_title") == "Admin Oversight Test" for t in transactions)
 
         # Step 5: Admin views audit logs
         audit_logs_response = client.get(

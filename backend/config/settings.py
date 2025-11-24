@@ -55,6 +55,7 @@ class Settings(BaseSettings):
 
         # Validate required secrets are not using default/placeholder values (skip in test mode)
         import sys
+
         if "pytest" not in sys.modules:
             self._validate_secrets()
 

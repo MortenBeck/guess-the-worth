@@ -38,7 +38,13 @@ def test_rate_limiting_on_registration(client: TestClient):
 
 
 @patch("services.auth_service.AuthService.verify_auth0_token")
-def test_rate_limiting_on_bid_creation(mock_verify, client: TestClient, artwork, buyer_user, buyer_token):
+def test_rate_limiting_on_bid_creation(
+    mock_verify,
+    client: TestClient,
+    artwork,
+    buyer_user,
+    buyer_token,
+):
     """Test rate limiting on bid creation endpoint (20/minute)."""
     # Mock Auth0 to fallback to JWT
     mock_verify.side_effect = Exception("Auth0 not available")
@@ -71,7 +77,12 @@ def test_rate_limiting_on_bid_creation(mock_verify, client: TestClient, artwork,
 
 
 @patch("services.auth_service.AuthService.verify_auth0_token")
-def test_rate_limiting_on_artwork_creation(mock_verify, client: TestClient, seller_user, seller_token):
+def test_rate_limiting_on_artwork_creation(
+    mock_verify,
+    client: TestClient,
+    seller_user,
+    seller_token,
+):
     """Test rate limiting on artwork creation endpoint (10/hour)."""
     # Mock Auth0 to fallback to JWT
     mock_verify.side_effect = Exception("Auth0 not available")
