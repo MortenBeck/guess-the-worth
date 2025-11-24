@@ -158,11 +158,13 @@ def test_losing_bid_does_not_create_artwork_sold_log(
     )
 
     # Place a losing bid (below threshold)
+    # Use half the threshold to ensure it's above zero but below the winning amount
+    losing_amount = artwork.secret_threshold / 2
     response = client.post(
         "/api/bids/",
         json={
             "artwork_id": artwork.id,
-            "amount": artwork.secret_threshold - 100,
+            "amount": losing_amount,
         },
         headers=headers,
     )

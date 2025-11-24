@@ -425,8 +425,8 @@ class TestArtworkEdgeCases:
 
         response = client.post("/api/artworks/", json=payload, headers=headers)
 
-        # Should either succeed or fail with validation
-        assert response.status_code in [200, 422]
+        # Should either succeed or fail with validation (400 for too long, 422 for schema validation)
+        assert response.status_code in [200, 400, 422]
 
     def test_artwork_with_unicode_characters(self, client, seller_user):
         """Test creating artwork with unicode in title/description."""
