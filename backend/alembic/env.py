@@ -11,7 +11,7 @@ backend_path = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_path))
 
 # Import models and database configuration
-from database import DATABASE_URL  # noqa: E402
+from config.settings import settings  # noqa: E402
 from models import Base  # noqa: E402
 
 # this is the Alembic Config object, which provides
@@ -34,7 +34,7 @@ target_metadata = Base.metadata
 
 
 def get_url():
-    return DATABASE_URL
+    return settings.database_url
 
 
 def run_migrations_offline() -> None:

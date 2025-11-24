@@ -57,6 +57,11 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# Update Alpine packages to fix security vulnerabilities (e.g., busybox CVE-2024-58251)
+RUN apk update && \
+    apk upgrade && \
+    rm -rf /var/cache/apk/*
+
 # Upgrade npm to fix CVE-2024-21538 (cross-spawn) and CVE-2025-64756 (glob)
 RUN npm install -g npm@latest
 

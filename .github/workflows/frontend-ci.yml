@@ -65,17 +65,43 @@ jobs:
         run: npm ci
 
       - name: Run tests with coverage
-        run: npm run test -- --coverage --run
+        run: npm run test:coverage -- --run
+        env:
+          # Enforce minimum coverage thresholds (configured in vitest.config.js)
+          VITE_TEST_COVERAGE: true
+
+      - name: Debug - List coverage files
+        if: always()
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "Listing frontend directory:"
+          ls -la
+          echo "Checking for coverage directory:"
+          if [ -d "coverage" ]; then
+            echo "Coverage directory exists:"
+            ls -la coverage/
+          else
+            echo "Coverage directory does not exist"
+          fi
 
       - name: Upload coverage reports
+        if: always()  # Upload even if tests fail
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./frontend/coverage/lcov.info
+          directory: ./frontend/coverage
           flags: frontend
           fail_ci_if_error: false
-          disable_file_fixes: true
           verbose: true
+
+      - name: Upload coverage HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage-report
+          path: frontend/coverage/
+          retention-days: 30
 
   security:
     name: Frontend Security

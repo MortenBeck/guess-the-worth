@@ -1,6 +1,9 @@
-import { Box, Container, Heading, Text, VStack, HStack } from "@chakra-ui/react";
+import { Box, Container, Heading, Text, VStack, HStack, Button } from "@chakra-ui/react";
+import { useNavigate } from "react-router-dom";
 
 const ActivityFeed = () => {
+  const navigate = useNavigate();
+
   const mockActivities = [
     {
       id: 1,
@@ -97,9 +100,19 @@ const ActivityFeed = () => {
             </VStack>
           </Box>
 
-          <Text color="#94a3b8" fontSize="sm" textAlign="center">
+          <Button
+            variant="link"
+            color="#6366f1"
+            fontSize="sm"
+            cursor="pointer"
+            onClick={() => navigate("/dashboard")}
+            _hover={{
+              color: "#ec4899",
+              textDecoration: "underline",
+            }}
+          >
             View all activity in your dashboard
-          </Text>
+          </Button>
         </VStack>
       </Container>
     </Box>

@@ -3,7 +3,19 @@ Integration tests for artworks API endpoints.
 Tests /api/artworks routes with authentication and database.
 """
 
+from unittest.mock import patch
+
+import pytest
+
 from models.artwork import ArtworkStatus
+
+
+@pytest.fixture(autouse=True)
+def mock_auth0():
+    """Mock Auth0 verification for all tests in this module to use JWT fallback."""
+    with patch("services.auth_service.AuthService.verify_auth0_token") as mock:
+        mock.side_effect = Exception("Auth0 not available - using JWT")
+        yield mock
 
 
 class TestListArtworks:
@@ -256,31 +268,33 @@ class TestCreateArtwork:
             assert data["title"] == "Minimal Art"
             assert data["description"] is None
 
-    def test_create_artwork_missing_required_fields(self, client, seller_user):
+    def test_create_artwork_missing_required_fields(self, client, seller_user, seller_token):
         """Test creating artwork with missing required fields."""
+        headers = {"Authorization": f"Bearer {seller_token}"}
+
         # Missing title
-        response = client.post(
-            f"/api/artworks?seller_id={seller_user.id}", json={"secret_threshold": 100.0}
-        )
+        response = client.post("/api/artworks/", json={"secret_threshold": 100.0}, headers=headers)
         assert response.status_code == 422
 
         # Missing secret_threshold
-        response = client.post(f"/api/artworks?seller_id={seller_user.id}", json={"title": "Test"})
+        response = client.post("/api/artworks/", json={"title": "Test"}, headers=headers)
         assert response.status_code == 422
 
     def test_create_artwork_invalid_seller(self, client):
-        """Test creating artwork with non-existent seller."""
+        """Test creating artwork without authentication requires auth token."""
         payload = {"title": "Invalid Seller Art", "secret_threshold": 100.0}
 
-        response = client.post("/api/artworks?seller_id=99999", json=payload)
+        response = client.post("/api/artworks/", json=payload)
 
-        assert response.status_code in [400, 404]
+        # Without authentication, should get 401
+        assert response.status_code in [401, 400, 404]
 
-    def test_create_artwork_negative_threshold(self, client, seller_user):
+    def test_create_artwork_negative_threshold(self, client, seller_user, seller_token):
         """Test creating artwork with negative threshold."""
         payload = {"title": "Negative Threshold", "secret_threshold": -100.0}
+        headers = {"Authorization": f"Bearer {seller_token}"}
 
-        response = client.post(f"/api/artworks?seller_id={seller_user.id}", json=payload)
+        response = client.post("/api/artworks/", json=payload, headers=headers)
 
         # Schema allows this, but business logic may reject it
         # Adjust based on actual requirements
@@ -300,22 +314,26 @@ class TestCreateArtwork:
 class TestUploadArtworkImage:
     """Test POST /api/artworks/{artwork_id}/upload-image endpoint."""
 
-    def test_upload_image_endpoint_exists(self, client, artwork):
+    def test_upload_image_endpoint_exists(self, client, artwork, seller_token):
         """Test that image upload endpoint exists (stub implementation)."""
+        headers = {"Authorization": f"Bearer {seller_token}"}
         # This is a stub in current implementation
         response = client.post(
             f"/api/artworks/{artwork.id}/upload-image",
             files={"file": ("test.jpg", b"fake image data", "image/jpeg")},
+            headers=headers,
         )
 
         # Endpoint exists but may not be fully implemented
         assert response.status_code in [200, 501, 422]
 
-    def test_upload_image_artwork_not_found(self, client):
+    def test_upload_image_artwork_not_found(self, client, seller_token):
         """Test uploading image to non-existent artwork."""
+        headers = {"Authorization": f"Bearer {seller_token}"}
         response = client.post(
             "/api/artworks/99999/upload-image",
             files={"file": ("test.jpg", b"fake image data", "image/jpeg")},
+            headers=headers,
         )
 
         assert response.status_code in [404, 501]
@@ -399,15 +417,17 @@ class TestArtworkEdgeCases:
         data = response.json()
         assert data["current_highest_bid"] == 0.0
 
-    def test_artwork_with_very_long_title(self, client, seller_user):
+    def test_artwork_with_very_long_title(self, client, seller_user, seller_token):
         """Test creating artwork with very long title."""
         long_title = "A" * 1000
         payload = {"title": long_title, "secret_threshold": 100.0}
+        headers = {"Authorization": f"Bearer {seller_token}"}
 
-        response = client.post(f"/api/artworks?seller_id={seller_user.id}", json=payload)
+        response = client.post("/api/artworks/", json=payload, headers=headers)
 
-        # Should either succeed or fail with validation
-        assert response.status_code in [200, 422]
+        # Should succeed or fail with validation
+        # (400 for too long, 422 for schema validation)
+        assert response.status_code in [200, 400, 422]
 
     def test_artwork_with_unicode_characters(self, client, seller_user):
         """Test creating artwork with unicode in title/description."""
@@ -439,14 +459,210 @@ class TestArtworkEdgeCases:
             # Should store as-is (sanitization happens on frontend)
             assert "<script>" in data["description"]
 
-    def test_concurrent_artwork_creation(self, client, seller_user):
+    def test_concurrent_artwork_creation(self, client, seller_user, seller_token):
         """Test handling concurrent artwork creation."""
         payload1 = {"title": "Concurrent Art 1", "secret_threshold": 100.0}
         payload2 = {"title": "Concurrent Art 2", "secret_threshold": 200.0}
+        headers = {"Authorization": f"Bearer {seller_token}"}
 
-        response1 = client.post(f"/api/artworks?seller_id={seller_user.id}", json=payload1)
-        response2 = client.post(f"/api/artworks?seller_id={seller_user.id}", json=payload2)
+        response1 = client.post("/api/artworks/", json=payload1, headers=headers)
+        response2 = client.post("/api/artworks/", json=payload2, headers=headers)
 
         # Both should succeed
         assert response1.status_code in [200, 201]
         assert response2.status_code in [200, 201]
+
+
+class TestPaginationValidation:
+    """Test pagination parameter validation."""
+
+    def test_list_artworks_negative_skip(self, client):
+        """Test that negative skip parameter is rejected."""
+        response = client.get("/api/artworks?skip=-1")
+        assert response.status_code == 400
+        assert "skip" in response.json()["detail"].lower()
+
+    def test_list_artworks_zero_limit(self, client):
+        """Test that zero limit parameter is rejected."""
+        response = client.get("/api/artworks?limit=0")
+        assert response.status_code == 400
+        assert "limit" in response.json()["detail"].lower()
+
+    def test_list_artworks_limit_exceeds_max(self, client):
+        """Test that limit exceeding 100 is rejected."""
+        response = client.get("/api/artworks?limit=101")
+        assert response.status_code == 400
+        assert "100" in response.json()["detail"]
+
+
+class TestArtworkValidation:
+    """Test artwork field validation."""
+
+    def test_create_artwork_title_too_short(self, client, seller_token):
+        """Test that title shorter than 3 characters is rejected."""
+        headers = {"Authorization": f"Bearer {seller_token}"}
+        payload = {"title": "ab", "secret_threshold": 100.0}
+
+        response = client.post("/api/artworks/", json=payload, headers=headers)
+        assert response.status_code == 400
+        assert "3 characters" in response.json()["detail"]
+
+    def test_create_artwork_description_too_long(self, client, seller_token):
+        """Test that description longer than 2000 characters is rejected."""
+        headers = {"Authorization": f"Bearer {seller_token}"}
+        payload = {"title": "Valid Title", "description": "a" * 2001, "secret_threshold": 100.0}
+
+        response = client.post("/api/artworks/", json=payload, headers=headers)
+        assert response.status_code == 400
+        assert "2000" in response.json()["detail"]
+
+    def test_create_artwork_end_date_in_past(self, client, seller_token):
+        """Test that end_date in the past is rejected."""
+        from datetime import datetime, timedelta
+
+        headers = {"Authorization": f"Bearer {seller_token}"}
+        past_date = (datetime.utcnow() - timedelta(days=1)).isoformat()
+        payload = {"title": "Valid Title", "secret_threshold": 100.0, "end_date": past_date}
+
+        response = client.post("/api/artworks/", json=payload, headers=headers)
+        assert response.status_code == 400
+        assert "future" in response.json()["detail"].lower()
+
+
+class TestUpdateArtwork:
+    """Test PUT /api/artworks/{artwork_id} endpoint."""
+
+    def test_update_artwork_not_found(self, client, seller_token):
+        """Test updating non-existent artwork."""
+        headers = {"Authorization": f"Bearer {seller_token}"}
+        payload = {"title": "Updated Title"}
+
+        response = client.put("/api/artworks/99999", json=payload, headers=headers)
+        assert response.status_code == 404
+
+    def test_update_artwork_not_owner(self, client, db_session, artwork, buyer_token):
+        """Test that non-owner cannot update artwork."""
+        headers = {"Authorization": f"Bearer {buyer_token}"}
+        payload = {"title": "Hacked Title"}
+
+        response = client.put(f"/api/artworks/{artwork.id}", json=payload, headers=headers)
+        assert response.status_code == 403
+
+    def test_update_artwork_success(self, client, artwork, seller_token):
+        """Test successful artwork update by owner."""
+        headers = {"Authorization": f"Bearer {seller_token}"}
+        payload = {"title": "Updated Title"}
+
+        response = client.put(f"/api/artworks/{artwork.id}", json=payload, headers=headers)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["title"] == "Updated Title"
+
+    def test_update_artwork_title_too_short(self, client, artwork, seller_token):
+        """Test that update rejects title < 3 characters."""
+        headers = {"Authorization": f"Bearer {seller_token}"}
+        payload = {"title": "ab"}
+
+        response = client.put(f"/api/artworks/{artwork.id}", json=payload, headers=headers)
+        assert response.status_code == 400
+        assert "3 characters" in response.json()["detail"]
+
+    def test_update_artwork_title_too_long(self, client, artwork, seller_token):
+        """Test that update rejects title > 200 characters."""
+        headers = {"Authorization": f"Bearer {seller_token}"}
+        payload = {"title": "a" * 201}
+
+        response = client.put(f"/api/artworks/{artwork.id}", json=payload, headers=headers)
+        assert response.status_code == 400
+        assert "200" in response.json()["detail"]
+
+    def test_update_artwork_description_too_long(self, client, artwork, seller_token):
+        """Test that update rejects description > 2000 characters."""
+        headers = {"Authorization": f"Bearer {seller_token}"}
+        payload = {"description": "a" * 2001}
+
+        response = client.put(f"/api/artworks/{artwork.id}", json=payload, headers=headers)
+        assert response.status_code == 400
+        assert "2000" in response.json()["detail"]
+
+    def test_update_artwork_end_date_in_past(self, client, artwork, seller_token):
+        """Test that update rejects end_date in past."""
+        from datetime import datetime, timedelta
+
+        headers = {"Authorization": f"Bearer {seller_token}"}
+        past_date = (datetime.utcnow() - timedelta(days=1)).isoformat()
+        payload = {"end_date": past_date}
+
+        response = client.put(f"/api/artworks/{artwork.id}", json=payload, headers=headers)
+        assert response.status_code == 400
+        assert "future" in response.json()["detail"].lower()
+
+    def test_update_artwork_negative_threshold(self, client, artwork, seller_token):
+        """Test that update rejects negative threshold."""
+        headers = {"Authorization": f"Bearer {seller_token}"}
+        payload = {"secret_threshold": -100.0}
+
+        response = client.put(f"/api/artworks/{artwork.id}", json=payload, headers=headers)
+        assert response.status_code == 400
+        assert "non-negative" in response.json()["detail"].lower()
+
+
+class TestDeleteArtwork:
+    """Test DELETE /api/artworks/{artwork_id} endpoint."""
+
+    def test_delete_artwork_not_found(self, client, seller_token):
+        """Test deleting non-existent artwork."""
+        headers = {"Authorization": f"Bearer {seller_token}"}
+        response = client.delete("/api/artworks/99999", headers=headers)
+        assert response.status_code == 404
+
+    def test_delete_sold_artwork_fails(self, client, sold_artwork, seller_token):
+        """Test that deleting sold artwork is rejected."""
+        headers = {"Authorization": f"Bearer {seller_token}"}
+        response = client.delete(f"/api/artworks/{sold_artwork.id}", headers=headers)
+        assert response.status_code == 400
+        assert "sold" in response.json()["detail"].lower()
+
+    def test_delete_artwork_not_owner(self, client, artwork, buyer_token):
+        """Test that non-owner cannot delete artwork."""
+        headers = {"Authorization": f"Bearer {buyer_token}"}
+        response = client.delete(f"/api/artworks/{artwork.id}", headers=headers)
+        assert response.status_code == 403
+
+
+class TestAdminArtworkAccess:
+    """Test admin can update/delete any artwork."""
+
+    def test_admin_can_update_any_artwork(self, client, artwork, admin_token):
+        """Test that admin can update any artwork."""
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        payload = {"title": "Admin Updated Title"}
+
+        response = client.put(f"/api/artworks/{artwork.id}", json=payload, headers=headers)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["title"] == "Admin Updated Title"
+
+    def test_admin_can_delete_any_artwork(self, client, artwork, admin_token):
+        """Test that admin can delete any artwork."""
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        response = client.delete(f"/api/artworks/{artwork.id}", headers=headers)
+        assert response.status_code == 200
+
+
+class TestExpireAuctions:
+    """Test expire auctions endpoint."""
+
+    def test_expire_auctions_admin_only(self, client, buyer_token):
+        """Test that only admins can expire auctions."""
+        headers = {"Authorization": f"Bearer {buyer_token}"}
+        response = client.post("/api/artworks/expire-auctions", headers=headers)
+        assert response.status_code == 403
+
+    def test_expire_auctions_success(self, client, admin_token):
+        """Test that admin can trigger auction expiration."""
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        response = client.post("/api/artworks/expire-auctions", headers=headers)
+        assert response.status_code == 200
+        data = response.json()
+        assert "Closed" in data["message"]

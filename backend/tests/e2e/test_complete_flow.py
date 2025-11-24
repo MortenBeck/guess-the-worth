@@ -3,16 +3,24 @@ End-to-end tests for complete user flows.
 Tests full workflows from registration through bidding to purchase.
 """
 
+from datetime import timedelta
 from unittest.mock import patch
+
+import pytest
+
+
+@pytest.fixture(autouse=True)
+def mock_auth0():
+    """Mock Auth0 verification for all tests in this module to use JWT fallback."""
+    with patch("services.auth_service.AuthService.verify_auth0_token") as mock:
+        mock.side_effect = Exception("Auth0 not available - using JWT")
+        yield mock
 
 
 class TestCompleteUserFlow:
     """Test complete user journey from registration to purchase."""
 
-    @patch("services.auth_service.AuthService.verify_auth0_token")
-    def test_buyer_registration_to_winning_bid_flow(
-        self, mock_verify, client, db_session, mock_auth0_response
-    ):
+    def test_buyer_registration_to_winning_bid_flow(self, client, db_session):
         """
         Complete flow:
         1. Buyer registers
@@ -22,6 +30,8 @@ class TestCompleteUserFlow:
         5. Buyer places winning bid
         6. Artwork is sold
         """
+        from services.jwt_service import JWTService
+
         # Step 1: Register buyer
         buyer_payload = {
             "email": "buyer@e2e.com",
@@ -31,8 +41,11 @@ class TestCompleteUserFlow:
         }
         buyer_response = client.post("/api/auth/register", json=buyer_payload)
         assert buyer_response.status_code == 200
-        buyer_data = buyer_response.json()
-        buyer_id = buyer_data["id"]
+
+        # Create buyer token
+        buyer_token = JWTService.create_access_token(
+            data={"sub": "auth0|e2e_buyer", "role": "BUYER"}, expires_delta=timedelta(hours=1)
+        )
 
         # Step 2: Register seller
         seller_payload = {
@@ -43,8 +56,11 @@ class TestCompleteUserFlow:
         }
         seller_response = client.post("/api/auth/register", json=seller_payload)
         assert seller_response.status_code == 200
-        seller_data = seller_response.json()
-        seller_id = seller_data["id"]
+
+        # Create seller token
+        seller_token = JWTService.create_access_token(
+            data={"sub": "auth0|e2e_seller", "role": "SELLER"}, expires_delta=timedelta(hours=1)
+        )
 
         # Step 3: Seller creates artwork
         artwork_payload = {
@@ -52,7 +68,11 @@ class TestCompleteUserFlow:
             "description": "Beautiful test artwork",
             "secret_threshold": 500.0,
         }
-        artwork_response = client.post(f"/api/artworks?seller_id={seller_id}", json=artwork_payload)
+        artwork_response = client.post(
+            "/api/artworks/",
+            json=artwork_payload,
+            headers={"Authorization": f"Bearer {seller_token}"},
+        )
         assert artwork_response.status_code == 200
         artwork_data = artwork_response.json()
         artwork_id = artwork_data["id"]
@@ -62,7 +82,9 @@ class TestCompleteUserFlow:
         # Step 4: Buyer places losing bid
         losing_bid_payload = {"artwork_id": artwork_id, "amount": 300.0}  # Below threshold
         losing_bid_response = client.post(
-            f"/api/bids?bidder_id={buyer_id}", json=losing_bid_payload
+            "/api/bids/",
+            json=losing_bid_payload,
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
         assert losing_bid_response.status_code == 200
         losing_bid_data = losing_bid_response.json()
@@ -76,7 +98,9 @@ class TestCompleteUserFlow:
         # Step 5: Buyer places winning bid
         winning_bid_payload = {"artwork_id": artwork_id, "amount": 500.0}  # At threshold
         winning_bid_response = client.post(
-            f"/api/bids?bidder_id={buyer_id}", json=winning_bid_payload
+            "/api/bids/",
+            json=winning_bid_payload,
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
         assert winning_bid_response.status_code == 200
         winning_bid_data = winning_bid_response.json()
@@ -108,6 +132,8 @@ class TestMultipleUsersCompetingFlow:
         3. Buyers compete with bids
         4. Highest bidder wins
         """
+        from services.jwt_service import JWTService
+
         # Step 1: Register seller
         seller_payload = {
             "email": "seller@compete.com",
@@ -115,16 +141,26 @@ class TestMultipleUsersCompetingFlow:
             "auth0_sub": "auth0|compete_seller",
             "role": "SELLER",
         }
-        seller_response = client.post("/api/auth/register", json=seller_payload)
-        seller_id = seller_response.json()["id"]
+        client.post("/api/auth/register", json=seller_payload)
+
+        # Create seller token
+        seller_token = JWTService.create_access_token(
+            data={"sub": "auth0|compete_seller", "role": "SELLER"},
+            expires_delta=timedelta(hours=1),
+        )
 
         # Create artwork
         artwork_payload = {"title": "Competitive Art", "secret_threshold": 1000.0}
-        artwork_response = client.post(f"/api/artworks?seller_id={seller_id}", json=artwork_payload)
+        artwork_response = client.post(
+            "/api/artworks/",
+            json=artwork_payload,
+            headers={"Authorization": f"Bearer {seller_token}"},
+        )
         artwork_id = artwork_response.json()["id"]
 
-        # Step 2: Register 3 buyers
+        # Step 2: Register 3 buyers and create tokens
         buyers = []
+        buyer_tokens = []
         for i in range(1, 4):
             buyer_payload = {
                 "email": f"buyer{i}@compete.com",
@@ -135,17 +171,26 @@ class TestMultipleUsersCompetingFlow:
             response = client.post("/api/auth/register", json=buyer_payload)
             buyers.append(response.json()["id"])
 
+            # Create buyer token
+            token = JWTService.create_access_token(
+                data={"sub": buyer_payload["auth0_sub"], "role": "BUYER"},
+                expires_delta=timedelta(hours=1),
+            )
+            buyer_tokens.append(token)
+
         # Step 3: Buyers place increasing bids
         bid_amounts = [
-            (buyers[0], 200.0),  # Buyer 1: 200
-            (buyers[1], 400.0),  # Buyer 2: 400
-            (buyers[0], 600.0),  # Buyer 1: 600 (outbids Buyer 2)
-            (buyers[2], 800.0),  # Buyer 3: 800 (outbids Buyer 1)
+            (0, 200.0),  # Buyer 1: 200
+            (1, 400.0),  # Buyer 2: 400
+            (0, 600.0),  # Buyer 1: 600 (outbids Buyer 2)
+            (2, 800.0),  # Buyer 3: 800 (outbids Buyer 1)
         ]
 
-        for buyer_id, amount in bid_amounts:
+        for buyer_index, amount in bid_amounts:
             bid_response = client.post(
-                f"/api/bids?bidder_id={buyer_id}", json={"artwork_id": artwork_id, "amount": amount}
+                "/api/bids/",
+                json={"artwork_id": artwork_id, "amount": amount},
+                headers={"Authorization": f"Bearer {buyer_tokens[buyer_index]}"},
             )
             assert bid_response.status_code == 200
 
@@ -156,7 +201,9 @@ class TestMultipleUsersCompetingFlow:
 
         # Step 4: Buyer 3 places winning bid
         winning_response = client.post(
-            f"/api/bids?bidder_id={buyers[2]}", json={"artwork_id": artwork_id, "amount": 1000.0}
+            "/api/bids/",
+            json={"artwork_id": artwork_id, "amount": 1000.0},
+            headers={"Authorization": f"Bearer {buyer_tokens[2]}"},
         )
         assert winning_response.status_code == 200
         assert winning_response.json()["is_winning"] is True
@@ -167,7 +214,9 @@ class TestMultipleUsersCompetingFlow:
 
         # Verify Buyer 1 and Buyer 2 cannot bid anymore
         late_bid = client.post(
-            f"/api/bids?bidder_id={buyers[0]}", json={"artwork_id": artwork_id, "amount": 1500.0}
+            "/api/bids/",
+            json={"artwork_id": artwork_id, "amount": 1500.0},
+            headers={"Authorization": f"Bearer {buyer_tokens[0]}"},
         )
         assert late_bid.status_code == 400
 
@@ -182,6 +231,8 @@ class TestSellerMultipleArtworksFlow:
         2. Some get sold, some remain active
         3. Verify seller's artworks
         """
+        from services.jwt_service import JWTService
+
         # Register seller
         seller_payload = {
             "email": "multi@seller.com",
@@ -189,8 +240,13 @@ class TestSellerMultipleArtworksFlow:
             "auth0_sub": "auth0|multi_seller",
             "role": "SELLER",
         }
-        seller_response = client.post("/api/auth/register", json=seller_payload)
-        seller_id = seller_response.json()["id"]
+        client.post("/api/auth/register", json=seller_payload)
+
+        # Create seller token
+        seller_token = JWTService.create_access_token(
+            data={"sub": "auth0|multi_seller", "role": "SELLER"},
+            expires_delta=timedelta(hours=1),
+        )
 
         # Register buyer
         buyer_payload = {
@@ -199,26 +255,37 @@ class TestSellerMultipleArtworksFlow:
             "auth0_sub": "auth0|multi_buyer",
             "role": "BUYER",
         }
-        buyer_response = client.post("/api/auth/register", json=buyer_payload)
-        buyer_id = buyer_response.json()["id"]
+        client.post("/api/auth/register", json=buyer_payload)
+
+        # Create buyer token
+        buyer_token = JWTService.create_access_token(
+            data={"sub": "auth0|multi_buyer", "role": "BUYER"},
+            expires_delta=timedelta(hours=1),
+        )
 
         # Create 3 artworks
         artworks = []
         for i in range(1, 4):
             artwork_payload = {"title": f"Artwork {i}", "secret_threshold": 100.0 * i}
-            response = client.post(f"/api/artworks?seller_id={seller_id}", json=artwork_payload)
+            response = client.post(
+                "/api/artworks/",
+                json=artwork_payload,
+                headers={"Authorization": f"Bearer {seller_token}"},
+            )
             artworks.append(response.json())
 
         # Buy first artwork (threshold = 100)
         client.post(
-            f"/api/bids?bidder_id={buyer_id}",
+            "/api/bids/",
             json={"artwork_id": artworks[0]["id"], "amount": 100.0},
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
 
         # Bid on second but don't reach threshold (threshold = 200)
         client.post(
-            f"/api/bids?bidder_id={buyer_id}",
+            "/api/bids/",
             json={"artwork_id": artworks[1]["id"], "amount": 150.0},
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
 
         # Don't bid on third
@@ -244,6 +311,8 @@ class TestErrorRecoveryFlow:
         2. User corrects and places valid bid
         3. Bid succeeds
         """
+        from services.jwt_service import JWTService
+
         # Setup: Register users and create artwork
         seller_payload = {
             "email": "error@seller.com",
@@ -251,8 +320,13 @@ class TestErrorRecoveryFlow:
             "auth0_sub": "auth0|error_seller",
             "role": "SELLER",
         }
-        seller_response = client.post("/api/auth/register", json=seller_payload)
-        seller_id = seller_response.json()["id"]
+        client.post("/api/auth/register", json=seller_payload)
+
+        # Create seller token
+        seller_token = JWTService.create_access_token(
+            data={"sub": "auth0|error_seller", "role": "SELLER"},
+            expires_delta=timedelta(hours=1),
+        )
 
         buyer_payload = {
             "email": "error@buyer.com",
@@ -260,22 +334,35 @@ class TestErrorRecoveryFlow:
             "auth0_sub": "auth0|error_buyer",
             "role": "BUYER",
         }
-        buyer_response = client.post("/api/auth/register", json=buyer_payload)
-        buyer_id = buyer_response.json()["id"]
+        client.post("/api/auth/register", json=buyer_payload)
+
+        # Create buyer token
+        buyer_token = JWTService.create_access_token(
+            data={"sub": "auth0|error_buyer", "role": "BUYER"},
+            expires_delta=timedelta(hours=1),
+        )
 
         artwork_payload = {"title": "Error Test Art", "secret_threshold": 100.0}
-        artwork_response = client.post(f"/api/artworks?seller_id={seller_id}", json=artwork_payload)
+        artwork_response = client.post(
+            "/api/artworks/",
+            json=artwork_payload,
+            headers={"Authorization": f"Bearer {seller_token}"},
+        )
         artwork_id = artwork_response.json()["id"]
 
         # Step 1: Try invalid bid (negative amount)
         invalid_bid = client.post(
-            f"/api/bids?bidder_id={buyer_id}", json={"artwork_id": artwork_id, "amount": -50.0}
+            "/api/bids/",
+            json={"artwork_id": artwork_id, "amount": -50.0},
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
         assert invalid_bid.status_code in [400, 422]
 
         # Step 2: Try valid bid
         valid_bid = client.post(
-            f"/api/bids?bidder_id={buyer_id}", json={"artwork_id": artwork_id, "amount": 75.0}
+            "/api/bids/",
+            json={"artwork_id": artwork_id, "amount": 75.0},
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
         assert valid_bid.status_code == 200
 
@@ -321,8 +408,11 @@ class TestCompleteMarketplaceFlow:
         3. Some artworks sold, some remain
         4. Verify marketplace state
         """
+        from services.jwt_service import JWTService
+
         # Setup: Create 2 sellers, 3 buyers
         sellers = []
+        seller_tokens = []
         for i in range(1, 3):
             payload = {
                 "email": f"market_seller{i}@test.com",
@@ -333,7 +423,15 @@ class TestCompleteMarketplaceFlow:
             response = client.post("/api/auth/register", json=payload)
             sellers.append(response.json()["id"])
 
+            # Create seller token
+            token = JWTService.create_access_token(
+                data={"sub": payload["auth0_sub"], "role": "SELLER"},
+                expires_delta=timedelta(hours=1),
+            )
+            seller_tokens.append(token)
+
         buyers = []
+        buyer_tokens = []
         for i in range(1, 4):
             payload = {
                 "email": f"market_buyer{i}@test.com",
@@ -344,38 +442,53 @@ class TestCompleteMarketplaceFlow:
             response = client.post("/api/auth/register", json=payload)
             buyers.append(response.json()["id"])
 
+            # Create buyer token
+            token = JWTService.create_access_token(
+                data={"sub": payload["auth0_sub"], "role": "BUYER"},
+                expires_delta=timedelta(hours=1),
+            )
+            buyer_tokens.append(token)
+
         # Each seller creates 2 artworks
         artworks = []
-        for seller_id in sellers:
+        for idx, seller_id in enumerate(sellers):
             for j in range(1, 3):
                 payload = {
-                    "title": f"Market Art S{sellers.index(seller_id)+1}-A{j}",
+                    "title": f"Market Art S{idx+1}-A{j}",
                     "secret_threshold": 100.0 * j,
                 }
-                response = client.post(f"/api/artworks?seller_id={seller_id}", json=payload)
+                response = client.post(
+                    "/api/artworks/",
+                    json=payload,
+                    headers={"Authorization": f"Bearer {seller_tokens[idx]}"},
+                )
                 artworks.append(response.json())
 
         # Buyers bid on various artworks
         # Buyer 1 wins artwork 1
         client.post(
-            f"/api/bids?bidder_id={buyers[0]}",
+            "/api/bids/",
             json={"artwork_id": artworks[0]["id"], "amount": 100.0},
+            headers={"Authorization": f"Bearer {buyer_tokens[0]}"},
         )
 
         # Buyer 2 and 3 compete on artwork 2
         client.post(
-            f"/api/bids?bidder_id={buyers[1]}",
+            "/api/bids/",
             json={"artwork_id": artworks[1]["id"], "amount": 150.0},
+            headers={"Authorization": f"Bearer {buyer_tokens[1]}"},
         )
         client.post(
-            f"/api/bids?bidder_id={buyers[2]}",
+            "/api/bids/",
             json={"artwork_id": artworks[1]["id"], "amount": 200.0},
+            headers={"Authorization": f"Bearer {buyer_tokens[2]}"},
         )
 
         # Buyer 3 bids on artwork 3 but doesn't win
         client.post(
-            f"/api/bids?bidder_id={buyers[2]}",
+            "/api/bids/",
             json={"artwork_id": artworks[2]["id"], "amount": 50.0},
+            headers={"Authorization": f"Bearer {buyer_tokens[2]}"},
         )
 
         # Verify marketplace state
@@ -403,8 +516,10 @@ class TestEdgeCaseFlows:
         """
         Flow: Buyer immediately purchases by bidding at threshold.
         """
+        from services.jwt_service import JWTService
+
         # Setup
-        seller = client.post(
+        client.post(
             "/api/auth/register",
             json={
                 "email": "instant@seller.com",
@@ -412,9 +527,15 @@ class TestEdgeCaseFlows:
                 "auth0_sub": "auth0|instant_seller",
                 "role": "SELLER",
             },
-        ).json()
+        )
 
-        buyer = client.post(
+        # Create seller token
+        seller_token = JWTService.create_access_token(
+            data={"sub": "auth0|instant_seller", "role": "SELLER"},
+            expires_delta=timedelta(hours=1),
+        )
+
+        client.post(
             "/api/auth/register",
             json={
                 "email": "instant@buyer.com",
@@ -422,17 +543,25 @@ class TestEdgeCaseFlows:
                 "auth0_sub": "auth0|instant_buyer",
                 "role": "BUYER",
             },
-        ).json()
+        )
+
+        # Create buyer token
+        buyer_token = JWTService.create_access_token(
+            data={"sub": "auth0|instant_buyer", "role": "BUYER"},
+            expires_delta=timedelta(hours=1),
+        )
 
         artwork = client.post(
-            f"/api/artworks?seller_id={seller['id']}",
+            "/api/artworks/",
             json={"title": "Instant Buy", "secret_threshold": 250.0},
+            headers={"Authorization": f"Bearer {seller_token}"},
         ).json()
 
         # Immediate purchase
         bid = client.post(
-            f"/api/bids?bidder_id={buyer['id']}",
+            "/api/bids/",
             json={"artwork_id": artwork["id"], "amount": 250.0},
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
 
         assert bid.status_code == 200
@@ -484,3 +613,129 @@ class TestEdgeCaseFlows:
 
             if bid.status_code == 200:
                 assert bid.json()["is_winning"] is True
+
+
+class TestAdminOversightFlow:
+    """Test admin monitoring and oversight of platform activity."""
+
+    def test_complete_auction_with_admin_oversight(
+        self, client, seller_user, buyer_user, admin_user, seller_token, buyer_token, admin_token
+    ):
+        """
+        Complete flow with admin oversight:
+        1. Seller creates artwork
+        2. Buyer places bids
+        3. Artwork is sold
+        4. Admin views transaction
+        5. Admin verifies audit logs
+        """
+        # Step 1: Seller creates artwork
+        artwork_payload = {
+            "title": "Admin Oversight Test",
+            "description": "Testing admin monitoring",
+            "artist_name": "Test Artist",
+            "category": "painting",
+            "secret_threshold": 500.0,
+        }
+        artwork_response = client.post(
+            "/api/artworks/",
+            json=artwork_payload,
+            headers={"Authorization": f"Bearer {seller_token}"},
+        )
+        assert artwork_response.status_code == 200
+        artwork = artwork_response.json()
+        artwork_id = artwork["id"]
+
+        # Step 2: Buyer places losing bid
+        losing_bid_response = client.post(
+            "/api/bids/",
+            json={"artwork_id": artwork_id, "amount": 200.0},
+            headers={"Authorization": f"Bearer {buyer_token}"},
+        )
+        assert losing_bid_response.status_code == 200
+        assert losing_bid_response.json()["is_winning"] is False
+
+        # Step 3: Buyer places winning bid
+        winning_bid_response = client.post(
+            "/api/bids/",
+            json={"artwork_id": artwork_id, "amount": 600.0},
+            headers={"Authorization": f"Bearer {buyer_token}"},
+        )
+        assert winning_bid_response.status_code == 200
+        assert winning_bid_response.json()["is_winning"] is True
+
+        # Step 4: Admin views transactions
+        transactions_response = client.get(
+            "/api/admin/transactions",
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
+        assert transactions_response.status_code == 200
+        response_data = transactions_response.json()
+        assert response_data["total"] > 0
+        transactions = response_data["transactions"]
+        assert len(transactions) > 0
+        # Verify our transaction is in the list (check artwork_title field)
+        assert any(t.get("artwork_title") == "Admin Oversight Test" for t in transactions)
+
+        # Step 5: Admin views audit logs
+        audit_logs_response = client.get(
+            "/api/admin/audit-logs",
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
+        assert audit_logs_response.status_code == 200
+        logs_data = audit_logs_response.json()
+        assert logs_data["total"] > 0
+        logs = logs_data["logs"]
+        assert len(logs) > 0
+        # Verify bid-related audit logs exist
+        assert any(log.get("action") in ["bid_placed", "artwork_sold"] for log in logs)
+
+        # Step 6: Admin views platform stats
+        stats_response = client.get(
+            "/api/admin/stats/overview",
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
+        assert stats_response.status_code == 200
+        stats = stats_response.json()
+        assert "users" in stats
+        assert stats["users"]["total"] >= 0
+        assert "auctions" in stats
+        assert stats["auctions"]["total"] >= 0
+        assert "transactions" in stats
+
+    def test_admin_user_management(self, client, buyer_user, admin_user, buyer_token, admin_token):
+        """Test admin user management capabilities."""
+        # Step 1: Admin lists all users
+        users_response = client.get(
+            "/api/admin/users", headers={"Authorization": f"Bearer {admin_token}"}
+        )
+        assert users_response.status_code == 200
+        users = users_response.json()
+        assert len(users) >= 2  # At least buyer and admin
+
+        # Step 2: Admin gets specific user details
+        user_details_response = client.get(
+            f"/api/admin/users/{buyer_user.id}",
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
+        assert user_details_response.status_code == 200
+        user_details = user_details_response.json()
+        assert user_details["id"] == buyer_user.id
+        assert "stats" in user_details
+
+        # Step 3: Verify non-admin cannot access admin endpoints
+        unauthorized_response = client.get(
+            "/api/admin/users", headers={"Authorization": f"Bearer {buyer_token}"}
+        )
+        assert unauthorized_response.status_code == 403
+
+    def test_admin_system_health_monitoring(self, client, admin_token):
+        """Test admin can monitor system health."""
+        health_response = client.get(
+            "/api/admin/system/health",
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
+        assert health_response.status_code == 200
+        health = health_response.json()
+        assert "database" in health
+        assert "status" in health

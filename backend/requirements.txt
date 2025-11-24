@@ -15,6 +15,8 @@ pydantic-settings
 pydantic[email]
 sentry-sdk[fastapi]
 requests
+slowapi>=0.1.9
+redis>=5.0.0
 
 # Security: Pin h11 to fix CVE (required by uvicorn/httpx)
 h11>=0.16.0

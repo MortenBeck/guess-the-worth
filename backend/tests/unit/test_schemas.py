@@ -218,7 +218,7 @@ class TestBidSchemas:
             "artwork_id": 5,
             "bidder_id": 10,
             "amount": 200.0,
-            "bid_time": datetime.now(),
+            "created_at": datetime.now(),
             "is_winning": True,
         }
         response = BidResponse(**response_data)
@@ -227,7 +227,7 @@ class TestBidSchemas:
         assert response.bidder_id == 10
         assert response.amount == 200.0
         assert response.is_winning is True
-        assert isinstance(response.bid_time, datetime)
+        assert isinstance(response.created_at, datetime)
 
 
 class TestAuthSchemas:

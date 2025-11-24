@@ -280,9 +280,8 @@ describe("API Services", () => {
     });
 
     describe("getCurrentUser", () => {
-      it("should fetch current user by auth0 sub", async () => {
-        const auth0Sub = "auth0|user123";
-        const mockUser = { id: 1, auth0_sub: auth0Sub, email: "test@example.com" };
+      it("should fetch current user", async () => {
+        const mockUser = { id: 1, auth0_sub: "auth0|user123", email: "test@example.com" };
 
         fetch.mockResolvedValueOnce({
           ok: true,
@@ -290,12 +289,13 @@ describe("API Services", () => {
           json: async () => mockUser,
         });
 
-        const result = await userService.getCurrentUser(auth0Sub);
+        const result = await userService.getCurrentUser();
 
-        expect(fetch).toHaveBeenCalledWith(expect.stringContaining("/auth/me"), expect.any(Object));
         expect(fetch).toHaveBeenCalledWith(
-          expect.stringContaining(`auth0_sub=${encodeURIComponent(auth0Sub)}`),
-          expect.any(Object)
+          expect.stringContaining("/auth/me"),
+          expect.objectContaining({
+            method: "GET",
+          })
         );
         expect(result.data).toEqual(mockUser);
       });
@@ -385,19 +385,55 @@ describe("API Services", () => {
       fetch.mockResolvedValueOnce({
         ok: false,
         status: 401,
+        json: async () => ({}),
       });
 
-      await expect(artworkService.getAll()).rejects.toThrow("Unauthorized");
+      await expect(artworkService.getAll()).rejects.toThrow(
+        "Your session has expired. Please log in again."
+      );
       expect(localStorage.getItem("access_token")).toBeNull();
+    });
+
+    it("should throw error for 403 Forbidden", async () => {
+      fetch.mockResolvedValueOnce({
+        ok: false,
+        status: 403,
+        json: async () => ({ detail: "Access denied" }),
+      });
+
+      await expect(artworkService.getAll()).rejects.toThrow("Access denied");
+    });
+
+    it("should throw error for 404 Not Found", async () => {
+      fetch.mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        json: async () => ({ detail: "Resource not found" }),
+      });
+
+      await expect(artworkService.getAll()).rejects.toThrow("Resource not found");
+    });
+
+    it("should throw error for 400 Bad Request", async () => {
+      fetch.mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        json: async () => ({ detail: "Invalid data" }),
+      });
+
+      await expect(artworkService.getAll()).rejects.toThrow("Invalid data");
     });
 
     it("should throw error for non-ok responses", async () => {
       fetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
+        json: async () => ({}),
       });
 
-      await expect(artworkService.getAll()).rejects.toThrow("HTTP error! status: 500");
+      await expect(artworkService.getAll()).rejects.toThrow(
+        "Server error. Please try again later."
+      );
     });
 
     it("should throw error for network failures", async () => {
@@ -410,6 +446,39 @@ describe("API Services", () => {
       fetch.mockRejectedValueOnce(new Error("Random error"));
 
       await expect(artworkService.getAll()).rejects.toThrow("Random error");
+    });
+
+    it("should handle response with no JSON body", async () => {
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => {
+          throw new Error("No JSON");
+        },
+      });
+
+      const result = await artworkService.getAll();
+      expect(result.data).toBeNull();
+    });
+  });
+
+  describe("API Methods", () => {
+    it("should support PUT method", async () => {
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ id: 1, title: "Updated" }),
+      });
+
+      const result = await userService.updateProfile({ name: "New Name" });
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          method: "PUT",
+        })
+      );
+      expect(result.data).toEqual({ id: 1, title: "Updated" });
     });
   });
 });

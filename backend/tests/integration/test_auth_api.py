@@ -134,9 +134,14 @@ class TestAuthRegistration:
 class TestAuthGetCurrentUser:
     """Test GET /api/auth/me endpoint."""
 
-    def test_get_current_user_success(self, client, buyer_user):
-        """Test retrieving current user by auth0_sub."""
-        response = client.get(f"/api/auth/me?auth0_sub={buyer_user.auth0_sub}")
+    @patch("services.auth_service.AuthService.verify_auth0_token")
+    def test_get_current_user_success(self, mock_verify, client, buyer_user, buyer_token):
+        """Test retrieving current user with JWT token."""
+        # Mock Auth0 to fallback to JWT
+        mock_verify.side_effect = Exception("Auth0 not available")
+
+        headers = {"Authorization": f"Bearer {buyer_token}"}
+        response = client.get("/api/auth/me", headers=headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -147,35 +152,47 @@ class TestAuthGetCurrentUser:
         assert data["role"] == buyer_user.role.value
 
     def test_get_current_user_not_found(self, client):
-        """Test retrieving non-existent user returns 404."""
-        response = client.get("/api/auth/me?auth0_sub=auth0|nonexistent")
-
-        assert response.status_code == 404
-        assert "not found" in response.json()["detail"].lower()
-
-    def test_get_current_user_missing_auth0_sub(self, client):
-        """Test request without auth0_sub parameter."""
+        """Test request without authentication returns 401."""
         response = client.get("/api/auth/me")
 
-        assert response.status_code == 422  # Missing required query parameter
+        assert response.status_code == 401
+        assert "authentication" in response.json()["detail"].lower()
+
+    @patch("services.auth_service.AuthService.verify_auth0_token")
+    def test_get_current_user_missing_auth0_sub(self, mock_verify, client):
+        """Test request with invalid token returns 401."""
+        mock_verify.side_effect = Exception("Auth0 not available")
+
+        headers = {"Authorization": "Bearer invalid.token"}
+        response = client.get("/api/auth/me", headers=headers)
+
+        assert response.status_code == 401
 
     def test_get_current_user_empty_auth0_sub(self, client):
-        """Test request with empty auth0_sub."""
-        response = client.get("/api/auth/me?auth0_sub=")
+        """Test request with missing Authorization header."""
+        response = client.get("/api/auth/me")
 
-        assert response.status_code == 404
+        assert response.status_code == 401
 
-    def test_get_current_user_seller(self, client, seller_user):
-        """Test retrieving seller user."""
-        response = client.get(f"/api/auth/me?auth0_sub={seller_user.auth0_sub}")
+    @patch("services.auth_service.AuthService.verify_auth0_token")
+    def test_get_current_user_seller(self, mock_verify, client, seller_user, seller_token):
+        """Test retrieving seller user with JWT."""
+        mock_verify.side_effect = Exception("Auth0 not available")
+
+        headers = {"Authorization": f"Bearer {seller_token}"}
+        response = client.get("/api/auth/me", headers=headers)
 
         assert response.status_code == 200
         data = response.json()
         assert data["role"] == "SELLER"
 
-    def test_get_current_user_admin(self, client, admin_user):
-        """Test retrieving admin user."""
-        response = client.get(f"/api/auth/me?auth0_sub={admin_user.auth0_sub}")
+    @patch("services.auth_service.AuthService.verify_auth0_token")
+    def test_get_current_user_admin(self, mock_verify, client, admin_user, admin_token):
+        """Test retrieving admin user with JWT."""
+        mock_verify.side_effect = Exception("Auth0 not available")
+
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        response = client.get("/api/auth/me", headers=headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -240,6 +257,10 @@ class TestAuthWithAuth0:
         self, mock_verify, client, db_session, mock_auth0_response
     ):
         """Test Auth0 token creates user on first login via registration."""
+        from datetime import timedelta
+
+        from services.jwt_service import JWTService
+
         # Mock Auth0 response for new user
         new_user_data = mock_auth0_response(
             sub="auth0|firstlogin",
@@ -261,8 +282,17 @@ class TestAuthWithAuth0:
         )
         assert register_response.status_code == 200
 
-        # Then retrieve user info
-        response = client.get("/api/auth/me?auth0_sub=auth0|firstlogin")
+        # Create token for the new user
+        token = JWTService.create_access_token(
+            data={"sub": "auth0|firstlogin", "role": "BUYER"}, expires_delta=timedelta(hours=1)
+        )
+
+        # Mock to fallback to JWT
+        mock_verify.side_effect = Exception("Auth0 not available")
+
+        # Then retrieve user info with JWT auth
+        headers = {"Authorization": f"Bearer {token}"}
+        response = client.get("/api/auth/me", headers=headers)
 
         # User should be found
         assert response.status_code == 200
