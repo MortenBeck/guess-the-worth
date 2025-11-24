@@ -72,6 +72,14 @@ jobs:
 
     env:
       DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+      JWT_SECRET_KEY: test-jwt-secret-key-for-ci-must-be-at-least-32-characters-long
+      JWT_ALGORITHM: HS256
+      JWT_EXPIRATION_MINUTES: 30
+      AUTH0_DOMAIN: test-domain.auth0.com
+      AUTH0_CLIENT_ID: test-client-id-for-ci
+      AUTH0_CLIENT_SECRET: test-client-secret-for-ci-min-20-chars
+      AUTH0_AUDIENCE: https://test-api.example.com
+      # Legacy fields for backward compatibility
       SECRET_KEY: test-secret-key-for-ci
       ALGORITHM: HS256
       ACCESS_TOKEN_EXPIRE_MINUTES: 30
@@ -148,6 +156,13 @@ jobs:
 
     env:
       DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+      JWT_SECRET_KEY: test-jwt-secret-key-for-ci-must-be-at-least-32-characters-long
+      JWT_ALGORITHM: HS256
+      JWT_EXPIRATION_MINUTES: 30
+      AUTH0_DOMAIN: test-domain.auth0.com
+      AUTH0_CLIENT_ID: test-client-id-for-ci
+      AUTH0_CLIENT_SECRET: test-client-secret-for-ci-min-20-chars
+      AUTH0_AUDIENCE: https://test-api.example.com
 
     steps:
       - name: Checkout code
