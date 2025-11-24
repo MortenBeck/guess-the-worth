@@ -75,4 +75,74 @@ describe("AdminDashboard", () => {
       expect(screen.getByText(/no flagged auctions/i)).toBeInTheDocument();
     });
   });
+
+  it("displays recent users with different roles", async () => {
+    const mockUsers = {
+      users: [
+        { id: 1, name: "Admin User", email: "admin@test.com", role: "ADMIN" },
+        { id: 2, name: "Seller User", email: "seller@test.com", role: "SELLER" },
+        { id: 3, name: "Buyer User", email: "buyer@test.com", role: "BUYER" },
+      ],
+    };
+
+    adminApi.default.getUsers.mockResolvedValue(mockUsers);
+    renderWithProviders(<AdminDashboard />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Admin User")).toBeInTheDocument();
+      expect(screen.getByText("Seller User")).toBeInTheDocument();
+      expect(screen.getByText("Buyer User")).toBeInTheDocument();
+    });
+  });
+
+  it("displays flagged auctions when they exist", async () => {
+    adminApi.default.getFlaggedAuctions.mockResolvedValue({
+      total: 2,
+      flagged_auctions: [
+        { id: 1, title: "Suspicious Art", reason: "Possible copyright violation" },
+        { id: 2, title: "Another Flagged", reason: "Inappropriate content" },
+      ],
+    });
+
+    renderWithProviders(<AdminDashboard />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Suspicious Art")).toBeInTheDocument();
+      expect(screen.getByText("Possible copyright violation")).toBeInTheDocument();
+      expect(screen.getByText("Another Flagged")).toBeInTheDocument();
+    });
+  });
+
+  it("shows system health as degraded", async () => {
+    adminApi.default.getSystemHealth.mockResolvedValue({
+      status: "degraded",
+      database: "healthy",
+      metrics: { bids_last_hour: 0, artworks_last_24h: 0 },
+    });
+
+    renderWithProviders(<AdminDashboard />);
+
+    await waitFor(() => {
+      expect(screen.getByText("degraded")).toBeInTheDocument();
+    });
+  });
+
+  it("displays loading state initially", () => {
+    renderWithProviders(<AdminDashboard />);
+    expect(screen.getByText("Loading admin dashboard...")).toBeInTheDocument();
+  });
+
+  it("displays fallback values when stats are undefined", async () => {
+    adminApi.default.getPlatformOverview.mockResolvedValue({
+      users: {},
+      auctions: {},
+      transactions: {},
+    });
+
+    renderWithProviders(<AdminDashboard />);
+
+    await waitFor(() => {
+      expect(screen.getByText("0")).toBeInTheDocument();
+    });
+  });
 });

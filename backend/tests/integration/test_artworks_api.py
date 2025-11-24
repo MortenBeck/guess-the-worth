@@ -621,3 +621,47 @@ class TestDeleteArtwork:
         response = client.delete(f"/api/artworks/{sold_artwork.id}", headers=headers)
         assert response.status_code == 400
         assert "sold" in response.json()["detail"].lower()
+
+    def test_delete_artwork_not_owner(self, client, artwork, buyer_token):
+        """Test that non-owner cannot delete artwork."""
+        headers = {"Authorization": f"Bearer {buyer_token}"}
+        response = client.delete(f"/api/artworks/{artwork.id}", headers=headers)
+        assert response.status_code == 403
+
+
+class TestAdminArtworkAccess:
+    """Test admin can update/delete any artwork."""
+
+    def test_admin_can_update_any_artwork(self, client, artwork, admin_token):
+        """Test that admin can update any artwork."""
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        payload = {"title": "Admin Updated Title"}
+
+        response = client.put(f"/api/artworks/{artwork.id}", json=payload, headers=headers)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["title"] == "Admin Updated Title"
+
+    def test_admin_can_delete_any_artwork(self, client, artwork, admin_token):
+        """Test that admin can delete any artwork."""
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        response = client.delete(f"/api/artworks/{artwork.id}", headers=headers)
+        assert response.status_code == 200
+
+
+class TestExpireAuctions:
+    """Test expire auctions endpoint."""
+
+    def test_expire_auctions_admin_only(self, client, buyer_token):
+        """Test that only admins can expire auctions."""
+        headers = {"Authorization": f"Bearer {buyer_token}"}
+        response = client.post("/api/artworks/expire-auctions", headers=headers)
+        assert response.status_code == 403
+
+    def test_expire_auctions_success(self, client, admin_token):
+        """Test that admin can trigger auction expiration."""
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        response = client.post("/api/artworks/expire-auctions", headers=headers)
+        assert response.status_code == 200
+        data = response.json()
+        assert "Closed" in data["message"]

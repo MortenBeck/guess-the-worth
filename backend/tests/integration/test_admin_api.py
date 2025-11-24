@@ -98,3 +98,64 @@ def test_get_audit_logs(client: TestClient, admin_token: str):
     data = response.json()
     assert "logs" in data
     assert "total" in data
+
+
+def test_list_users_with_role_filter(client: TestClient, admin_token: str, buyer_user: User):
+    """Admin can filter users by role."""
+    response = client.get(
+        "/api/admin/users?role=BUYER", headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "users" in data
+
+
+def test_list_users_with_search(client: TestClient, admin_token: str, buyer_user: User):
+    """Admin can search users by name or email."""
+    response = client.get(
+        f"/api/admin/users?search={buyer_user.name}",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "users" in data
+
+
+def test_get_user_details_not_found(client: TestClient, admin_token: str):
+    """Getting details for non-existent user returns 404."""
+    response = client.get(
+        "/api/admin/users/99999", headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert response.status_code == 404
+
+
+def test_ban_user_not_found(client: TestClient, admin_token: str):
+    """Banning non-existent user returns 404."""
+    response = client.put(
+        "/api/admin/users/99999/ban",
+        headers={"Authorization": f"Bearer {admin_token}"},
+        params={"reason": "Testing not found case"},
+    )
+    assert response.status_code == 404
+
+
+def test_get_flagged_auctions(client: TestClient, admin_token: str):
+    """Admin can view flagged auctions."""
+    response = client.get(
+        "/api/admin/flagged-auctions", headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "total" in data
+    assert "flagged_auctions" in data
+
+
+def test_get_audit_logs_with_filters(client: TestClient, admin_token: str, buyer_user: User):
+    """Admin can filter audit logs by action and user."""
+    response = client.get(
+        f"/api/admin/audit-logs?action=user_banned&user_id={buyer_user.id}",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "logs" in data

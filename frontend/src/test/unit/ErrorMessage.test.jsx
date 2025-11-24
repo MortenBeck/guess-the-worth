@@ -89,4 +89,11 @@ describe("ErrorMessage Component", () => {
 
     expect(screen.queryByRole("button", { name: /try again/i })).not.toBeInTheDocument();
   });
+
+  it("renders 400 bad request error with custom message", () => {
+    const error = { status: 400, message: "Custom validation error" };
+    renderWithChakra(<ErrorMessage error={error} />);
+
+    expect(screen.getByText("Custom validation error")).toBeInTheDocument();
+  });
 });

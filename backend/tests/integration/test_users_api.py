@@ -436,3 +436,25 @@ class TestUserStatistics:
 
         assert response.status_code == 200
         # May include bid count in response
+
+
+class TestUpdateUser:
+    """Test PUT /api/users/me endpoint."""
+
+    def test_update_current_user(self, client, buyer_user, buyer_token):
+        """Test updating current user's profile."""
+        response = client.put(
+            "/api/users/me",
+            headers={"Authorization": f"Bearer {buyer_token}"},
+            json={"name": "Updated Name"},
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["name"] == "Updated Name"
+
+    def test_update_current_user_without_auth(self, client):
+        """Test updating user without authentication fails."""
+        response = client.put("/api/users/me", json={"name": "Updated Name"})
+
+        assert response.status_code in [401, 403]
