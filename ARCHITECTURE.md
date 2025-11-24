@@ -827,9 +827,11 @@ GET    /api/stats/user/{id}        - User statistics
 
 #### Health
 ```
-GET    /health                     - Application health
-GET    /health/db                  - Database connectivity
+GET/HEAD    /health                - Application health
+GET/HEAD    /health/db             - Database connectivity
 ```
+
+Note: Health endpoints support both GET and HEAD methods for compatibility with monitoring tools like UptimeRobot.
 
 ### Request/Response Format
 

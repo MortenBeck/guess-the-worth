@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Updated dependency versions via Dependabot
 
+### Fixed
+- Health check endpoints now support HEAD requests for UptimeRobot monitoring compatibility
+
 ### Security
 - Known security vulnerabilities documented in SECURITY.md
 - All critical security issues remain unfixed (see SECURITY.md for details)
