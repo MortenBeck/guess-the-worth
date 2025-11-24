@@ -3,16 +3,24 @@ End-to-end tests for complete user flows.
 Tests full workflows from registration through bidding to purchase.
 """
 
+from datetime import timedelta
 from unittest.mock import patch
+
+import pytest
+
+
+@pytest.fixture(autouse=True)
+def mock_auth0():
+    """Mock Auth0 verification for all tests in this module to use JWT fallback."""
+    with patch("services.auth_service.AuthService.verify_auth0_token") as mock:
+        mock.side_effect = Exception("Auth0 not available - using JWT")
+        yield mock
 
 
 class TestCompleteUserFlow:
     """Test complete user journey from registration to purchase."""
 
-    @patch("services.auth_service.AuthService.verify_auth0_token")
-    def test_buyer_registration_to_winning_bid_flow(
-        self, mock_verify, client, db_session, mock_auth0_response
-    ):
+    def test_buyer_registration_to_winning_bid_flow(self, client, db_session):
         """
         Complete flow:
         1. Buyer registers
@@ -22,6 +30,8 @@ class TestCompleteUserFlow:
         5. Buyer places winning bid
         6. Artwork is sold
         """
+        from services.jwt_service import JWTService
+
         # Step 1: Register buyer
         buyer_payload = {
             "email": "buyer@e2e.com",
@@ -33,6 +43,11 @@ class TestCompleteUserFlow:
         assert buyer_response.status_code == 200
         buyer_data = buyer_response.json()
         buyer_id = buyer_data["id"]
+
+        # Create buyer token
+        buyer_token = JWTService.create_access_token(
+            data={"sub": "auth0|e2e_buyer", "role": "BUYER"}, expires_delta=timedelta(hours=1)
+        )
 
         # Step 2: Register seller
         seller_payload = {
@@ -46,13 +61,22 @@ class TestCompleteUserFlow:
         seller_data = seller_response.json()
         seller_id = seller_data["id"]
 
+        # Create seller token
+        seller_token = JWTService.create_access_token(
+            data={"sub": "auth0|e2e_seller", "role": "SELLER"}, expires_delta=timedelta(hours=1)
+        )
+
         # Step 3: Seller creates artwork
         artwork_payload = {
             "title": "E2E Masterpiece",
             "description": "Beautiful test artwork",
             "secret_threshold": 500.0,
         }
-        artwork_response = client.post(f"/api/artworks?seller_id={seller_id}", json=artwork_payload)
+        artwork_response = client.post(
+            "/api/artworks/",
+            json=artwork_payload,
+            headers={"Authorization": f"Bearer {seller_token}"},
+        )
         assert artwork_response.status_code == 200
         artwork_data = artwork_response.json()
         artwork_id = artwork_data["id"]
@@ -62,7 +86,9 @@ class TestCompleteUserFlow:
         # Step 4: Buyer places losing bid
         losing_bid_payload = {"artwork_id": artwork_id, "amount": 300.0}  # Below threshold
         losing_bid_response = client.post(
-            f"/api/bids?bidder_id={buyer_id}", json=losing_bid_payload
+            "/api/bids/",
+            json=losing_bid_payload,
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
         assert losing_bid_response.status_code == 200
         losing_bid_data = losing_bid_response.json()
@@ -76,7 +102,9 @@ class TestCompleteUserFlow:
         # Step 5: Buyer places winning bid
         winning_bid_payload = {"artwork_id": artwork_id, "amount": 500.0}  # At threshold
         winning_bid_response = client.post(
-            f"/api/bids?bidder_id={buyer_id}", json=winning_bid_payload
+            "/api/bids/",
+            json=winning_bid_payload,
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
         assert winning_bid_response.status_code == 200
         winning_bid_data = winning_bid_response.json()

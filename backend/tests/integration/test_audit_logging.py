@@ -3,6 +3,9 @@ Integration tests for audit logging.
 Tests that security-critical actions are logged to the audit_logs table.
 """
 
+from unittest.mock import patch
+
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
@@ -10,10 +13,19 @@ from models import Artwork
 from models.audit_log import AuditLog
 
 
+@pytest.fixture(autouse=True)
+def mock_auth0():
+    """Mock Auth0 verification for all tests in this module to use JWT fallback."""
+    with patch("services.auth_service.AuthService.verify_auth0_token") as mock:
+        mock.side_effect = Exception("Auth0 not available - using JWT")
+        yield mock
+
+
 def test_bid_placement_creates_audit_log(
-    client: TestClient, db_session: Session, artwork, buyer_user
+    client: TestClient, db_session: Session, artwork, buyer_user, buyer_token
 ):
     """Test that placing a bid creates an audit log entry."""
+    headers = {"Authorization": f"Bearer {buyer_token}"}
     # Place a bid
     response = client.post(
         "/api/bids/",
@@ -21,6 +33,7 @@ def test_bid_placement_creates_audit_log(
             "artwork_id": artwork.id,
             "amount": 500,
         },
+        headers=headers,
     )
     assert response.status_code == 200
 
@@ -41,9 +54,10 @@ def test_bid_placement_creates_audit_log(
 
 
 def test_artwork_sold_creates_audit_log(
-    client: TestClient, db_session: Session, artwork, buyer_user
+    client: TestClient, db_session: Session, artwork, buyer_user, buyer_token
 ):
     """Test that a winning bid creates an audit log for artwork sold."""
+    headers = {"Authorization": f"Bearer {buyer_token}"}
     # Place a winning bid (at or above threshold)
     response = client.post(
         "/api/bids/",
@@ -51,6 +65,7 @@ def test_artwork_sold_creates_audit_log(
             "artwork_id": artwork.id,
             "amount": artwork.secret_threshold,
         },
+        headers=headers,
     )
     assert response.status_code == 200
 
@@ -75,7 +90,7 @@ def test_artwork_sold_creates_audit_log(
 
 
 def test_audit_log_contains_request_metadata(
-    client: TestClient, db_session: Session, artwork, buyer_user
+    client: TestClient, db_session: Session, artwork, buyer_user, buyer_token
 ):
     """Test that audit logs contain request metadata (IP, user agent)."""
     # Place a bid
@@ -85,7 +100,7 @@ def test_audit_log_contains_request_metadata(
             "artwork_id": artwork.id,
             "amount": 300,
         },
-        headers={"User-Agent": "TestClient/1.0"},
+        headers={"User-Agent": "TestClient/1.0", "Authorization": f"Bearer {buyer_token}"},
     )
     assert response.status_code == 200
 
@@ -104,8 +119,11 @@ def test_audit_log_contains_request_metadata(
     assert audit_log.user_agent is not None
 
 
-def test_audit_log_timestamps_are_set(client: TestClient, db_session: Session, artwork, buyer_user):
+def test_audit_log_timestamps_are_set(
+    client: TestClient, db_session: Session, artwork, buyer_user, buyer_token
+):
     """Test that audit logs have timestamps set automatically."""
+    headers = {"Authorization": f"Bearer {buyer_token}"}
     # Place a bid
     response = client.post(
         "/api/bids/",
@@ -113,6 +131,7 @@ def test_audit_log_timestamps_are_set(client: TestClient, db_session: Session, a
             "artwork_id": artwork.id,
             "amount": 400,
         },
+        headers=headers,
     )
     assert response.status_code == 200
 
@@ -129,9 +148,10 @@ def test_audit_log_timestamps_are_set(client: TestClient, db_session: Session, a
 
 
 def test_losing_bid_does_not_create_artwork_sold_log(
-    client: TestClient, db_session: Session, artwork, buyer_user
+    client: TestClient, db_session: Session, artwork, buyer_user, buyer_token
 ):
     """Test that a losing bid does not create an artwork_sold audit log."""
+    headers = {"Authorization": f"Bearer {buyer_token}"}
     # Get initial count of artwork_sold logs
     initial_sold_count = (
         db_session.query(AuditLog).filter(AuditLog.action == "artwork_sold").count()
@@ -144,6 +164,7 @@ def test_losing_bid_does_not_create_artwork_sold_log(
             "artwork_id": artwork.id,
             "amount": artwork.secret_threshold - 100,
         },
+        headers=headers,
     )
     assert response.status_code == 200
 

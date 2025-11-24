@@ -3,7 +3,19 @@ Integration tests for artworks API endpoints.
 Tests /api/artworks routes with authentication and database.
 """
 
+from unittest.mock import patch
+
+import pytest
+
 from models.artwork import ArtworkStatus
+
+
+@pytest.fixture(autouse=True)
+def mock_auth0():
+    """Mock Auth0 verification for all tests in this module to use JWT fallback."""
+    with patch("services.auth_service.AuthService.verify_auth0_token") as mock:
+        mock.side_effect = Exception("Auth0 not available - using JWT")
+        yield mock
 
 
 class TestListArtworks:
@@ -256,31 +268,33 @@ class TestCreateArtwork:
             assert data["title"] == "Minimal Art"
             assert data["description"] is None
 
-    def test_create_artwork_missing_required_fields(self, client, seller_user):
+    def test_create_artwork_missing_required_fields(self, client, seller_user, seller_token):
         """Test creating artwork with missing required fields."""
+        headers = {"Authorization": f"Bearer {seller_token}"}
+
         # Missing title
-        response = client.post(
-            f"/api/artworks?seller_id={seller_user.id}", json={"secret_threshold": 100.0}
-        )
+        response = client.post("/api/artworks/", json={"secret_threshold": 100.0}, headers=headers)
         assert response.status_code == 422
 
         # Missing secret_threshold
-        response = client.post(f"/api/artworks?seller_id={seller_user.id}", json={"title": "Test"})
+        response = client.post("/api/artworks/", json={"title": "Test"}, headers=headers)
         assert response.status_code == 422
 
     def test_create_artwork_invalid_seller(self, client):
-        """Test creating artwork with non-existent seller."""
+        """Test creating artwork without authentication requires auth token."""
         payload = {"title": "Invalid Seller Art", "secret_threshold": 100.0}
 
-        response = client.post("/api/artworks?seller_id=99999", json=payload)
+        response = client.post("/api/artworks/", json=payload)
 
-        assert response.status_code in [400, 404]
+        # Without authentication, should get 401
+        assert response.status_code in [401, 400, 404]
 
-    def test_create_artwork_negative_threshold(self, client, seller_user):
+    def test_create_artwork_negative_threshold(self, client, seller_user, seller_token):
         """Test creating artwork with negative threshold."""
         payload = {"title": "Negative Threshold", "secret_threshold": -100.0}
+        headers = {"Authorization": f"Bearer {seller_token}"}
 
-        response = client.post(f"/api/artworks?seller_id={seller_user.id}", json=payload)
+        response = client.post("/api/artworks/", json=payload, headers=headers)
 
         # Schema allows this, but business logic may reject it
         # Adjust based on actual requirements
@@ -300,22 +314,26 @@ class TestCreateArtwork:
 class TestUploadArtworkImage:
     """Test POST /api/artworks/{artwork_id}/upload-image endpoint."""
 
-    def test_upload_image_endpoint_exists(self, client, artwork):
+    def test_upload_image_endpoint_exists(self, client, artwork, seller_token):
         """Test that image upload endpoint exists (stub implementation)."""
+        headers = {"Authorization": f"Bearer {seller_token}"}
         # This is a stub in current implementation
         response = client.post(
             f"/api/artworks/{artwork.id}/upload-image",
             files={"file": ("test.jpg", b"fake image data", "image/jpeg")},
+            headers=headers,
         )
 
         # Endpoint exists but may not be fully implemented
         assert response.status_code in [200, 501, 422]
 
-    def test_upload_image_artwork_not_found(self, client):
+    def test_upload_image_artwork_not_found(self, client, seller_token):
         """Test uploading image to non-existent artwork."""
+        headers = {"Authorization": f"Bearer {seller_token}"}
         response = client.post(
             "/api/artworks/99999/upload-image",
             files={"file": ("test.jpg", b"fake image data", "image/jpeg")},
+            headers=headers,
         )
 
         assert response.status_code in [404, 501]
@@ -399,12 +417,13 @@ class TestArtworkEdgeCases:
         data = response.json()
         assert data["current_highest_bid"] == 0.0
 
-    def test_artwork_with_very_long_title(self, client, seller_user):
+    def test_artwork_with_very_long_title(self, client, seller_user, seller_token):
         """Test creating artwork with very long title."""
         long_title = "A" * 1000
         payload = {"title": long_title, "secret_threshold": 100.0}
+        headers = {"Authorization": f"Bearer {seller_token}"}
 
-        response = client.post(f"/api/artworks?seller_id={seller_user.id}", json=payload)
+        response = client.post("/api/artworks/", json=payload, headers=headers)
 
         # Should either succeed or fail with validation
         assert response.status_code in [200, 422]
@@ -439,13 +458,14 @@ class TestArtworkEdgeCases:
             # Should store as-is (sanitization happens on frontend)
             assert "<script>" in data["description"]
 
-    def test_concurrent_artwork_creation(self, client, seller_user):
+    def test_concurrent_artwork_creation(self, client, seller_user, seller_token):
         """Test handling concurrent artwork creation."""
         payload1 = {"title": "Concurrent Art 1", "secret_threshold": 100.0}
         payload2 = {"title": "Concurrent Art 2", "secret_threshold": 200.0}
+        headers = {"Authorization": f"Bearer {seller_token}"}
 
-        response1 = client.post(f"/api/artworks?seller_id={seller_user.id}", json=payload1)
-        response2 = client.post(f"/api/artworks?seller_id={seller_user.id}", json=payload2)
+        response1 = client.post("/api/artworks/", json=payload1, headers=headers)
+        response2 = client.post("/api/artworks/", json=payload2, headers=headers)
 
         # Both should succeed
         assert response1.status_code in [200, 201]
