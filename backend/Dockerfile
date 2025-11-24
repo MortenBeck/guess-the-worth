@@ -1,5 +1,5 @@
 # Builder stage - install dependencies
-FROM python:3.13-slim-bookworm AS builder
+FROM python:3.14-slim-bookworm AS builder
 
 WORKDIR /app
 
@@ -18,7 +18,7 @@ RUN python -m venv /app/.venv && \
     /app/.venv/bin/pip install --no-cache-dir -r requirements.txt
 
 # Production stage - slim for compatibility with venv
-FROM python:3.13-slim-bookworm
+FROM python:3.14-slim-bookworm
 
 WORKDIR /app
 
