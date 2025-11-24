@@ -48,6 +48,53 @@ cp frontend/.env.example frontend/.env
 
 See `.env.example` files for all required variables.
 
+### Database Seeding
+
+Populate the database with demo data for testing and demonstration:
+
+**Local/Docker:**
+```bash
+# Local
+cd backend
+python seeds/seed_manager.py
+
+# Docker
+docker exec guess_the_worth_backend python seeds/seed_manager.py
+```
+
+**Azure Production:**
+1. Go to [Azure Portal](https://portal.azure.com)
+2. Navigate to your Backend App Service
+3. In the left menu, go to **Development Tools** → **SSH** or **Console**
+4. Run the seeding command:
+   ```bash
+   cd /home/site/wwwroot
+   python seeds/seed_manager.py --env production
+   ```
+5. Type `yes` when prompted to confirm production seeding
+
+**Demo Accounts** (for Auth0 testing - create these users in your Auth0 tenant):
+
+| Role | Email | Name | auth0_sub |
+|------|-------|------|-----------|
+| Admin | admin@guesstheworth.demo | Demo Admin | auth0\|demo-admin-001 |
+| Seller | seller1@guesstheworth.demo | Alice Johnson (Demo Seller) | auth0\|demo-seller-001 |
+| Seller | seller2@guesstheworth.demo | Bob Martinez (Demo Seller) | auth0\|demo-seller-002 |
+| Seller | seller3@guesstheworth.demo | Carol Chen (Demo Seller) | auth0\|demo-seller-003 |
+| Buyer | buyer1@guesstheworth.demo | David Smith (Demo Buyer) | auth0\|demo-buyer-001 |
+| Buyer | buyer2@guesstheworth.demo | Emma Wilson (Demo Buyer) | auth0\|demo-buyer-002 |
+| Buyer | buyer3@guesstheworth.demo | Frank Brown (Demo Buyer) | auth0\|demo-buyer-003 |
+| Buyer | buyer4@guesstheworth.demo | Grace Lee (Demo Buyer) | auth0\|demo-buyer-004 |
+| Buyer | buyer5@guesstheworth.demo | Henry Taylor (Demo Buyer) | auth0\|demo-buyer-005 |
+
+**Seeded Content:**
+- 15 artworks across various categories (Landscape, Abstract, Portrait, etc.)
+- Multiple bid histories showing realistic auction activity
+- Mix of ACTIVE, SOLD, and ARCHIVED artwork statuses
+- Artworks with different auction end dates for testing
+
+**Note**: The seeding system is idempotent - safe to run multiple times without duplicating data.
+
 ---
 
 ## 📊 Implementation Status
@@ -68,11 +115,11 @@ See `.env.example` files for all required variables.
 - **Admin Dashboard** - User management, artwork oversight
 - **Security** - Rate limiting, security headers, input validation, RBAC
 - **Documentation** - Complete project documentation (CONTRIBUTING.md, CHANGELOG.md, ARCHITECTURE.md)
+- **Database Seeding System** - Idempotent seed scripts for users, artworks, and bids
 
 ### ❌ Pending Implementation
 
 - **Stripe Payment Integration** - Infrastructure ready, payment flow needs implementation
-- **Database Seeding System** - No seed scripts for development/demo data
 
 ---
 
@@ -187,13 +234,10 @@ npm run dev
    - Checkout component
    - Webhook handling
 
-2. **Create Database Seeding System**
-   - Development seed data
-   - Test users and sample artworks
+2. **Fix SENTRY Frontend**
 
-3. **Fix SENTRY Frontend**
-
-4. **Fix (i forgot)**
+3. **Fix Possible issue with db in production**
+  - "Failed to fetch (gtw-hgdyfdfdd2bjducu.swedencentral-01.azurewebsites.net)" on artworks page
 ---
 
 ## 📚 Documentation
