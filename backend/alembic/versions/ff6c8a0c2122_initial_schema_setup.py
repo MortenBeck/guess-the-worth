@@ -20,9 +20,21 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Create enum types
-    op.execute("CREATE TYPE userole AS ENUM ('BUYER', 'SELLER', 'ADMIN')")
-    op.execute("CREATE TYPE artworkstatus AS ENUM ('ACTIVE', 'SOLD', 'ARCHIVED')")
+    # Create enum types (idempotent - won't fail if they already exist)
+    op.execute("""
+        DO $$ BEGIN
+            CREATE TYPE userole AS ENUM ('BUYER', 'SELLER', 'ADMIN');
+        EXCEPTION
+            WHEN duplicate_object THEN null;
+        END $$;
+    """)
+    op.execute("""
+        DO $$ BEGIN
+            CREATE TYPE artworkstatus AS ENUM ('ACTIVE', 'SOLD', 'ARCHIVED');
+        EXCEPTION
+            WHEN duplicate_object THEN null;
+        END $$;
+    """)
 
     # Create users table
     op.create_table(
@@ -109,6 +121,6 @@ def downgrade() -> None:
     op.drop_index('ix_users_id', table_name='users')
     op.drop_table('users')
 
-    # Drop enum types
-    op.execute('DROP TYPE artworkstatus')
-    op.execute('DROP TYPE userole')
+    # Drop enum types (idempotent - won't fail if they don't exist)
+    op.execute('DROP TYPE IF EXISTS artworkstatus')
+    op.execute('DROP TYPE IF EXISTS userole')
