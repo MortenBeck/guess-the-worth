@@ -65,16 +65,10 @@ jobs:
         run: npm ci
 
       - name: Run tests with coverage
-        run: npm run test -- --coverage --run
+        run: npm run test:coverage -- --run
         env:
-          # Enforce minimum coverage thresholds
+          # Enforce minimum coverage thresholds (configured in vitest.config.js)
           VITE_TEST_COVERAGE: true
-
-      - name: Check coverage thresholds
-        run: |
-          # Vitest coverage is checked via vitest.config.js thresholds
-          # This step will fail if coverage is below configured thresholds
-          npm run test:coverage -- --run
 
       - name: Upload coverage reports
         if: always()  # Upload even if tests fail
