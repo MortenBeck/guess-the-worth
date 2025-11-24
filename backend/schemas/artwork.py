@@ -49,7 +49,7 @@ class ArtworkResponse(ArtworkBase):
     model_config = ConfigDict(
         from_attributes=True,
         # Ensure minimal response size by using efficient serialization
-        use_enum_values=True  # Serialize enums as strings, not objects
+        use_enum_values=True,  # Serialize enums as strings, not objects
     )
 
 

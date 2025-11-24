@@ -191,6 +191,9 @@ npm run dev
    - Development seed data
    - Test users and sample artworks
 
+3. **Fix SENTRY Frontend**
+
+4. **Fix (i forgot)**
 ---
 
 ## 📚 Documentation
@@ -203,4 +206,3 @@ npm run dev
 ---
 
 **Last Updated**: 2025-11-24
--

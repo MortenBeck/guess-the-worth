@@ -3,7 +3,7 @@ Admin router for platform management.
 Proof-of-concept implementation.
 """
 
-from datetime import datetime, timedelta, UTC
+from datetime import UTC, datetime, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
