@@ -26,7 +26,7 @@ def seed_users(db: Session) -> int:
         # Admin user with password for API seeding
         {
             "auth0_sub": "auth0|demo-admin-001",
-            "email": "admin@guesstheworth.com",
+            "email": "admin@guesstheworth.demo",
             "name": "Demo Admin",
             "role": UserRole.ADMIN,
             "password": "AdminPass123!",
