@@ -3,7 +3,7 @@
 Creates a variety of artworks with different categories, statuses, and price points.
 """
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.orm import Session
 
@@ -34,7 +34,7 @@ def seed_artworks(db: Session) -> int:
     seller_map = {seller.email: seller for seller in sellers}
 
     # Calculate dates for auctions
-    now = datetime.utcnow()
+    now = datetime.now(UTC)
     future_7_days = now + timedelta(days=7)
     future_3_days = now + timedelta(days=3)
     future_1_day = now + timedelta(days=1)
@@ -47,7 +47,10 @@ def seed_artworks(db: Session) -> int:
             "title": "Sunset Over Mountains",
             "artist_name": "Alice Johnson",
             "category": "Landscape",
-            "description": "A breathtaking view of sunset casting golden hues over mountain peaks. Oil on canvas.",
+            "description": (
+                "A breathtaking view of sunset casting golden hues over mountain peaks. "
+                "Oil on canvas."
+            ),
             "secret_threshold": 1500.00,
             "current_highest_bid": 1200.00,
             "status": ArtworkStatus.ACTIVE,
@@ -59,7 +62,9 @@ def seed_artworks(db: Session) -> int:
             "title": "Urban Dreams",
             "artist_name": "Alice Johnson",
             "category": "Abstract",
-            "description": "An abstract interpretation of city life with bold colors and geometric shapes.",
+            "description": (
+                "An abstract interpretation of city life with bold colors and " "geometric shapes."
+            ),
             "secret_threshold": 800.00,
             "current_highest_bid": 600.00,
             "status": ArtworkStatus.ACTIVE,
@@ -121,7 +126,9 @@ def seed_artworks(db: Session) -> int:
             "title": "Garden Bloom",
             "artist_name": "Carol Chen",
             "category": "Floral",
-            "description": "Vibrant flowers in full bloom, celebrating nature's beauty. Watercolor.",
+            "description": (
+                "Vibrant flowers in full bloom, celebrating nature's beauty. " "Watercolor."
+            ),
             "secret_threshold": 600.00,
             "current_highest_bid": 450.00,
             "status": ArtworkStatus.ACTIVE,

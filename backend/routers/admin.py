@@ -356,3 +356,65 @@ async def get_audit_logs(
         "skip": skip,
         "limit": limit,
     }
+
+
+# ============================================================================
+# DATABASE SEEDING
+# ============================================================================
+
+
+@router.post("/seed-database")
+async def seed_database(
+    confirm: str = Query(..., description="Must be 'yes' to confirm"),
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """
+    Seed the production database with demo data.
+    Requires admin authentication and explicit confirmation.
+    Safe to run multiple times (idempotent).
+    """
+    if confirm.lower() != "yes":
+        raise HTTPException(
+            status_code=400,
+            detail="Must confirm with 'yes' query parameter to proceed with seeding",
+        )
+
+    try:
+        # Import seed functions
+        from seeds.demo_artworks import seed_artworks
+        from seeds.demo_bids import seed_bids
+        from seeds.demo_users import seed_users
+
+        # Execute seeding
+        user_count = seed_users(db)
+        artwork_count = seed_artworks(db)
+        bid_count = seed_bids(db)
+
+        # Log the seeding action
+        AuditService.log_action(
+            db=db,
+            action="database_seeded",
+            resource_type="system",
+            resource_id=0,
+            user=current_user,
+            details={
+                "users": user_count,
+                "artworks": artwork_count,
+                "bids": bid_count,
+            },
+        )
+
+        return {
+            "success": True,
+            "message": "Database seeded successfully",
+            "summary": {
+                "users": user_count,
+                "artworks": artwork_count,
+                "bids": bid_count,
+            },
+        }
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Seeding failed: {str(e)}")

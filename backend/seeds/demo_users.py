@@ -85,9 +85,7 @@ def seed_users(db: Session) -> int:
 
     for user_data in demo_users:
         # Check if user already exists (idempotency)
-        existing_user = (
-            db.query(User).filter(User.auth0_sub == user_data["auth0_sub"]).first()
-        )
+        existing_user = db.query(User).filter(User.auth0_sub == user_data["auth0_sub"]).first()
 
         if existing_user:
             # Update existing user data if needed
