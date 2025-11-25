@@ -359,6 +359,54 @@ async def get_audit_logs(
 
 
 # ============================================================================
+# DATABASE MIGRATIONS
+# ============================================================================
+
+
+@router.post("/run-migrations")
+async def run_migrations(
+    bootstrap_token: Optional[str] = Query(None, description="Temporary bootstrap token"),
+    current_user: Optional[User] = Depends(require_admin),
+):
+    """
+    Run database migrations (alembic upgrade head).
+    Requires admin authentication or bootstrap token.
+
+    TEMPORARY: Supports bootstrap token for initial migration.
+    """
+    # TEMPORARY: Allow migrations with bootstrap token
+    BOOTSTRAP_TOKEN = "TEMP_SEED_2024_REMOVE_AFTER_USE"
+    using_bootstrap = bootstrap_token == BOOTSTRAP_TOKEN
+
+    # Require authentication if not using bootstrap
+    if not using_bootstrap and not current_user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    try:
+        import subprocess
+
+        # Run alembic upgrade head
+        result = subprocess.run(
+            ["alembic", "upgrade", "head"],
+            capture_output=True,
+            text=True,
+            cwd="/app",  # Azure app directory
+        )
+
+        if result.returncode != 0:
+            raise Exception(f"Migration failed: {result.stderr}")
+
+        return {
+            "success": True,
+            "message": "Migrations completed successfully",
+            "output": result.stdout,
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Migration failed: {str(e)}")
+
+
+# ============================================================================
 # DATABASE SEEDING
 # ============================================================================
 
