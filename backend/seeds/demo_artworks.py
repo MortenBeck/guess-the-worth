@@ -3,7 +3,7 @@
 Creates a variety of artworks with different categories, statuses, and price points.
 """
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.orm import Session
 
@@ -34,7 +34,7 @@ def seed_artworks(db: Session) -> int:
     seller_map = {seller.email: seller for seller in sellers}
 
     # Calculate dates for auctions
-    now = datetime.utcnow()
+    now = datetime.now(UTC)
     future_7_days = now + timedelta(days=7)
     future_3_days = now + timedelta(days=3)
     future_1_day = now + timedelta(days=1)

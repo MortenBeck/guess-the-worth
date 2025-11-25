@@ -3,7 +3,7 @@
 Creates realistic bid history for artworks with active bidding.
 """
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.orm import Session
 
@@ -296,7 +296,7 @@ def seed_bids(db: Session) -> int:
             print(f"   ↻ Updated bid for {artwork.title} by {bidder.name}")
         else:
             # Create new bid with adjusted timestamp
-            created_at = datetime.utcnow() - timedelta(days=bid_data["days_ago"])
+            created_at = datetime.now(UTC) - timedelta(days=bid_data["days_ago"])
             new_bid = Bid(
                 artwork_id=artwork.id,
                 bidder_id=bidder.id,
