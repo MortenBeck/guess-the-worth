@@ -1,6 +1,7 @@
 from .artwork import ArtworkBase, ArtworkCreate, ArtworkResponse, ArtworkUpdate
 from .auth import AuthUser, TokenResponse
 from .bid import BidBase, BidCreate, BidResponse
+from .payment import PaymentCreate, PaymentIntentResponse, PaymentResponse
 from .user import UserBase, UserCreate, UserResponse, UserUpdate
 
 __all__ = [
@@ -15,6 +16,9 @@ __all__ = [
     "BidBase",
     "BidCreate",
     "BidResponse",
+    "PaymentCreate",
+    "PaymentIntentResponse",
+    "PaymentResponse",
     "TokenResponse",
     "AuthUser",
 ]

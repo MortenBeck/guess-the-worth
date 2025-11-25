@@ -49,10 +49,10 @@ class Settings(BaseSettings):
         if self.cors_origins:
             self.allowed_origins = [origin.strip() for origin in self.cors_origins.split(",")]
 
-        # Validate required secrets are not using default/placeholder values (skip in test mode)
+        # Validate required secrets are not using default/placeholder values (skip in test mode and alembic)
         import sys
 
-        if "pytest" not in sys.modules:
+        if "pytest" not in sys.modules and "alembic" not in sys.modules:
             self._validate_secrets()
 
     def _validate_secrets(self):
