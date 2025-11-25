@@ -241,3 +241,21 @@ def test_seed_database_creates_audit_log(
     assert "users" in logs[0]["details"]
     assert "artworks" in logs[0]["details"]
     assert "bids" in logs[0]["details"]
+
+
+def test_seed_database_handles_errors(client: TestClient, admin_token: str, monkeypatch):
+    """Seeding handles database errors gracefully."""
+    # Mock seed_users to raise an exception
+    def mock_seed_users(db):
+        raise Exception("Simulated database error")
+
+    import seeds.demo_users
+
+    monkeypatch.setattr(seeds.demo_users, "seed_users", mock_seed_users)
+
+    response = client.post(
+        "/api/admin/seed-database?confirm=yes",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+    assert response.status_code == 500
+    assert "failed" in response.json()["detail"].lower()
