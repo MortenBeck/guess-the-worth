@@ -218,9 +218,7 @@ def test_seed_database_is_idempotent(client: TestClient, admin_token: str):
     assert response2.json()["success"] is True
 
 
-def test_seed_database_creates_audit_log(
-    client: TestClient, admin_token: str, db_session: Session
-):
+def test_seed_database_creates_audit_log(client: TestClient, admin_token: str, db_session: Session):
     """Seeding creates an audit log entry."""
     # Seed the database
     response = client.post(
@@ -245,6 +243,7 @@ def test_seed_database_creates_audit_log(
 
 def test_seed_database_handles_errors(client: TestClient, admin_token: str, monkeypatch):
     """Seeding handles database errors gracefully."""
+
     # Mock seed_users to raise an exception
     def mock_seed_users(db):
         raise Exception("Simulated database error")
