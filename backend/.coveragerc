@@ -12,6 +12,14 @@ omit =
 precision = 2
 skip_empty = True
 show_missing = True
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise AssertionError
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+    @abstractmethod
 
 [html]
 directory = htmlcov
