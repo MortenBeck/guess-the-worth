@@ -52,8 +52,10 @@ class SeedManager:
         """
         # Check if target environment matches current environment
         if self.target_env != self.current_env:
-            print(f"❌ Error: Target environment '{self.target_env}' does not match "
-                  f"current environment '{self.current_env}'")
+            print(
+                f"❌ Error: Target environment '{self.target_env}' does not match "
+                f"current environment '{self.current_env}'"
+            )
             print(f"   Update your .env file ENVIRONMENT variable to '{self.target_env}'")
             return False
 
@@ -110,6 +112,7 @@ class SeedManager:
             print(f"\n❌ Error during seeding: {str(e)}")
             db.rollback()
             import traceback
+
             traceback.print_exc()
             return False
 
