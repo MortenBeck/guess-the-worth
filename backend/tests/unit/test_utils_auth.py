@@ -2,8 +2,6 @@
 Unit tests for utils/auth.py password hashing and verification.
 """
 
-import pytest
-
 from utils.auth import hash_password, verify_password
 
 

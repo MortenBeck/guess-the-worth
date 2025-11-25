@@ -411,7 +411,8 @@ class TestAuthLogin:
 
         # Login
         login_response = client.post(
-            "/api/auth/login", json={"email": "admin@guesstheworth.demo", "password": "AdminPass123!"}
+            "/api/auth/login",
+            json={"email": "admin@guesstheworth.demo", "password": "AdminPass123!"},
         )
         assert login_response.status_code == 200
         token = login_response.json()["access_token"]
@@ -483,8 +484,6 @@ class TestAuthEdgeCases:
         from sqlalchemy.exc import IntegrityError
 
         # Mock the session.commit to raise IntegrityError
-        original_commit = db_session.commit
-
         def mock_commit():
             raise IntegrityError("mock", "mock", "mock")
 
