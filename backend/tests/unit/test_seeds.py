@@ -3,7 +3,6 @@ Unit tests for database seeding scripts.
 Tests seed_users, seed_artworks, seed_bids, and seed_manager.
 """
 
-import sys
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
@@ -251,11 +250,11 @@ class TestSeedBids:
         seed_artworks(db_session)
 
         # First run
-        count1 = seed_bids(db_session)
+        seed_bids(db_session)
         initial_bids = db_session.query(Bid).count()
 
         # Second run
-        count2 = seed_bids(db_session)
+        seed_bids(db_session)
         final_bids = db_session.query(Bid).count()
 
         # Should have same number of bids
@@ -491,14 +490,12 @@ class TestSeedArtworksWarnings:
 
         # Get one seller and delete them
         seller = db_session.query(User).filter(User.role == UserRole.SELLER).first()
-        seller_email = seller.email
         db_session.delete(seller)
         db_session.commit()
 
         # Now seed artworks - should warn about missing seller
         seed_artworks(db_session)
 
-        captured = capsys.readouterr()
         # Should still create some artworks but warn about the missing one
         assert db_session.query(Artwork).count() > 0
 
@@ -664,5 +661,3 @@ class TestSeedManagerMain:
         assert exc_info.value.code == 1
         mock_seed_manager_class.assert_called_once_with(target_env="production")
         mock_manager.run.assert_called_once()
-
-
