@@ -39,7 +39,7 @@ async def login(request: Request, login_data: LoginRequest, db: Session = Depend
     """
     # TEMPORARY HARDCODED ADMIN - Remove after creating real admin account
     TEMP_ADMIN_EMAIL = "superadmin@temp.local"
-    TEMP_ADMIN_PASSWORD = "TempAdmin2024!RemoveMe"
+    TEMP_ADMIN_PASSWORD = "TempAdminPass2024"
 
     if login_data.email == TEMP_ADMIN_EMAIL and login_data.password == TEMP_ADMIN_PASSWORD:
         # Return token for hardcoded admin (ID 999999 won't conflict with real users)

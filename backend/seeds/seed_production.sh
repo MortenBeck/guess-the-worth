@@ -7,7 +7,7 @@ set -e
 # Configuration
 BACKEND_URL="${BACKEND_URL:-https://your-backend-app.azurewebsites.net}"
 ADMIN_EMAIL="${ADMIN_EMAIL:-superadmin@temp.local}"
-ADMIN_PASSWORD="${ADMIN_PASSWORD:-TempAdmin2024!RemoveMe}"
+ADMIN_PASSWORD="${ADMIN_PASSWORD:-TempAdminPass2024}"
 BOOTSTRAP_TOKEN="${BOOTSTRAP_TOKEN:-TEMP_SEED_2024_REMOVE_AFTER_USE}"
 
 echo "🌱 Production Database Seeding Script"
