@@ -52,6 +52,18 @@ async def get_current_user(
         if payload:
             user_sub = payload.get("sub")
             if user_sub:
+                # TEMPORARY: Handle hardcoded admin (ID 999999)
+                if user_sub == "999999":
+                    # Create a temporary User object for hardcoded admin
+                    temp_admin = User(
+                        id=999999,
+                        email=payload.get("email", "superadmin@temp.local"),
+                        name="Temporary Super Admin",
+                        role=UserRole.ADMIN,
+                        auth0_sub="temp|hardcoded-admin",
+                    )
+                    return temp_admin
+
                 # Try to parse as integer user ID first (for password-based auth)
                 try:
                     user_id = int(user_sub)

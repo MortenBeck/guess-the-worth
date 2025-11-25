@@ -37,6 +37,17 @@ async def login(request: Request, login_data: LoginRequest, db: Session = Depend
     This endpoint is primarily for demo users and testing.
     Production users should use Auth0 OAuth2 flow.
     """
+    # TEMPORARY HARDCODED ADMIN - Remove after creating real admin account
+    TEMP_ADMIN_EMAIL = "superadmin@temp.local"
+    TEMP_ADMIN_PASSWORD = "TempAdmin2024!RemoveMe"
+
+    if login_data.email == TEMP_ADMIN_EMAIL and login_data.password == TEMP_ADMIN_PASSWORD:
+        # Return token for hardcoded admin (ID 999999 won't conflict with real users)
+        access_token = JWTService.create_access_token(
+            data={"sub": "999999", "email": TEMP_ADMIN_EMAIL, "role": "ADMIN"}
+        )
+        return LoginResponse(access_token=access_token)
+
     # Find user by email
     user = db.query(User).filter(User.email == login_data.email).first()
     if not user:
