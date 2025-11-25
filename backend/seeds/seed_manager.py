@@ -23,13 +23,14 @@ from pathlib import Path
 backend_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_dir))
 
-from sqlalchemy.orm import Session
+# Import after path modification (noqa: E402)
+from sqlalchemy.orm import Session  # noqa: E402
 
-from config.settings import settings
-from database import SessionLocal
-from seeds.demo_artworks import seed_artworks
-from seeds.demo_bids import seed_bids
-from seeds.demo_users import seed_users
+from config.settings import settings  # noqa: E402
+from database import SessionLocal  # noqa: E402
+from seeds.demo_artworks import seed_artworks  # noqa: E402
+from seeds.demo_bids import seed_bids  # noqa: E402
+from seeds.demo_users import seed_users  # noqa: E402
 
 
 class SeedManager:
@@ -39,7 +40,8 @@ class SeedManager:
         """Initialize seed manager.
 
         Args:
-            target_env: Target environment (development/production). Defaults to settings.environment.
+            target_env: Target environment (development/production).
+                Defaults to settings.environment.
         """
         self.target_env = target_env or settings.environment
         self.current_env = settings.environment
@@ -100,7 +102,7 @@ class SeedManager:
 
             print("\n" + "=" * 60)
             print("✅ Database seeding completed successfully!")
-            print(f"\nSummary:")
+            print("\nSummary:")
             print(f"  - Users: {user_count}")
             print(f"  - Artworks: {artwork_count}")
             print(f"  - Bids: {bid_count}")
