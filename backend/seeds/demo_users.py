@@ -7,6 +7,7 @@ All demo users have predictable auth0_sub values for easy identification.
 from sqlalchemy.orm import Session
 
 from models.user import User, UserRole
+from utils.auth import hash_password
 
 
 def seed_users(db: Session) -> int:
@@ -22,12 +23,13 @@ def seed_users(db: Session) -> int:
         Number of users created or verified
     """
     demo_users = [
-        # Admin user
+        # Admin user with password for API seeding
         {
             "auth0_sub": "auth0|demo-admin-001",
             "email": "admin@guesstheworth.demo",
             "name": "Demo Admin",
             "role": UserRole.ADMIN,
+            "password": "AdminPass123!",
         },
         # Seller users
         {
@@ -84,6 +86,9 @@ def seed_users(db: Session) -> int:
     created_count = 0
 
     for user_data in demo_users:
+        # Extract password if provided (not part of User model directly)
+        password = user_data.pop("password", None)
+
         # Check if user already exists (idempotency)
         existing_user = db.query(User).filter(User.auth0_sub == user_data["auth0_sub"]).first()
 
@@ -92,10 +97,14 @@ def seed_users(db: Session) -> int:
             existing_user.email = user_data["email"]
             existing_user.name = user_data["name"]
             existing_user.role = user_data["role"]
+            if password:
+                existing_user.password_hash = hash_password(password)
             print(f"   ↻ Updated existing user: {user_data['name']}")
         else:
             # Create new user
             new_user = User(**user_data)
+            if password:
+                new_user.password_hash = hash_password(password)
             db.add(new_user)
             print(f"   ✓ Created new user: {user_data['name']}")
 

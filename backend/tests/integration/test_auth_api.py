@@ -323,6 +323,109 @@ class TestAuthWithAuth0:
         assert user.id == buyer_user.id
         assert user.role == UserRole.ADMIN
 
+    @patch("services.auth_service.AuthService.verify_auth0_token")
+    @patch("services.auth_service.AuthService.get_or_create_user")
+    def test_auth0_token_authentication_success(
+        self, mock_get_or_create, mock_verify, client, buyer_user, mock_auth0_response
+    ):
+        """Test successful authentication with Auth0 token."""
+        # Mock Auth0 verification to succeed
+        auth0_user_data = mock_auth0_response(
+            sub=buyer_user.auth0_sub,
+            email=buyer_user.email,
+            name=buyer_user.name,
+            roles=["buyer"],
+        )
+        mock_verify.return_value = auth0_user_data
+        mock_get_or_create.return_value = buyer_user
+
+        # Use a fake Auth0 token
+        headers = {"Authorization": "Bearer fake.auth0.token"}
+        response = client.get("/api/auth/me", headers=headers)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["id"] == buyer_user.id
+        assert data["email"] == buyer_user.email
+        mock_verify.assert_called_once_with("fake.auth0.token")
+        mock_get_or_create.assert_called_once()
+
+
+class TestAuthLogin:
+    """Test POST /api/auth/login endpoint."""
+
+    def test_login_success(self, client, db_session):
+        """Test successful login with email and password."""
+        from seeds.demo_users import seed_users
+
+        # Seed demo users (admin has password)
+        seed_users(db_session)
+
+        payload = {"email": "admin@guesstheworth.demo", "password": "AdminPass123!"}
+
+        response = client.post("/api/auth/login", json=payload)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "access_token" in data
+        assert data["token_type"] == "bearer"
+        assert len(data["access_token"]) > 0
+
+    def test_login_invalid_email(self, client, db_session):
+        """Test login with non-existent email."""
+        payload = {"email": "nonexistent@example.com", "password": "SomePassword123!"}
+
+        response = client.post("/api/auth/login", json=payload)
+
+        assert response.status_code == 401
+        assert "Invalid email or password" in response.json()["detail"]
+
+    def test_login_invalid_password(self, client, db_session):
+        """Test login with incorrect password."""
+        from seeds.demo_users import seed_users
+
+        seed_users(db_session)
+
+        payload = {"email": "admin@guesstheworth.demo", "password": "WrongPassword123!"}
+
+        response = client.post("/api/auth/login", json=payload)
+
+        assert response.status_code == 401
+        assert "Invalid email or password" in response.json()["detail"]
+
+    def test_login_oauth_user_without_password(self, client, buyer_user):
+        """Test login attempt on OAuth user (no password hash)."""
+        # buyer_user doesn't have a password_hash
+        payload = {"email": buyer_user.email, "password": "AnyPassword123!"}
+
+        response = client.post("/api/auth/login", json=payload)
+
+        assert response.status_code == 401
+        assert "OAuth2" in response.json()["detail"]
+
+    def test_login_returns_valid_jwt(self, client, db_session):
+        """Test that login returns a valid JWT that can be used for authentication."""
+        from seeds.demo_users import seed_users
+
+        seed_users(db_session)
+
+        # Login
+        login_response = client.post(
+            "/api/auth/login",
+            json={"email": "admin@guesstheworth.demo", "password": "AdminPass123!"},
+        )
+        assert login_response.status_code == 200
+        token = login_response.json()["access_token"]
+
+        # Use the token to access a protected endpoint
+        headers = {"Authorization": f"Bearer {token}"}
+        me_response = client.get("/api/auth/me", headers=headers)
+
+        assert me_response.status_code == 200
+        user_data = me_response.json()
+        assert user_data["email"] == "admin@guesstheworth.demo"
+        assert user_data["role"] == "ADMIN"
+
 
 class TestAuthEdgeCases:
     """Test edge cases and error handling."""
@@ -375,3 +478,26 @@ class TestAuthEdgeCases:
         status_codes = [response1.status_code, response2.status_code]
         assert 200 in status_codes
         assert 400 in status_codes
+
+    def test_register_integrity_error_handling(self, client, db_session, monkeypatch):
+        """Test that IntegrityError during registration is handled properly."""
+        from sqlalchemy.exc import IntegrityError
+
+        # Mock the session.commit to raise IntegrityError
+        def mock_commit():
+            raise IntegrityError("mock", "mock", "mock")
+
+        monkeypatch.setattr(db_session, "commit", mock_commit)
+
+        payload = {
+            "email": "integrity@example.com",
+            "name": "Integrity User",
+            "auth0_sub": "auth0|integrity123",
+            "role": "BUYER",
+        }
+
+        response = client.post("/api/auth/register", json=payload)
+
+        # Should handle IntegrityError and return 400
+        assert response.status_code == 400
+        assert "constraint violation" in response.json()["detail"].lower()

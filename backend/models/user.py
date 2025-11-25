@@ -21,6 +21,7 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     name = Column(String, nullable=False)
     role = Column(Enum(UserRole), default=UserRole.BUYER, nullable=False)
+    password_hash = Column(String, nullable=True)  # For demo users with password-based auth
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     artworks = relationship("Artwork", back_populates="seller", cascade="all, delete-orphan")

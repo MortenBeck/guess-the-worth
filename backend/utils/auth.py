@@ -1,3 +1,4 @@
+import bcrypt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
@@ -8,6 +9,18 @@ from services.auth_service import AuthService
 from services.jwt_service import JWTService
 
 security = HTTPBearer(auto_error=False)
+
+
+def hash_password(password: str) -> str:
+    """Hash a password using bcrypt."""
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password.encode("utf-8"), salt)
+    return hashed.decode("utf-8")
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verify a password against a bcrypt hash."""
+    return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
 
 
 async def get_current_user(
@@ -37,11 +50,19 @@ async def get_current_user(
     try:
         payload = JWTService.verify_token(token)
         if payload:
-            auth0_sub = payload.get("sub")
-            if auth0_sub:
-                user = AuthService.get_user_by_auth0_sub(db, auth0_sub)
-                if user:
-                    return user
+            user_sub = payload.get("sub")
+            if user_sub:
+                # Try to parse as integer user ID first (for password-based auth)
+                try:
+                    user_id = int(user_sub)
+                    user = db.query(User).filter(User.id == user_id).first()
+                    if user:
+                        return user
+                except (ValueError, TypeError):
+                    # Not an integer, try as auth0_sub
+                    user = AuthService.get_user_by_auth0_sub(db, user_sub)
+                    if user:
+                        return user
     except Exception:
         # JWT verification failed
         pass
