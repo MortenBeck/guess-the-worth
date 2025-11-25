@@ -159,3 +159,85 @@ def test_get_audit_logs_with_filters(client: TestClient, admin_token: str, buyer
     assert response.status_code == 200
     data = response.json()
     assert "logs" in data
+
+
+def test_seed_database_requires_admin(client: TestClient, buyer_token: str):
+    """Non-admin users cannot seed the database."""
+    response = client.post(
+        "/api/admin/seed-database?confirm=yes",
+        headers={"Authorization": f"Bearer {buyer_token}"},
+    )
+    assert response.status_code == 403
+
+
+def test_seed_database_requires_confirmation(client: TestClient, admin_token: str):
+    """Seeding without confirmation returns 400."""
+    response = client.post(
+        "/api/admin/seed-database?confirm=no",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+    assert response.status_code == 400
+    assert "confirm" in response.json()["detail"].lower()
+
+
+def test_seed_database_success(client: TestClient, admin_token: str, db_session: Session):
+    """Admin can successfully seed the database."""
+    response = client.post(
+        "/api/admin/seed-database?confirm=yes",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["success"] is True
+    assert "message" in data
+    assert "summary" in data
+    assert "users" in data["summary"]
+    assert "artworks" in data["summary"]
+    assert "bids" in data["summary"]
+    # Verify counts are reasonable
+    assert data["summary"]["users"] > 0
+    assert data["summary"]["artworks"] > 0
+    assert data["summary"]["bids"] >= 0
+
+
+def test_seed_database_is_idempotent(client: TestClient, admin_token: str):
+    """Seeding can be run multiple times without errors."""
+    # First seeding
+    response1 = client.post(
+        "/api/admin/seed-database?confirm=yes",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+    assert response1.status_code == 200
+
+    # Second seeding (should not fail)
+    response2 = client.post(
+        "/api/admin/seed-database?confirm=yes",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+    assert response2.status_code == 200
+    assert response2.json()["success"] is True
+
+
+def test_seed_database_creates_audit_log(
+    client: TestClient, admin_token: str, db_session: Session
+):
+    """Seeding creates an audit log entry."""
+    # Seed the database
+    response = client.post(
+        "/api/admin/seed-database?confirm=yes",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+    assert response.status_code == 200
+
+    # Check audit logs for the seeding action
+    logs_response = client.get(
+        "/api/admin/audit-logs?action=database_seeded",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+    assert logs_response.status_code == 200
+    logs = logs_response.json()["logs"]
+    assert len(logs) > 0
+    assert logs[0]["action"] == "database_seeded"
+    assert "users" in logs[0]["details"]
+    assert "artworks" in logs[0]["details"]
+    assert "bids" in logs[0]["details"]
