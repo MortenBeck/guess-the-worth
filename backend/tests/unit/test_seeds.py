@@ -3,6 +3,7 @@ Unit tests for database seeding scripts.
 Tests seed_users, seed_artworks, seed_bids, and seed_manager.
 """
 
+import sys
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
@@ -463,3 +464,205 @@ class TestSeedIntegration:
         assert users1 == users2 == 9
         assert artworks1 == artworks2 == 15
         assert bids1 == bids2
+
+
+class TestSeedUsersWarnings:
+    """Test warning scenarios in seed_users."""
+
+    def test_seed_users_prints_update_message(self, db_session, capsys):
+        """Test that updating existing users prints update message."""
+        # First seed
+        seed_users(db_session)
+
+        # Second seed should print update messages
+        seed_users(db_session)
+
+        captured = capsys.readouterr()
+        assert "↻ Updated existing user:" in captured.out
+
+
+class TestSeedArtworksWarnings:
+    """Test warning scenarios in seed_artworks."""
+
+    def test_seed_artworks_prints_seller_not_found_warning(self, db_session, capsys):
+        """Test that missing seller prints warning (edge case)."""
+        # Create users but then manually delete one
+        seed_users(db_session)
+
+        # Get one seller and delete them
+        seller = db_session.query(User).filter(User.role == UserRole.SELLER).first()
+        seller_email = seller.email
+        db_session.delete(seller)
+        db_session.commit()
+
+        # Now seed artworks - should warn about missing seller
+        seed_artworks(db_session)
+
+        captured = capsys.readouterr()
+        # Should still create some artworks but warn about the missing one
+        assert db_session.query(Artwork).count() > 0
+
+    def test_seed_artworks_prints_update_message(self, db_session, capsys):
+        """Test that updating existing artworks prints update message."""
+        seed_users(db_session)
+
+        # First seed
+        seed_artworks(db_session)
+
+        # Second seed should print update messages
+        seed_artworks(db_session)
+
+        captured = capsys.readouterr()
+        assert "↻ Updated existing artwork:" in captured.out
+
+
+class TestSeedBidsWarnings:
+    """Test warning scenarios in seed_bids."""
+
+    def test_seed_bids_prints_artwork_not_found_warning(self, db_session, capsys):
+        """Test that missing artwork prints warning."""
+        # Seed everything
+        seed_users(db_session)
+        seed_artworks(db_session)
+
+        # Delete one artwork that has bids
+        artwork = (
+            db_session.query(Artwork)
+            .filter(
+                Artwork.status == ArtworkStatus.ACTIVE,
+                Artwork.current_highest_bid > 0,
+            )
+            .first()
+        )
+        db_session.delete(artwork)
+        db_session.commit()
+
+        # Clear existing bids
+        db_session.query(Bid).delete()
+        db_session.commit()
+
+        # Now seed bids - should warn about missing artwork
+        seed_bids(db_session)
+
+        captured = capsys.readouterr()
+        assert "⚠️  Artwork not found:" in captured.out
+
+    def test_seed_bids_prints_bidder_not_found_warning(self, db_session, capsys):
+        """Test that missing bidder prints warning."""
+        # Seed everything
+        seed_users(db_session)
+        seed_artworks(db_session)
+
+        # Delete one buyer
+        buyer = db_session.query(User).filter(User.role == UserRole.BUYER).first()
+        db_session.delete(buyer)
+        db_session.commit()
+
+        # Clear existing bids
+        db_session.query(Bid).delete()
+        db_session.commit()
+
+        # Now seed bids - should warn about missing bidder
+        seed_bids(db_session)
+
+        captured = capsys.readouterr()
+        assert "⚠️  Bidder not found:" in captured.out
+
+    def test_seed_bids_prints_update_message(self, db_session, capsys):
+        """Test that updating existing bids prints update message."""
+        seed_users(db_session)
+        seed_artworks(db_session)
+
+        # First seed
+        seed_bids(db_session)
+
+        # Second seed should print update messages
+        seed_bids(db_session)
+
+        captured = capsys.readouterr()
+        assert "↻ Updated bid for" in captured.out
+
+
+class TestSeedPrintMessages:
+    """Test print messages in seed functions."""
+
+    def test_seed_users_prints_create_message(self, db_session, capsys):
+        """Test that creating new users prints create message."""
+        seed_users(db_session)
+
+        captured = capsys.readouterr()
+        assert "✓ Created new user:" in captured.out
+
+    def test_seed_artworks_prints_create_message(self, db_session, capsys):
+        """Test that creating new artworks prints create message."""
+        seed_users(db_session)
+        seed_artworks(db_session)
+
+        captured = capsys.readouterr()
+        assert "✓ Created new artwork:" in captured.out
+
+    def test_seed_bids_prints_create_message(self, db_session, capsys):
+        """Test that creating new bids prints create message."""
+        seed_users(db_session)
+        seed_artworks(db_session)
+        seed_bids(db_session)
+
+        captured = capsys.readouterr()
+        assert "✓ Created bid for" in captured.out
+
+
+class TestSeedManagerMain:
+    """Test seed_manager.main() function."""
+
+    @patch("seeds.seed_manager.SeedManager")
+    @patch("sys.argv", ["seed_manager.py"])
+    def test_main_no_args(self, mock_seed_manager_class):
+        """Test main() with no arguments."""
+        from seeds.seed_manager import main
+
+        mock_manager = MagicMock()
+        mock_manager.run.return_value = 0
+        mock_seed_manager_class.return_value = mock_manager
+
+        with pytest.raises(SystemExit) as exc_info:
+            main()
+
+        assert exc_info.value.code == 0
+        mock_seed_manager_class.assert_called_once_with(target_env=None)
+        mock_manager.run.assert_called_once()
+
+    @patch("seeds.seed_manager.SeedManager")
+    @patch("sys.argv", ["seed_manager.py", "--env", "development"])
+    def test_main_with_env_arg(self, mock_seed_manager_class):
+        """Test main() with --env argument."""
+        from seeds.seed_manager import main
+
+        mock_manager = MagicMock()
+        mock_manager.run.return_value = 0
+        mock_seed_manager_class.return_value = mock_manager
+
+        with pytest.raises(SystemExit) as exc_info:
+            main()
+
+        assert exc_info.value.code == 0
+        mock_seed_manager_class.assert_called_once_with(target_env="development")
+        mock_manager.run.assert_called_once()
+
+    @patch("seeds.seed_manager.SeedManager")
+    @patch("sys.argv", ["seed_manager.py", "--env", "production"])
+    def test_main_with_production_env(self, mock_seed_manager_class):
+        """Test main() with production environment."""
+        from seeds.seed_manager import main
+
+        mock_manager = MagicMock()
+        mock_manager.run.return_value = 1
+        mock_seed_manager_class.return_value = mock_manager
+
+        with pytest.raises(SystemExit) as exc_info:
+            main()
+
+        assert exc_info.value.code == 1
+        mock_seed_manager_class.assert_called_once_with(target_env="production")
+        mock_manager.run.assert_called_once()
+
+
