@@ -63,8 +63,7 @@ def seed_artworks(db: Session) -> int:
             "artist_name": "Alice Johnson",
             "category": "Abstract",
             "description": (
-                "An abstract interpretation of city life with bold colors and "
-                "geometric shapes."
+                "An abstract interpretation of city life with bold colors and " "geometric shapes."
             ),
             "secret_threshold": 800.00,
             "current_highest_bid": 600.00,
@@ -128,8 +127,7 @@ def seed_artworks(db: Session) -> int:
             "artist_name": "Carol Chen",
             "category": "Floral",
             "description": (
-                "Vibrant flowers in full bloom, celebrating nature's beauty. "
-                "Watercolor."
+                "Vibrant flowers in full bloom, celebrating nature's beauty. " "Watercolor."
             ),
             "secret_threshold": 600.00,
             "current_highest_bid": 450.00,
