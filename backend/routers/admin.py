@@ -363,6 +363,50 @@ async def get_audit_logs(
 # ============================================================================
 
 
+@router.post("/stamp-migrations")
+async def stamp_migrations(
+    revision: str = Query(..., description="Migration revision to stamp (e.g., 'b2d54a525fd0')"),
+    bootstrap_token: Optional[str] = Query(None, description="Temporary bootstrap token"),
+    current_user: Optional[User] = Depends(require_admin),
+):
+    """
+    Stamp the database with a specific migration revision without running migrations.
+    Use this when the database schema already matches a migration version.
+
+    TEMPORARY: Supports bootstrap token for initial stamp.
+    """
+    # TEMPORARY: Allow stamping with bootstrap token
+    BOOTSTRAP_TOKEN = "TEMP_SEED_2024_REMOVE_AFTER_USE"
+    using_bootstrap = bootstrap_token == BOOTSTRAP_TOKEN
+
+    # Require authentication if not using bootstrap
+    if not using_bootstrap and not current_user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    try:
+        import subprocess
+
+        # Run alembic stamp to mark database at specific revision
+        result = subprocess.run(
+            ["alembic", "stamp", revision],
+            capture_output=True,
+            text=True,
+            cwd="/app",  # Azure app directory
+        )
+
+        if result.returncode != 0:
+            raise Exception(f"Stamp failed: {result.stderr}")
+
+        return {
+            "success": True,
+            "message": f"Database stamped at revision {revision}",
+            "output": result.stdout,
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Stamp failed: {str(e)}")
+
+
 @router.post("/run-migrations")
 async def run_migrations(
     bootstrap_token: Optional[str] = Query(None, description="Temporary bootstrap token"),
