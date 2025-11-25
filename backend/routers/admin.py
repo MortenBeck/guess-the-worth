@@ -366,14 +366,41 @@ async def get_audit_logs(
 @router.post("/seed-database")
 async def seed_database(
     confirm: str = Query(..., description="Must be 'yes' to confirm"),
-    current_user: User = Depends(require_admin),
+    bootstrap_token: Optional[str] = Query(None, description="Temporary bootstrap token"),
+    current_user: Optional[User] = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     """
     Seed the production database with demo data.
     Requires admin authentication and explicit confirmation.
     Safe to run multiple times (idempotent).
+
+    TEMPORARY: Supports a bootstrap token for initial seeding when no admin exists.
+    Bootstrap token: TEMP_SEED_2024_REMOVE_AFTER_USE
     """
+    # TEMPORARY: Allow seeding with bootstrap token when no users exist
+    BOOTSTRAP_TOKEN = "TEMP_SEED_2024_REMOVE_AFTER_USE"
+    using_bootstrap = False
+
+    if bootstrap_token == BOOTSTRAP_TOKEN:
+        # Check if any users exist
+        user_count = db.query(User).count()
+        if user_count == 0:
+            using_bootstrap = True
+            print("⚠️  Using bootstrap token for initial seeding")
+        else:
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    "Bootstrap token can only be used when database is empty. "
+                    "Use admin authentication."
+                ),
+            )
+
+    # Require authentication if not using bootstrap
+    if not using_bootstrap and not current_user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
     if confirm.lower() != "yes":
         raise HTTPException(
             status_code=400,
@@ -391,19 +418,20 @@ async def seed_database(
         artwork_count = seed_artworks(db)
         bid_count = seed_bids(db)
 
-        # Log the seeding action
-        AuditService.log_action(
-            db=db,
-            action="database_seeded",
-            resource_type="system",
-            resource_id=0,
-            user=current_user,
-            details={
-                "users": user_count,
-                "artworks": artwork_count,
-                "bids": bid_count,
-            },
-        )
+        # Log the seeding action (only if user exists)
+        if current_user:
+            AuditService.log_action(
+                db=db,
+                action="database_seeded",
+                resource_type="system",
+                resource_id=0,
+                user=current_user,
+                details={
+                    "users": user_count,
+                    "artworks": artwork_count,
+                    "bids": bid_count,
+                },
+            )
 
         return {
             "success": True,
