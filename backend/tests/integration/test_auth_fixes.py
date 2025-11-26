@@ -287,16 +287,14 @@ class TestRoleBasedAccess:
     ):
         """Test that sellers cannot delete other sellers' artworks."""
         # Create a second seller
-        from models.user import UserRole
-
-        other_seller = User(
-            auth0_sub="auth0|seller999",
-            email="other@test.com",
-            name="Other Seller",
-            role=UserRole.SELLER,
-        )
+        other_seller = User(auth0_sub="auth0|seller999")
         db_session.add(other_seller)
         db_session.commit()
+        db_session.refresh(other_seller)
+        # Attach Auth0 data (simulated)
+        other_seller.email = "other@test.com"
+        other_seller.name = "Other Seller"
+        other_seller.role = "SELLER"
 
         # Create artwork by other seller
         from models.artwork import Artwork, ArtworkStatus

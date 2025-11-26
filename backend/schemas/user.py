@@ -1,27 +1,34 @@
 from datetime import datetime
-from typing import Optional
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr
 
-from models.user import UserRole
+# Role type for validation (roles are managed in Auth0)
+UserRole = Literal["ADMIN", "SELLER", "BUYER"]
 
 
 class UserBase(BaseModel):
+    """Base user schema - data from Auth0."""
+
     email: EmailStr
     name: str
 
 
-class UserCreate(UserBase):
+class UserCreate(BaseModel):
+    """Schema for creating minimal user reference."""
+
     auth0_sub: str
-    role: UserRole = UserRole.BUYER
 
 
 class UserUpdate(BaseModel):
-    name: Optional[str] = None
-    role: Optional[UserRole] = None
+    """User updates are managed in Auth0, not in our database."""
+
+    pass
 
 
 class UserResponse(UserBase):
+    """User response includes Auth0 data attached at runtime."""
+
     id: int
     auth0_sub: str
     role: UserRole

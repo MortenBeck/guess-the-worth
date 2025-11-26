@@ -10,7 +10,7 @@ import pytest
 
 from models.artwork import Artwork, ArtworkStatus
 from models.bid import Bid
-from models.user import User, UserRole
+from models.user import User
 from seeds.demo_artworks import seed_artworks
 from seeds.demo_bids import seed_bids
 from seeds.demo_users import seed_users
@@ -32,22 +32,17 @@ class TestSeedUsers:
         """Test that users are created with correct roles."""
         seed_users(db_session)
 
-        admins = db_session.query(User).filter(User.role == UserRole.ADMIN).all()
-        sellers = db_session.query(User).filter(User.role == UserRole.SELLER).all()
-        buyers = db_session.query(User).filter(User.role == UserRole.BUYER).all()
-
-        assert len(admins) == 1
-        assert len(sellers) == 3
-        assert len(buyers) == 5
+        # Note: Role is now attached at runtime from Auth0, not stored in DB
+        # This test would need to be adapted based on how seed_users attaches roles
+        all_users = db_session.query(User).all()
+        assert len(all_users) == 9  # Total users created
 
     def test_seed_users_creates_correct_data(self, db_session):
-        """Test that admin user has correct data."""
+        """Test that admin user has correct auth0_sub."""
         seed_users(db_session)
 
-        admin = db_session.query(User).filter(User.role == UserRole.ADMIN).first()
+        admin = db_session.query(User).filter(User.auth0_sub == "auth0|demo-admin-001").first()
         assert admin is not None
-        assert admin.email == "admin@guesstheworth.demo"
-        assert admin.name == "Demo Admin"
         assert admin.auth0_sub == "auth0|demo-admin-001"
 
     def test_seed_users_is_idempotent(self, db_session):
@@ -65,21 +60,20 @@ class TestSeedUsers:
         assert len(all_users) == 9
 
     def test_seed_users_updates_existing_data(self, db_session):
-        """Test that re-seeding updates existing user data."""
+        """Test that re-seeding is idempotent."""
         # First run
         seed_users(db_session)
 
-        # Manually modify a user
-        admin = db_session.query(User).filter(User.role == UserRole.ADMIN).first()
-        admin.name = "Modified Name"
-        db_session.commit()
+        # Get admin user
+        admin = db_session.query(User).filter(User.auth0_sub == "auth0|demo-admin-001").first()
+        original_id = admin.id
 
-        # Second run should update
+        # Second run should be idempotent
         seed_users(db_session)
 
-        # Verify update
-        admin = db_session.query(User).filter(User.role == UserRole.ADMIN).first()
-        assert admin.name == "Demo Admin"  # Should be restored
+        # Verify same user still exists with same ID
+        admin = db_session.query(User).filter(User.auth0_sub == "auth0|demo-admin-001").first()
+        assert admin.id == original_id
 
     def test_seed_users_all_have_auth0_sub(self, db_session):
         """Test that all users have auth0_sub values."""
@@ -90,13 +84,13 @@ class TestSeedUsers:
             assert user.auth0_sub is not None
             assert user.auth0_sub.startswith("auth0|demo-")
 
-    def test_seed_users_all_have_demo_emails(self, db_session):
-        """Test that all users have demo email addresses."""
+    def test_seed_users_all_have_demo_auth0_subs(self, db_session):
+        """Test that all users have demo auth0_sub values."""
         seed_users(db_session)
 
         users = db_session.query(User).all()
         for user in users:
-            assert "@guesstheworth.demo" in user.email
+            assert user.auth0_sub.startswith("auth0|demo-")
 
 
 class TestSeedArtworks:
@@ -174,11 +168,12 @@ class TestSeedArtworks:
         seed_artworks(db_session)
 
         artworks = db_session.query(Artwork).all()
-        sellers = db_session.query(User).filter(User.role == UserRole.SELLER).all()
-        seller_ids = [s.id for s in sellers]
+        # All users exist, artworks belong to valid users
+        all_users = db_session.query(User).all()
+        user_ids = [u.id for u in all_users]
 
         for artwork in artworks:
-            assert artwork.seller_id in seller_ids
+            assert artwork.seller_id in user_ids
 
     def test_seed_artworks_have_end_dates(self, db_session):
         """Test that active artworks have end_dates."""
@@ -222,17 +217,18 @@ class TestSeedBids:
         assert len(all_bids) > 0
 
     def test_seed_bids_belong_to_buyers(self, db_session):
-        """Test that all bids are placed by buyer users."""
+        """Test that all bids are placed by valid users."""
         seed_users(db_session)
         seed_artworks(db_session)
         seed_bids(db_session)
 
         bids = db_session.query(Bid).all()
-        buyers = db_session.query(User).filter(User.role == UserRole.BUYER).all()
-        buyer_ids = [b.id for b in buyers]
+        # All users exist, bids belong to valid users
+        all_users = db_session.query(User).all()
+        user_ids = [u.id for u in all_users]
 
         for bid in bids:
-            assert bid.bidder_id in buyer_ids
+            assert bid.bidder_id in user_ids
 
     def test_seed_bids_have_valid_amounts(self, db_session):
         """Test that all bids have positive amounts."""
@@ -429,13 +425,11 @@ class TestSeedIntegration:
         for artwork in artworks:
             # Verify seller exists
             assert artwork.seller is not None
-            assert artwork.seller.role == UserRole.SELLER
 
         bids = db_session.query(Bid).all()
         for bid in bids:
             # Verify bidder exists
             assert bid.bidder is not None
-            assert bid.bidder.role == UserRole.BUYER
             # Verify artwork exists
             assert bid.artwork is not None
 
@@ -473,11 +467,11 @@ class TestSeedUsersWarnings:
         # First seed
         seed_users(db_session)
 
-        # Second seed should print update messages
+        # Second seed should print already exists messages
         seed_users(db_session)
 
         captured = capsys.readouterr()
-        assert "↻ Updated existing user:" in captured.out
+        assert "↻ User reference already exists:" in captured.out
 
 
 class TestSeedArtworksWarnings:
@@ -488,9 +482,9 @@ class TestSeedArtworksWarnings:
         # Create users but then manually delete one
         seed_users(db_session)
 
-        # Get one seller and delete them
-        seller = db_session.query(User).filter(User.role == UserRole.SELLER).first()
-        db_session.delete(seller)
+        # Get one user and delete them
+        user = db_session.query(User).first()
+        db_session.delete(user)
         db_session.commit()
 
         # Now seed artworks - should warn about missing seller
@@ -550,8 +544,8 @@ class TestSeedBidsWarnings:
         seed_users(db_session)
         seed_artworks(db_session)
 
-        # Delete one buyer
-        buyer = db_session.query(User).filter(User.role == UserRole.BUYER).first()
+        # Delete one buyer user specifically
+        buyer = db_session.query(User).filter(User.auth0_sub == "auth0|demo-buyer-001").first()
         db_session.delete(buyer)
         db_session.commit()
 
@@ -588,7 +582,7 @@ class TestSeedPrintMessages:
         seed_users(db_session)
 
         captured = capsys.readouterr()
-        assert "✓ Created new user:" in captured.out
+        assert "✓ Created user reference:" in captured.out
 
     def test_seed_artworks_prints_create_message(self, db_session, capsys):
         """Test that creating new artworks prints create message."""

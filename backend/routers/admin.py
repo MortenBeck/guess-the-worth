@@ -14,7 +14,7 @@ from database import get_db
 from models.artwork import Artwork, ArtworkStatus
 from models.audit_log import AuditLog
 from models.bid import Bid
-from models.user import User, UserRole
+from models.user import User
 from services.audit_service import AuditService
 from utils.auth import get_current_user
 
@@ -23,7 +23,7 @@ router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 def require_admin(current_user: User = Depends(get_current_user)) -> User:
     """Ensure user is an admin."""
-    if current_user.role != UserRole.ADMIN:
+    if not hasattr(current_user, "role") or current_user.role != "ADMIN":
         raise HTTPException(status_code=403, detail="Admin access required")
     return current_user
 
@@ -37,25 +37,16 @@ def require_admin(current_user: User = Depends(get_current_user)) -> User:
 async def list_users(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, le=100),
-    role: Optional[str] = None,
-    search: Optional[str] = None,
     current_user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     """
-    List all users with optional filtering.
-    POC: Basic implementation.
+    List all users.
+
+    NOTE: This returns minimal user data from database.
+    For full user details (email, name, role), query Auth0 Management API.
     """
     query = db.query(User)
-
-    # Filter by role
-    if role:
-        query = query.filter(User.role == role)
-
-    # Search by name or email
-    if search:
-        search_pattern = f"%{search}%"
-        query = query.filter((User.name.ilike(search_pattern)) | (User.email.ilike(search_pattern)))
 
     # Get total count
     total = query.count()
@@ -68,16 +59,14 @@ async def list_users(
         "users": [
             {
                 "id": user.id,
-                "name": user.name,
-                "email": user.email,
-                "role": user.role,
+                "auth0_sub": user.auth0_sub,
                 "created_at": user.created_at.isoformat(),
-                "is_active": True,  # POC: Always true
             }
             for user in users
         ],
         "skip": skip,
         "limit": limit,
+        "note": "For full user details (email, name, role), query Auth0 Management API",
     }
 
 
@@ -94,9 +83,7 @@ async def get_user_details(
 
     # Get user statistics
     artworks_count = db.query(Artwork).filter(Artwork.seller_id == user_id).count()
-
     bids_count = db.query(Bid).filter(Bid.bidder_id == user_id).count()
-
     total_spent = (
         db.query(func.sum(Bid.amount))
         .filter(Bid.bidder_id == user_id, Bid.is_winning.is_(True))
@@ -106,15 +93,14 @@ async def get_user_details(
 
     return {
         "id": user.id,
-        "name": user.name,
-        "email": user.email,
-        "role": user.role,
+        "auth0_sub": user.auth0_sub,
         "created_at": user.created_at.isoformat(),
         "stats": {
             "artworks_created": artworks_count,
             "bids_placed": bids_count,
             "total_spent": float(total_spent),
         },
+        "note": "For email, name, and role, query Auth0 Management API",
     }
 
 
@@ -133,7 +119,7 @@ async def ban_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    if user.role == UserRole.ADMIN:
+    if hasattr(user, "role") and user.role == "ADMIN":
         raise HTTPException(status_code=400, detail="Cannot ban admin users")
 
     # POC: Just log the action (don't actually ban)
@@ -359,6 +345,77 @@ async def get_audit_logs(
 
 
 # ============================================================================
+# DATABASE MIGRATIONS
+# ============================================================================
+
+
+@router.post("/stamp-migrations")
+async def stamp_migrations(
+    revision: str = Query(..., description="Migration revision to stamp (e.g., 'b2d54a525fd0')"),
+    current_user: User = Depends(require_admin),
+):
+    """
+    Stamp the database with a specific migration revision without running migrations.
+    Use this when the database schema already matches a migration version.
+    Requires admin authentication.
+    """
+    try:
+        import subprocess
+
+        # Run alembic stamp to mark database at specific revision
+        result = subprocess.run(
+            ["alembic", "stamp", revision],
+            capture_output=True,
+            text=True,
+            cwd="/app",  # Azure app directory
+        )
+
+        if result.returncode != 0:
+            raise Exception(f"Stamp failed: {result.stderr}")
+
+        return {
+            "success": True,
+            "message": f"Database stamped at revision {revision}",
+            "output": result.stdout,
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Stamp failed: {str(e)}")
+
+
+@router.post("/run-migrations")
+async def run_migrations(
+    current_user: User = Depends(require_admin),
+):
+    """
+    Run database migrations (alembic upgrade head).
+    Requires admin authentication.
+    """
+    try:
+        import subprocess
+
+        # Run alembic upgrade head
+        result = subprocess.run(
+            ["alembic", "upgrade", "head"],
+            capture_output=True,
+            text=True,
+            cwd="/app",  # Azure app directory
+        )
+
+        if result.returncode != 0:
+            raise Exception(f"Migration failed: {result.stderr}")
+
+        return {
+            "success": True,
+            "message": "Migrations completed successfully",
+            "output": result.stdout,
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Migration failed: {str(e)}")
+
+
+# ============================================================================
 # DATABASE SEEDING
 # ============================================================================
 
@@ -371,6 +428,14 @@ async def seed_database(
 ):
     """
     Seed the production database with demo data.
+
+    ⚠️ IMPORTANT: Before running this endpoint with Auth0:
+    1. Create demo users in Auth0 Dashboard with matching auth0_sub values
+    2. Assign appropriate roles (ADMIN, SELLER, BUYER) in Auth0
+    3. Have those users log in at least once (creates minimal DB records)
+    4. Then run this seeding endpoint
+
+    This endpoint seeds artworks and bids. User creation is handled by Auth0.
     Requires admin authentication and explicit confirmation.
     Safe to run multiple times (idempotent).
     """

@@ -3,8 +3,6 @@ Integration tests for users API endpoints.
 Tests /api/users routes with pagination and access control.
 """
 
-from models.user import UserRole
-
 
 class TestListUsers:
     """Test GET /api/users endpoint."""
@@ -46,17 +44,19 @@ class TestListUsers:
         from models.user import User
 
         # Create 15 users
-        users = [
-            User(
-                auth0_sub=f"auth0|user{i}",
-                email=f"user{i}@test.com",
-                name=f"User {i}",
-                role=UserRole.BUYER,
-            )
-            for i in range(15)
-        ]
+        users = []
+        for i in range(15):
+            user = User(auth0_sub=f"auth0|user{i}")
+            users.append(user)
         db_session.add_all(users)
         db_session.commit()
+
+        # Attach Auth0 data (simulated)
+        for i, user in enumerate(users):
+            db_session.refresh(user)
+            user.email = f"user{i}@test.com"
+            user.name = f"User {i}"
+            user.role = "BUYER"
 
         response = client.get("/api/users")
 
@@ -68,17 +68,19 @@ class TestListUsers:
         """Test pagination with skip parameter."""
         from models.user import User
 
-        users = [
-            User(
-                auth0_sub=f"auth0|skip{i}",
-                email=f"skip{i}@test.com",
-                name=f"Skip {i}",
-                role=UserRole.BUYER,
-            )
-            for i in range(10)
-        ]
+        users = []
+        for i in range(10):
+            user = User(auth0_sub=f"auth0|skip{i}")
+            users.append(user)
         db_session.add_all(users)
         db_session.commit()
+
+        # Attach Auth0 data (simulated)
+        for i, user in enumerate(users):
+            db_session.refresh(user)
+            user.email = f"skip{i}@test.com"
+            user.name = f"Skip {i}"
+            user.role = "BUYER"
 
         response = client.get("/api/users?skip=5")
 
@@ -90,17 +92,19 @@ class TestListUsers:
         """Test pagination with limit parameter."""
         from models.user import User
 
-        users = [
-            User(
-                auth0_sub=f"auth0|limit{i}",
-                email=f"limit{i}@test.com",
-                name=f"Limit {i}",
-                role=UserRole.BUYER,
-            )
-            for i in range(10)
-        ]
+        users = []
+        for i in range(10):
+            user = User(auth0_sub=f"auth0|limit{i}")
+            users.append(user)
         db_session.add_all(users)
         db_session.commit()
+
+        # Attach Auth0 data (simulated)
+        for i, user in enumerate(users):
+            db_session.refresh(user)
+            user.email = f"limit{i}@test.com"
+            user.name = f"Limit {i}"
+            user.role = "BUYER"
 
         response = client.get("/api/users?limit=3")
 
@@ -112,17 +116,19 @@ class TestListUsers:
         """Test pagination with both skip and limit."""
         from models.user import User
 
-        users = [
-            User(
-                auth0_sub=f"auth0|both{i}",
-                email=f"both{i}@test.com",
-                name=f"Both {i}",
-                role=UserRole.BUYER,
-            )
-            for i in range(20)
-        ]
+        users = []
+        for i in range(20):
+            user = User(auth0_sub=f"auth0|both{i}")
+            users.append(user)
         db_session.add_all(users)
         db_session.commit()
+
+        # Attach Auth0 data (simulated)
+        for i, user in enumerate(users):
+            db_session.refresh(user)
+            user.email = f"both{i}@test.com"
+            user.name = f"Both {i}"
+            user.role = "BUYER"
 
         response = client.get("/api/users?skip=5&limit=5")
 
@@ -171,7 +177,7 @@ class TestGetSingleUser:
         assert data["auth0_sub"] == buyer_user.auth0_sub
         assert data["email"] == buyer_user.email
         assert data["name"] == buyer_user.name
-        assert data["role"] == buyer_user.role.value
+        assert data["role"] == buyer_user.role
 
     def test_get_user_not_found(self, client):
         """Test retrieving non-existent user returns 404."""
@@ -346,12 +352,15 @@ class TestUserEdgeCases:
 
         user = User(
             auth0_sub="auth0|special",
-            email="special@test.com",
-            name="用户 with émojis 🎨",
-            role=UserRole.BUYER,
         )
         db_session.add(user)
         db_session.commit()
+        db_session.refresh(user)
+
+        # Attach Auth0 data (simulated)
+        user.email = "special@test.com"
+        user.name = "用户 with émojis 🎨"
+        user.role = "BUYER"
 
         response = client.get(f"/api/users/{user.id}")
 
@@ -367,12 +376,15 @@ class TestUserEdgeCases:
         long_name = "A" * 500
         user = User(
             auth0_sub="auth0|longname",
-            email="longname@test.com",
-            name=long_name,
-            role=UserRole.BUYER,
         )
         db_session.add(user)
         db_session.commit()
+        db_session.refresh(user)
+
+        # Attach Auth0 data (simulated)
+        user.email = "longname@test.com"
+        user.name = long_name
+        user.role = "BUYER"
 
         response = client.get(f"/api/users/{user.id}")
 
@@ -442,16 +454,17 @@ class TestUpdateUser:
     """Test PUT /api/users/me endpoint."""
 
     def test_update_current_user(self, client, buyer_user, buyer_token):
-        """Test updating current user's profile."""
+        """Test updating current user's profile - returns current data from Auth0."""
         response = client.put(
             "/api/users/me",
             headers={"Authorization": f"Bearer {buyer_token}"},
-            json={"name": "Updated Name"},
+            json={},  # No fields to update since data is in Auth0
         )
 
         assert response.status_code == 200
         data = response.json()
-        assert data["name"] == "Updated Name"
+        # Should return the user's current Auth0 data
+        assert data["name"] == buyer_user.name  # Name from Auth0, not updated
 
     def test_update_current_user_without_auth(self, client):
         """Test updating user without authentication fails."""

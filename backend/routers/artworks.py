@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session, joinedload
 from database import get_db
 from middleware.rate_limit import limiter
 from models import Artwork
-from models.user import User, UserRole
+from models.user import User
 from schemas import ArtworkCreate, ArtworkResponse, ArtworkUpdate
 from services.auction_service import AuctionService
 from utils.auth import get_current_user, require_admin, require_seller
@@ -134,7 +134,7 @@ async def update_artwork(
         raise HTTPException(status_code=404, detail="Artwork not found")
 
     # Check ownership
-    if artwork.seller_id != current_user.id and current_user.role != UserRole.ADMIN:
+    if artwork.seller_id != current_user.id and current_user.role != "ADMIN":
         raise HTTPException(status_code=403, detail="Not authorized to update this artwork")
 
     # Validate updated fields
@@ -189,7 +189,7 @@ async def delete_artwork(
         raise HTTPException(status_code=404, detail="Artwork not found")
 
     # Check ownership
-    if artwork.seller_id != current_user.id and current_user.role != UserRole.ADMIN:
+    if artwork.seller_id != current_user.id and current_user.role != "ADMIN":
         raise HTTPException(status_code=403, detail="Not authorized to delete this artwork")
 
     # Check if artwork is sold
@@ -221,7 +221,7 @@ async def upload_artwork_image(
         raise HTTPException(status_code=404, detail="Artwork not found")
 
     # Check ownership
-    if artwork.seller_id != current_user.id and current_user.role != UserRole.ADMIN:
+    if artwork.seller_id != current_user.id and current_user.role != "ADMIN":
         raise HTTPException(
             status_code=403, detail="Not authorized to upload image for this artwork"
         )
