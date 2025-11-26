@@ -23,7 +23,7 @@ export default function AdminRoute({ children }) {
     return <Navigate to="/login" />;
   }
 
-  if (user?.role !== "admin") {
+  if (user?.role !== "ADMIN") {
     return <Navigate to="/" />;
   }
 

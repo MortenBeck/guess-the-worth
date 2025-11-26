@@ -161,7 +161,7 @@ export const statsService = {
       // Calculate stats from the data
       const activeArtworks = artworks.filter((a) => a.status === "active");
       const totalBids = artworks.reduce((sum, a) => sum + (a.current_highest_bid || 0), 0);
-      const artists = users.filter((u) => u.role === "seller" || u.role === "admin");
+      const artists = users.filter((u) => u.role === "SELLER" || u.role === "ADMIN");
 
       return {
         totalArtworks: activeArtworks.length,

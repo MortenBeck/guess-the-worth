@@ -39,17 +39,17 @@ const useAuthStore = create(
 
       isAdmin: () => {
         const state = get();
-        return state.user?.role === "admin";
+        return state.user?.role === "ADMIN";
       },
 
       isSeller: () => {
         const state = get();
-        return state.user?.role === "seller" || state.user?.role === "admin";
+        return state.user?.role === "SELLER" || state.user?.role === "ADMIN";
       },
 
       isBuyer: () => {
         const state = get();
-        return ["buyer", "seller", "admin"].includes(state.user?.role);
+        return ["BUYER", "SELLER", "ADMIN"].includes(state.user?.role);
       },
     }),
     {
