@@ -438,6 +438,28 @@ describe("API Services", () => {
       );
     });
 
+    it("should handle other status codes with detail from response", async () => {
+      fetch.mockResolvedValueOnce({
+        ok: false,
+        status: 409,
+        statusText: "Conflict",
+        json: async () => ({ detail: "Resource conflict occurred" }),
+      });
+
+      await expect(artworkService.getAll()).rejects.toThrow("Resource conflict occurred");
+    });
+
+    it("should handle other status codes without detail from response", async () => {
+      fetch.mockResolvedValueOnce({
+        ok: false,
+        status: 429,
+        statusText: "Too Many Requests",
+        json: async () => ({}),
+      });
+
+      await expect(artworkService.getAll()).rejects.toThrow("HTTP 429: Too Many Requests");
+    });
+
     it("should throw error for network failures", async () => {
       fetch.mockRejectedValueOnce(new TypeError("Failed to fetch"));
 
