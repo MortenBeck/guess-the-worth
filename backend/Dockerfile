@@ -25,9 +25,6 @@ WORKDIR /app
 # Upgrade system pip to fix CVE-2025-8869
 RUN pip install --no-cache-dir --upgrade pip==25.3
 
-# Update npm to fix CVE-2025-13466 in body-parser
-RUN npm install -g npm@latest
-
 # Create non-root user for security
 RUN useradd -m -u 1000 appuser && \
     chown -R appuser:appuser /app
