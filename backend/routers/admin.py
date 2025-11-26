@@ -428,6 +428,14 @@ async def seed_database(
 ):
     """
     Seed the production database with demo data.
+
+    ⚠️ IMPORTANT: Before running this endpoint with Auth0:
+    1. Create demo users in Auth0 Dashboard with matching auth0_sub values
+    2. Assign appropriate roles (ADMIN, SELLER, BUYER) in Auth0
+    3. Have those users log in at least once (creates minimal DB records)
+    4. Then run this seeding endpoint
+
+    This endpoint seeds artworks and bids. User creation is handled by Auth0.
     Requires admin authentication and explicit confirmation.
     Safe to run multiple times (idempotent).
     """
