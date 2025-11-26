@@ -92,42 +92,7 @@ const LiveAuctions = () => {
 
   const artworkData = artworks?.data || [];
 
-  const mockArtworks = [
-    {
-      id: 1,
-      title: "Midnight Dreams",
-      artist: "Sarah Chen",
-      current_bid: 245,
-      status: "active",
-      time_left: "2h 15m",
-    },
-    {
-      id: 2,
-      title: "Abstract Emotions",
-      artist: "Michael Torres",
-      current_bid: 180,
-      status: "ending",
-      time_left: "15m",
-    },
-    {
-      id: 3,
-      title: "Ocean Waves",
-      artist: "Emma Rodriguez",
-      current_bid: 320,
-      status: "active",
-      time_left: "4h 32m",
-    },
-    {
-      id: 4,
-      title: "Golden Hour",
-      artist: "David Kim",
-      current_bid: 150,
-      status: "active",
-      time_left: "1h 45m",
-    },
-  ];
-
-  const displayArtworks = artworkData.length > 0 ? artworkData.slice(0, 4) : mockArtworks;
+  const displayArtworks = artworkData.slice(0, 4);
 
   return (
     <Box py={12}>
