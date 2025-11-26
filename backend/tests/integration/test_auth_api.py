@@ -5,7 +5,7 @@ Tests /api/auth routes with database and Auth0 mocking.
 
 from unittest.mock import patch
 
-from models.user import UserRole
+# UserRole enum removed - now using string literals
 
 
 class TestAuthRegistration:
@@ -321,7 +321,7 @@ class TestAuthWithAuth0:
         user = AuthService.get_or_create_user(db_session, updated_user_data)
 
         assert user.id == buyer_user.id
-        assert user.role == UserRole.ADMIN
+        assert user.role == "ADMIN"
 
     @patch("services.auth_service.AuthService.verify_auth0_token")
     @patch("services.auth_service.AuthService.get_or_create_user")

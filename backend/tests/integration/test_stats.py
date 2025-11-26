@@ -120,16 +120,19 @@ class TestUserStats:
     ):
         """Test that user only sees their own stats."""
         # Create another user's bid
-        from models.user import User, UserRole
+        from models.user import User
 
         other_buyer = User(
             auth0_sub="auth0|other_buyer",
-            email="other@buyer.com",
-            name="Other Buyer",
-            role=UserRole.BUYER,
         )
         db_session.add(other_buyer)
         db_session.commit()
+        db_session.refresh(other_buyer)
+
+        # Attach Auth0 data (simulated)
+        other_buyer.email = "other@buyer.com"
+        other_buyer.name = "Other Buyer"
+        other_buyer.role = "BUYER"
 
         # Other user places bids
         for amount in [50.0, 60.0]:
@@ -261,16 +264,19 @@ class TestSellerStats:
     ):
         """Test that seller only sees stats for their own artworks."""
         # Create another seller with artworks
-        from models.user import User, UserRole
+        from models.user import User
 
         other_seller = User(
             auth0_sub="auth0|other_seller",
-            email="other@seller.com",
-            name="Other Seller",
-            role=UserRole.SELLER,
         )
         db_session.add(other_seller)
         db_session.commit()
+        db_session.refresh(other_seller)
+
+        # Attach Auth0 data (simulated)
+        other_seller.email = "other@seller.com"
+        other_seller.name = "Other Seller"
+        other_seller.role = "SELLER"
 
         # Other seller creates artworks
         for i in range(2):

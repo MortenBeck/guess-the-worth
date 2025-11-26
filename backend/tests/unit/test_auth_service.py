@@ -11,7 +11,7 @@ import pytest
 from jwt import DecodeError, ExpiredSignatureError
 
 from config.settings import Settings
-from models.user import UserRole
+# UserRole enum removed - now using string literals
 from schemas.auth import AuthUser
 from services.auth_service import AuthService
 from services.jwt_service import JWTService
@@ -83,32 +83,32 @@ class TestAuth0Service:
 
     def test_map_auth0_role_to_user_role_buyer(self):
         """Test mapping Auth0 buyer role."""
-        assert AuthService.map_auth0_role_to_user_role(["buyer"]) == UserRole.BUYER
-        assert AuthService.map_auth0_role_to_user_role([]) == UserRole.BUYER  # Default
+        assert AuthService.map_auth0_role_to_user_role(["buyer"]) == "BUYER"
+        assert AuthService.map_auth0_role_to_user_role([]) == "BUYER"  # Default
 
     def test_map_auth0_role_to_user_role_seller(self):
         """Test mapping Auth0 seller role."""
-        assert AuthService.map_auth0_role_to_user_role(["seller"]) == UserRole.SELLER
-        assert AuthService.map_auth0_role_to_user_role(["buyer", "seller"]) == UserRole.SELLER
+        assert AuthService.map_auth0_role_to_user_role(["seller"]) == "SELLER"
+        assert AuthService.map_auth0_role_to_user_role(["buyer", "seller"]) == "SELLER"
 
     def test_map_auth0_role_to_user_role_admin(self):
         """Test mapping Auth0 admin role (highest priority)."""
-        assert AuthService.map_auth0_role_to_user_role(["admin"]) == UserRole.ADMIN
+        assert AuthService.map_auth0_role_to_user_role(["admin"]) == "ADMIN"
         assert (
-            AuthService.map_auth0_role_to_user_role(["buyer", "seller", "admin"]) == UserRole.ADMIN
+            AuthService.map_auth0_role_to_user_role(["buyer", "seller", "admin"]) == "ADMIN"
         )
-        assert AuthService.map_auth0_role_to_user_role(["admin", "seller"]) == UserRole.ADMIN
+        assert AuthService.map_auth0_role_to_user_role(["admin", "seller"]) == "ADMIN"
 
     def test_map_auth0_role_to_user_role_case_insensitive(self):
         """Test role mapping is case-insensitive."""
-        assert AuthService.map_auth0_role_to_user_role(["ADMIN"]) == UserRole.ADMIN
-        assert AuthService.map_auth0_role_to_user_role(["Seller"]) == UserRole.SELLER
-        assert AuthService.map_auth0_role_to_user_role(["BuYeR"]) == UserRole.BUYER
+        assert AuthService.map_auth0_role_to_user_role(["ADMIN"]) == "ADMIN"
+        assert AuthService.map_auth0_role_to_user_role(["Seller"]) == "SELLER"
+        assert AuthService.map_auth0_role_to_user_role(["BuYeR"]) == "BUYER"
 
     def test_map_auth0_role_unknown(self):
         """Test mapping unknown role defaults to BUYER."""
-        assert AuthService.map_auth0_role_to_user_role(["unknown"]) == UserRole.BUYER
-        assert AuthService.map_auth0_role_to_user_role(["moderator", "viewer"]) == UserRole.BUYER
+        assert AuthService.map_auth0_role_to_user_role(["unknown"]) == "BUYER"
+        assert AuthService.map_auth0_role_to_user_role(["moderator", "viewer"]) == "BUYER"
 
     def test_get_user_by_auth0_sub_exists(self, db_session, buyer_user):
         """Test retrieving existing user by auth0_sub."""
@@ -138,7 +138,7 @@ class TestAuth0Service:
         assert user.auth0_sub == "auth0|new123"
         assert user.email == "newuser@example.com"
         assert user.name == "New User"
-        assert user.role == UserRole.SELLER
+        assert user.role == "SELLER"
 
         # Verify user was persisted
         db_user = AuthService.get_user_by_auth0_sub(db_session, "auth0|new123")
@@ -159,7 +159,7 @@ class TestAuth0Service:
         user = AuthService.get_or_create_user(db_session, auth_user)
 
         assert user.id == buyer_user.id
-        assert user.role == UserRole.BUYER
+        assert user.role == "BUYER"
 
     def test_get_or_create_user_role_update(self, db_session, buyer_user):
         """Test updating user role when Auth0 role changes."""
@@ -175,11 +175,11 @@ class TestAuth0Service:
         user = AuthService.get_or_create_user(db_session, auth_user)
 
         assert user.id == buyer_user.id
-        assert user.role == UserRole.ADMIN  # Role should be updated
+        assert user.role == "ADMIN"  # Role should be updated
 
         # Verify persistence
         db_session.refresh(buyer_user)
-        assert buyer_user.role == UserRole.ADMIN
+        assert buyer_user.role == "ADMIN"
 
 
 class TestJWTService:
@@ -313,7 +313,7 @@ class TestAuthIntegration:
         # Verify user was created correctly
         assert db_user.auth0_sub == "auth0|integration123"
         assert db_user.email == "integration@test.com"
-        assert db_user.role == UserRole.SELLER
+        assert db_user.role == "SELLER"
 
         # Verify user can be retrieved
         retrieved_user = AuthService.get_user_by_auth0_sub(db_session, "auth0|integration123")
@@ -324,7 +324,7 @@ class TestAuthIntegration:
         # Create JWT token
         token_data = {
             "sub": seller_user.auth0_sub,
-            "role": seller_user.role.value,
+            "role": seller_user.role,
             "email": seller_user.email,
         }
         token = JWTService.create_access_token(token_data)
@@ -336,7 +336,7 @@ class TestAuthIntegration:
         db_user = AuthService.get_user_by_auth0_sub(db_session, payload["sub"])
 
         assert db_user.id == seller_user.id
-        assert db_user.role.value == payload["role"]
+        assert db_user.role == payload["role"]
         assert db_user.email == payload["email"]
 
     @patch("services.auth_service.requests.get")
@@ -357,7 +357,7 @@ class TestAuthIntegration:
 
         auth_user1 = AuthService.verify_auth0_token("token1")
         user = AuthService.get_or_create_user(db_session, auth_user1)
-        assert user.role == UserRole.BUYER
+        assert user.role == "BUYER"
 
         # User gets promoted to seller in Auth0
         mock_response.json.return_value["https://guesstheworth.com/roles"] = ["seller"]
@@ -366,4 +366,4 @@ class TestAuthIntegration:
 
         # Same user, updated role
         assert updated_user.id == user.id
-        assert updated_user.role == UserRole.SELLER
+        assert updated_user.role == "SELLER"

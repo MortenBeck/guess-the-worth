@@ -376,17 +376,17 @@ class TestArtworkFiltering:
     def test_filter_by_seller(self, client, db_session, seller_user):
         """Test filtering artworks by seller (if implemented)."""
         from models.artwork import Artwork
-        from models.user import User, UserRole
+        from models.user import User
 
         # Create another seller
-        another_seller = User(
-            auth0_sub="auth0|seller2",
-            email="seller2@test.com",
-            name="Seller 2",
-            role=UserRole.SELLER,
-        )
+        another_seller = User(auth0_sub="auth0|seller2")
         db_session.add(another_seller)
         db_session.commit()
+        db_session.refresh(another_seller)
+        # Attach Auth0 data (simulated)
+        another_seller.email = "seller2@test.com"
+        another_seller.name = "Seller 2"
+        another_seller.role = "SELLER"
 
         artwork1 = Artwork(seller_id=seller_user.id, title="Art 1", secret_threshold=100.0)
         artwork2 = Artwork(seller_id=another_seller.id, title="Art 2", secret_threshold=100.0)

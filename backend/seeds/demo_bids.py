@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from models.artwork import Artwork, ArtworkStatus
 from models.bid import Bid
-from models.user import User, UserRole
+from models.user import User
 
 
 def seed_bids(db: Session) -> int:
@@ -18,14 +18,23 @@ def seed_bids(db: Session) -> int:
     This function is idempotent - safe to run multiple times.
     Bids are identified by unique combinations and won't be duplicated.
 
+    NOTE: Users must be seeded first with matching auth0_sub values.
+
     Args:
         db: Database session
 
     Returns:
         Number of bids created or verified
     """
-    # Get demo buyers
-    buyers = db.query(User).filter(User.role == UserRole.BUYER).all()
+    # Get demo buyers by auth0_sub (buyer users)
+    buyer_subs = [
+        "auth0|demo-buyer-001",
+        "auth0|demo-buyer-002",
+        "auth0|demo-buyer-003",
+        "auth0|demo-buyer-004",
+        "auth0|demo-buyer-005",
+    ]
+    buyers = db.query(User).filter(User.auth0_sub.in_(buyer_subs)).all()
 
     if not buyers:
         print("   ⚠️  No buyers found! Please seed users first.")
@@ -45,8 +54,8 @@ def seed_bids(db: Session) -> int:
         print("   ⚠️  No artworks with bids found! Please seed artworks first.")
         return 0
 
-    # Map buyers by email for easy access
-    buyer_map = {buyer.email: buyer for buyer in buyers}
+    # Map buyers by auth0_sub for easy access
+    buyer_map = {buyer.auth0_sub: buyer for buyer in buyers}
 
     # Create bids for artworks
     # We'll create a bid history that leads to the current_highest_bid

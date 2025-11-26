@@ -206,26 +206,31 @@ class TestGetArtworkBids:
         """Test getting multiple bids for an artwork."""
         from datetime import timedelta
 
-        from models.user import User, UserRole
+        from models.user import User
         from services.jwt_service import JWTService
 
         # Create additional buyers
-        buyer2 = User(
-            auth0_sub="auth0|buyer2", email="buyer2@test.com", name="Buyer 2", role=UserRole.BUYER
-        )
-        buyer3 = User(
-            auth0_sub="auth0|buyer3", email="buyer3@test.com", name="Buyer 3", role=UserRole.BUYER
-        )
+        buyer2 = User(auth0_sub="auth0|buyer2")
+        buyer3 = User(auth0_sub="auth0|buyer3")
         db_session.add_all([buyer2, buyer3])
         db_session.commit()
+        db_session.refresh(buyer2)
+        db_session.refresh(buyer3)
+        # Attach Auth0 data (simulated)
+        buyer2.email = "buyer2@test.com"
+        buyer2.name = "Buyer 2"
+        buyer2.role = "BUYER"
+        buyer3.email = "buyer3@test.com"
+        buyer3.name = "Buyer 3"
+        buyer3.role = "BUYER"
 
         # Create tokens for the additional buyers
         buyer2_token = JWTService.create_access_token(
-            data={"sub": buyer2.auth0_sub, "role": UserRole.BUYER.value},
+            data={"sub": buyer2.auth0_sub, "role": "BUYER"},
             expires_delta=timedelta(hours=1),
         )
         buyer3_token = JWTService.create_access_token(
-            data={"sub": buyer3.auth0_sub, "role": UserRole.BUYER.value},
+            data={"sub": buyer3.auth0_sub, "role": "BUYER"},
             expires_delta=timedelta(hours=1),
         )
 
@@ -381,7 +386,7 @@ class TestBidThresholdLogic:
         """Test concurrent bids from multiple users."""
         from datetime import timedelta
 
-        from models.user import User, UserRole
+        from models.user import User
         from services.jwt_service import JWTService
 
         # Create multiple buyers
@@ -390,19 +395,21 @@ class TestBidThresholdLogic:
         for i in range(5):
             buyer = User(
                 auth0_sub=f"auth0|racer{i}",
-                email=f"racer{i}@test.com",
-                name=f"Racer {i}",
-                role=UserRole.BUYER,
             )
             buyers.append(buyer)
 
         db_session.add_all(buyers)
         db_session.commit()
 
-        # Create tokens for all buyers
-        for buyer in buyers:
+        # Attach Auth0 data and create tokens for all buyers
+        for i, buyer in enumerate(buyers):
+            db_session.refresh(buyer)
+            buyer.email = f"racer{i}@test.com"
+            buyer.name = f"Racer {i}"
+            buyer.role = "BUYER"
+
             token = JWTService.create_access_token(
-                data={"sub": buyer.auth0_sub, "role": UserRole.BUYER.value},
+                data={"sub": buyer.auth0_sub, "role": "BUYER"},
                 expires_delta=timedelta(hours=1),
             )
             tokens.append(token)
@@ -429,19 +436,25 @@ class TestBidThresholdLogic:
         """Test artwork is locked (SOLD) after first winning bid."""
         from datetime import timedelta
 
-        from models.user import User, UserRole
+        from models.user import User
         from services.jwt_service import JWTService
 
         # Create another buyer
         buyer2 = User(
-            auth0_sub="auth0|buyer2", email="buyer2@test.com", name="Buyer 2", role=UserRole.BUYER
+            auth0_sub="auth0|buyer2"
         )
         db_session.add(buyer2)
         db_session.commit()
+        db_session.refresh(buyer2)
+
+        # Attach Auth0 data (simulated)
+        buyer2.email = "buyer2@test.com"
+        buyer2.name = "Buyer 2"
+        buyer2.role = "BUYER"
 
         # Create token for buyer2
         buyer2_token = JWTService.create_access_token(
-            data={"sub": buyer2.auth0_sub, "role": UserRole.BUYER.value},
+            data={"sub": buyer2.auth0_sub, "role": "BUYER"},
             expires_delta=timedelta(hours=1),
         )
 
@@ -657,17 +670,20 @@ class TestGetMyBids:
     ):
         """Test that my-bids only returns user's own bids."""
         from models.bid import Bid
-        from models.user import User, UserRole
+        from models.user import User
 
         # Create another buyer
         other_buyer = User(
             auth0_sub="auth0|otherbuyer",
-            email="other@buyer.com",
-            name="Other Buyer",
-            role=UserRole.BUYER,
         )
         db_session.add(other_buyer)
         db_session.commit()
+        db_session.refresh(other_buyer)
+
+        # Attach Auth0 data (simulated)
+        other_buyer.email = "other@buyer.com"
+        other_buyer.name = "Other Buyer"
+        other_buyer.role = "BUYER"
 
         # Create bids for both buyers
         my_bid = Bid(artwork_id=artwork.id, bidder_id=buyer_user.id, amount=50.0)

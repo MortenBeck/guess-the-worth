@@ -9,7 +9,7 @@ import pytest
 from pydantic import ValidationError
 
 from models.artwork import ArtworkStatus
-from models.user import UserRole
+# UserRole enum removed - now using string literals
 from schemas.artwork import ArtworkCreate, ArtworkResponse, ArtworkUpdate, ArtworkWithSecretResponse
 from schemas.auth import AuthUser, TokenResponse
 from schemas.bid import BidCreate, BidResponse
@@ -25,13 +25,13 @@ class TestUserSchemas:
             "email": "test@example.com",
             "name": "Test User",
             "auth0_sub": "auth0|123456",
-            "role": UserRole.BUYER,
+            "role": "BUYER",
         }
         user = UserCreate(**user_data)
         assert user.email == "test@example.com"
         assert user.name == "Test User"
         assert user.auth0_sub == "auth0|123456"
-        assert user.role == UserRole.BUYER
+        assert user.role == "BUYER"
 
     def test_user_create_default_role(self):
         """Test UserCreate defaults to BUYER role."""
@@ -41,7 +41,7 @@ class TestUserSchemas:
             "auth0_sub": "auth0|default",
         }
         user = UserCreate(**user_data)
-        assert user.role == UserRole.BUYER
+        assert user.role == "BUYER"
 
     def test_user_create_invalid_email(self):
         """Test UserCreate rejects invalid email format."""
@@ -66,14 +66,14 @@ class TestUserSchemas:
         assert update1.role is None
 
         # Update only role
-        update2 = UserUpdate(role=UserRole.SELLER)
+        update2 = UserUpdate(role="SELLER")
         assert update2.name is None
-        assert update2.role == UserRole.SELLER
+        assert update2.role == "SELLER"
 
         # Update both
-        update3 = UserUpdate(name="Another Name", role=UserRole.ADMIN)
+        update3 = UserUpdate(name="Another Name", role="ADMIN")
         assert update3.name == "Another Name"
-        assert update3.role == UserRole.ADMIN
+        assert update3.role == "ADMIN"
 
     def test_user_response_structure(self):
         """Test UserResponse includes all expected fields."""
@@ -82,7 +82,7 @@ class TestUserSchemas:
             "auth0_sub": "auth0|123",
             "email": "test@example.com",
             "name": "Test User",
-            "role": UserRole.BUYER,
+            "role": "BUYER",
             "created_at": datetime.now(),
         }
         response = UserResponse(**response_data)
@@ -90,7 +90,7 @@ class TestUserSchemas:
         assert response.auth0_sub == "auth0|123"
         assert response.email == "test@example.com"
         assert response.name == "Test User"
-        assert response.role == UserRole.BUYER
+        assert response.role == "BUYER"
         assert isinstance(response.created_at, datetime)
 
 
