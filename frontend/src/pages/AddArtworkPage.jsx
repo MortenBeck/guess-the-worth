@@ -62,7 +62,7 @@ const AddArtworkPage = () => {
     onError: (error) => {
       toaster.create({
         title: "Failed to create artwork",
-        description: error.response?.data?.detail || error.message,
+        description: error.data?.detail || error.message || "Failed to create artwork",
         type: "error",
         duration: 5000,
       });

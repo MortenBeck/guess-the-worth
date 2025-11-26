@@ -53,7 +53,7 @@ export default function ImageUpload({ artworkId, currentImageUrl, onUploadSucces
     } catch (error) {
       toaster.create({
         title: "Upload failed",
-        description: error.response?.data?.detail || error.message,
+        description: error.data?.detail || error.message || "Failed to upload image",
         type: "error",
         duration: 5000,
       });
