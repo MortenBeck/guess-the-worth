@@ -19,8 +19,14 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Add password_hash column to users table
-    op.add_column('users', sa.Column('password_hash', sa.String(), nullable=True))
+    # Add password_hash column to users table (idempotent - skip if exists)
+    from sqlalchemy import inspect
+    conn = op.get_bind()
+    inspector = inspect(conn)
+    columns = [col['name'] for col in inspector.get_columns('users')]
+
+    if 'password_hash' not in columns:
+        op.add_column('users', sa.Column('password_hash', sa.String(), nullable=True))
 
 
 def downgrade() -> None:
