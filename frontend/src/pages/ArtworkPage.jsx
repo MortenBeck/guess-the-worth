@@ -118,7 +118,7 @@ const ArtworkPage = () => {
     onError: (error) => {
       toaster.create({
         title: "Bid failed",
-        description: error.response?.data?.detail || error.message,
+        description: error.data?.detail || error.message || "Failed to place bid",
         type: "error",
         duration: 5000,
       });
