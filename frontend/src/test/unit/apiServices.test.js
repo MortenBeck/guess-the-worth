@@ -341,9 +341,9 @@ describe("API Services", () => {
         ];
 
         const mockUsers = [
-          { id: 1, role: "buyer" },
-          { id: 2, role: "seller" },
-          { id: 3, role: "admin" },
+          { id: 1, role: "BUYER" },
+          { id: 2, role: "SELLER" },
+          { id: 3, role: "ADMIN" },
         ];
 
         fetch
