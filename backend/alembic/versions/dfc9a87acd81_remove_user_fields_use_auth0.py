@@ -9,7 +9,7 @@ User data (email, name, role) is now stored in Auth0 and attached
 to user objects at runtime from JWT tokens.
 
 Revision ID: dfc9a87acd81
-Revises: c3e5f7a8b2d1
+Revises: 4abe05ed05b4
 Create Date: 2025-11-26 07:35:26.949920
 
 """
@@ -21,7 +21,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "dfc9a87acd81"
-down_revision: Union[str, None] = "c3e5f7a8b2d1"
+down_revision: Union[str, None] = "4abe05ed05b4"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

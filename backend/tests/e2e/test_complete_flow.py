@@ -100,11 +100,11 @@ class TestCompleteUserFlow:
         assert winning_bid_data["is_winning"] is True
         assert winning_bid_data["amount"] == 500.0
 
-        # Step 6: Verify artwork is sold
+        # Step 6: Verify artwork is pending payment
         final_artwork = client.get(f"/api/artworks/{artwork_id}")
         assert final_artwork.status_code == 200
         final_artwork_data = final_artwork.json()
-        assert final_artwork_data["status"] == "SOLD"
+        assert final_artwork_data["status"] == "PENDING_PAYMENT"
         assert final_artwork_data["current_highest_bid"] == 500.0
 
         # Verify all bids are recorded
@@ -196,9 +196,9 @@ class TestMultipleUsersCompetingFlow:
         assert winning_response.status_code == 200
         assert winning_response.json()["is_winning"] is True
 
-        # Verify artwork sold
+        # Verify artwork pending payment
         final_artwork = client.get(f"/api/artworks/{artwork_id}")
-        assert final_artwork.json()["status"] == "SOLD"
+        assert final_artwork.json()["status"] == "PENDING_PAYMENT"
 
         # Verify Buyer 1 and Buyer 2 cannot bid anymore
         late_bid = client.post(
@@ -275,7 +275,7 @@ class TestSellerMultipleArtworksFlow:
 
         # Verify artwork statuses
         artwork1 = client.get(f"/api/artworks/{artworks[0]['id']}")
-        assert artwork1.json()["status"] == "SOLD"
+        assert artwork1.json()["status"] == "PENDING_PAYMENT"
 
         artwork2 = client.get(f"/api/artworks/{artworks[1]['id']}")
         assert artwork2.json()["status"] == "ACTIVE"
@@ -473,11 +473,11 @@ class TestCompleteMarketplaceFlow:
         artwork_list = all_artworks.json()
         assert len(artwork_list) == 4
 
-        # Count sold vs active
-        sold_count = sum(1 for a in artwork_list if a["status"] == "SOLD")
+        # Count pending payment vs active
+        pending_payment_count = sum(1 for a in artwork_list if a["status"] == "PENDING_PAYMENT")
         active_count = sum(1 for a in artwork_list if a["status"] == "ACTIVE")
 
-        assert sold_count >= 1  # At least artwork 1 is sold
+        assert pending_payment_count >= 1  # At least artwork 1 is pending payment
         assert active_count >= 2  # At least 2 remain active
 
         # Verify all users exist
@@ -534,9 +534,9 @@ class TestEdgeCaseFlows:
         assert bid.status_code == 200
         assert bid.json()["is_winning"] is True
 
-        # Verify sold immediately
+        # Verify pending payment immediately
         final_artwork = client.get(f"/api/artworks/{artwork['id']}")
-        assert final_artwork.json()["status"] == "SOLD"
+        assert final_artwork.json()["status"] == "PENDING_PAYMENT"
         assert final_artwork.json()["current_highest_bid"] == 250.0
 
     def test_zero_threshold_artwork(self, client, db_session):

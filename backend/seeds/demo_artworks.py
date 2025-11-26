@@ -26,10 +26,12 @@ def seed_artworks(db: Session) -> int:
         Number of artworks created or verified
     """
     # Get demo sellers by auth0_sub (seller users)
+    # Using 4 sellers with uneven distribution: 7, 4, 3, 1 artworks
     seller_subs = [
-        "auth0|demo-seller-001",
-        "auth0|demo-seller-002",
-        "auth0|demo-seller-003",
+        "auth0|6926e831a9097688ce0c5405",  # SellerAdam (7 artworks)
+        "auth0|6926e8dab9d364fc82c5472e",  # SellerBrian (4 artworks)
+        "auth0|6926e8f4c5c25e4533a50903",  # SellerCharles (3 artworks)
+        "auth0|6926e90fa9097688ce0c54f5",  # SellerDaniel (1 artwork)
     ]
     sellers = db.query(User).filter(User.auth0_sub.in_(seller_subs)).all()
 
@@ -48,9 +50,9 @@ def seed_artworks(db: Session) -> int:
     past_date = now - timedelta(days=1)
 
     demo_artworks = [
-        # Seller 1's artworks
+        # SellerAdam's artworks (7 total)
         {
-            "seller_sub": "auth0|demo-seller-001",
+            "seller_sub": "auth0|6926e831a9097688ce0c5405",
             "title": "Sunset Over Mountains",
             "artist_name": "Alice Johnson",
             "category": "Landscape",
@@ -65,7 +67,7 @@ def seed_artworks(db: Session) -> int:
             "image_url": None,
         },
         {
-            "seller_sub": "auth0|demo-seller-001",
+            "seller_sub": "auth0|6926e831a9097688ce0c5405",
             "title": "Urban Dreams",
             "artist_name": "Alice Johnson",
             "category": "Abstract",
@@ -79,7 +81,7 @@ def seed_artworks(db: Session) -> int:
             "image_url": None,
         },
         {
-            "seller_sub": "auth0|demo-seller-001",
+            "seller_sub": "auth0|6926e831a9097688ce0c5405",
             "title": "Morning Coffee",
             "artist_name": "Alice Johnson",
             "category": "Still Life",
@@ -90,9 +92,9 @@ def seed_artworks(db: Session) -> int:
             "end_date": past_date,
             "image_url": None,
         },
-        # Bob Martinez's artworks (seller2)
+        # SellerBrian's artworks (4 total)
         {
-            "seller_sub": "auth0|demo-seller-002",
+            "seller_sub": "auth0|6926e8dab9d364fc82c5472e",
             "title": "The Dancer",
             "artist_name": "Bob Martinez",
             "category": "Portrait",
@@ -104,7 +106,7 @@ def seed_artworks(db: Session) -> int:
             "image_url": None,
         },
         {
-            "seller_sub": "auth0|demo-seller-002",
+            "seller_sub": "auth0|6926e8dab9d364fc82c5472e",
             "title": "Ocean Waves",
             "artist_name": "Bob Martinez",
             "category": "Seascape",
@@ -116,7 +118,7 @@ def seed_artworks(db: Session) -> int:
             "image_url": None,
         },
         {
-            "seller_sub": "auth0|demo-seller-002",
+            "seller_sub": "auth0|6926e8dab9d364fc82c5472e",
             "title": "Jazz Night",
             "artist_name": "Bob Martinez",
             "category": "Abstract",
@@ -127,9 +129,9 @@ def seed_artworks(db: Session) -> int:
             "end_date": future_7_days,
             "image_url": None,
         },
-        # Carol Chen's artworks (seller3)
+        # SellerAdam's artworks (continued)
         {
-            "seller_sub": "auth0|demo-seller-003",
+            "seller_sub": "auth0|6926e831a9097688ce0c5405",
             "title": "Garden Bloom",
             "artist_name": "Carol Chen",
             "category": "Floral",
@@ -143,7 +145,7 @@ def seed_artworks(db: Session) -> int:
             "image_url": None,
         },
         {
-            "seller_sub": "auth0|demo-seller-003",
+            "seller_sub": "auth0|6926e831a9097688ce0c5405",
             "title": "Midnight Sky",
             "artist_name": "Carol Chen",
             "category": "Landscape",
@@ -154,8 +156,9 @@ def seed_artworks(db: Session) -> int:
             "end_date": future_1_day,
             "image_url": None,
         },
+        # SellerCharles's artworks (3 total)
         {
-            "seller_sub": "auth0|demo-seller-003",
+            "seller_sub": "auth0|6926e8f4c5c25e4533a50903",
             "title": "City Lights",
             "artist_name": "Carol Chen",
             "category": "Urban",
@@ -167,7 +170,7 @@ def seed_artworks(db: Session) -> int:
             "image_url": None,
         },
         {
-            "seller_sub": "auth0|demo-seller-003",
+            "seller_sub": "auth0|6926e8f4c5c25e4533a50903",
             "title": "Autumn Forest",
             "artist_name": "Carol Chen",
             "category": "Landscape",
@@ -179,7 +182,7 @@ def seed_artworks(db: Session) -> int:
             "image_url": None,
         },
         {
-            "seller_sub": "auth0|demo-seller-003",
+            "seller_sub": "auth0|6926e8f4c5c25e4533a50903",
             "title": "Vintage Portrait",
             "artist_name": "Carol Chen",
             "category": "Portrait",
@@ -190,9 +193,9 @@ def seed_artworks(db: Session) -> int:
             "end_date": None,
             "image_url": None,
         },
-        # Additional artworks for variety
+        # SellerAdam's artworks (continued)
         {
-            "seller_sub": "auth0|demo-seller-001",
+            "seller_sub": "auth0|6926e831a9097688ce0c5405",
             "title": "Desert Mirage",
             "artist_name": "Alice Johnson",
             "category": "Landscape",
@@ -203,8 +206,9 @@ def seed_artworks(db: Session) -> int:
             "end_date": future_3_days,
             "image_url": None,
         },
+        # SellerBrian's artworks (continued)
         {
-            "seller_sub": "auth0|demo-seller-002",
+            "seller_sub": "auth0|6926e8dab9d364fc82c5472e",
             "title": "Winter Wonderland",
             "artist_name": "Bob Martinez",
             "category": "Landscape",
@@ -215,8 +219,9 @@ def seed_artworks(db: Session) -> int:
             "end_date": future_7_days,
             "image_url": None,
         },
+        # SellerDaniel's artwork (1 total)
         {
-            "seller_sub": "auth0|demo-seller-003",
+            "seller_sub": "auth0|6926e90fa9097688ce0c54f5",
             "title": "Abstract Emotions",
             "artist_name": "Carol Chen",
             "category": "Abstract",
@@ -227,8 +232,9 @@ def seed_artworks(db: Session) -> int:
             "end_date": future_1_day,
             "image_url": None,
         },
+        # SellerAdam's artworks (final)
         {
-            "seller_sub": "auth0|demo-seller-001",
+            "seller_sub": "auth0|6926e831a9097688ce0c5405",
             "title": "Spring Meadow",
             "artist_name": "Alice Johnson",
             "category": "Floral",

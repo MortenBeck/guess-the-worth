@@ -43,9 +43,9 @@ class TestCreateBid:
         assert data["amount"] == 100.0
         assert data["is_winning"] is True
 
-        # Verify artwork is marked as SOLD
+        # Verify artwork is marked as PENDING_PAYMENT (awaiting payment confirmation)
         db_session.refresh(artwork)
-        assert artwork.status == ArtworkStatus.SOLD
+        assert artwork.status == ArtworkStatus.PENDING_PAYMENT
         assert artwork.current_highest_bid == 100.0
 
     def test_create_bid_above_threshold(self, client, db_session, artwork, buyer_user, buyer_token):
@@ -61,9 +61,9 @@ class TestCreateBid:
         assert data["amount"] == 150.0
         assert data["is_winning"] is True
 
-        # Verify artwork is marked as SOLD
+        # Verify artwork is marked as PENDING_PAYMENT (awaiting payment confirmation)
         db_session.refresh(artwork)
-        assert artwork.status == ArtworkStatus.SOLD
+        assert artwork.status == ArtworkStatus.PENDING_PAYMENT
         assert artwork.current_highest_bid == 150.0
 
     def test_bid_on_sold_artwork_fails(self, client, sold_artwork, buyer_user, buyer_token):
@@ -357,7 +357,7 @@ class TestBidThresholdLogic:
         )
 
         db_session.refresh(artwork)
-        assert artwork.status == ArtworkStatus.SOLD
+        assert artwork.status == ArtworkStatus.PENDING_PAYMENT
 
     def test_cannot_bid_after_artwork_sold(
         self, client, db_session, artwork, buyer_user, buyer_token
@@ -371,7 +371,7 @@ class TestBidThresholdLogic:
         )
 
         db_session.refresh(artwork)
-        assert artwork.status == ArtworkStatus.SOLD
+        assert artwork.status == ArtworkStatus.PENDING_PAYMENT
 
         # Try to bid again
         response = client.post(

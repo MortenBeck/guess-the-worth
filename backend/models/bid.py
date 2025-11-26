@@ -18,3 +18,4 @@ class Bid(Base):
     # Relationships
     artwork = relationship("Artwork", back_populates="bids")
     bidder = relationship("User", back_populates="bids")
+    payment = relationship("Payment", back_populates="bid", uselist=False)

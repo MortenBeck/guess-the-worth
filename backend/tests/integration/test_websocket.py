@@ -105,10 +105,10 @@ class TestBidEvents:
         # Verify bid won
         assert bid_data["is_winning"] is True
 
-        # Verify artwork marked as sold
+        # Verify artwork marked as pending payment
         artwork_response = client.get(f"/api/artworks/{artwork.id}")
         assert artwork_response.status_code == 200
-        assert artwork_response.json()["status"] == "SOLD"
+        assert artwork_response.json()["status"] == "PENDING_PAYMENT"
 
         # Note: Actual socket events would be verified with AsyncClient
         # The socket emission code is in routers/bids.py lines 124-133

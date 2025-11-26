@@ -368,6 +368,8 @@ describe("API Services", () => {
       });
 
       it("should return mock data if API fails", async () => {
+        // Mock both calls to fail since getPlatformStats makes 2 parallel requests
+        fetch.mockRejectedValueOnce(new Error("API Error"));
         fetch.mockRejectedValueOnce(new Error("API Error"));
 
         const result = await statsService.getPlatformStats();
@@ -434,6 +436,28 @@ describe("API Services", () => {
       await expect(artworkService.getAll()).rejects.toThrow(
         "Server error. Please try again later."
       );
+    });
+
+    it("should handle other status codes with detail from response", async () => {
+      fetch.mockResolvedValueOnce({
+        ok: false,
+        status: 409,
+        statusText: "Conflict",
+        json: async () => ({ detail: "Resource conflict occurred" }),
+      });
+
+      await expect(artworkService.getAll()).rejects.toThrow("Resource conflict occurred");
+    });
+
+    it("should handle other status codes without detail from response", async () => {
+      fetch.mockResolvedValueOnce({
+        ok: false,
+        status: 429,
+        statusText: "Too Many Requests",
+        json: async () => ({}),
+      });
+
+      await expect(artworkService.getAll()).rejects.toThrow("HTTP 429: Too Many Requests");
     });
 
     it("should throw error for network failures", async () => {

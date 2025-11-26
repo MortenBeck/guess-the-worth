@@ -8,18 +8,107 @@ import {
   HStack,
   SimpleGrid,
   Badge,
+  Image,
+  Skeleton,
 } from "@chakra-ui/react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import useAuthStore from "../store/authStore";
 import { config } from "../config/env";
+import { artworkService, statsService } from "../services/api";
+
+// Optimized artwork image component with lazy loading
+const ArtworkImage = ({ imageUrl, title, index }) => {
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  const gradientColors = [
+    ["#667eea", "#764ba2"],
+    ["#f093fb", "#f5576c"],
+    ["#4facfe", "#00f2fe"],
+    ["#fa709a", "#fee140"],
+    ["#a8edea", "#fed6e3"],
+    ["#ffecd2", "#fcb69f"],
+  ];
+
+  const [color1, color2] = gradientColors[index % 6];
+  const gradientBg = `linear-gradient(45deg, ${color1} 0%, ${color2} 100%)`;
+
+  return (
+    <Box h="200px" position="relative" overflow="hidden">
+      {/* Gradient background (always shown as fallback) */}
+      <Box
+        position="absolute"
+        top="0"
+        left="0"
+        right="0"
+        bottom="0"
+        bg={gradientBg}
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+      >
+        <Text fontSize="3rem" opacity="0.7">
+          🎨
+        </Text>
+      </Box>
+
+      {/* Actual image (lazy loaded if available) */}
+      {imageUrl && (
+        <>
+          {!imageLoaded && (
+            <Skeleton
+              position="absolute"
+              top="0"
+              left="0"
+              right="0"
+              bottom="0"
+              startColor="gray.700"
+              endColor="gray.600"
+            />
+          )}
+          <Image
+            src={imageUrl}
+            alt={title}
+            loading="lazy"
+            position="absolute"
+            top="0"
+            left="0"
+            w="100%"
+            h="100%"
+            objectFit="cover"
+            onLoad={() => setImageLoaded(true)}
+            display={imageLoaded ? "block" : "none"}
+          />
+        </>
+      )}
+    </Box>
+  );
+};
 
 const HomePage = () => {
   const { loginWithRedirect, isAuthenticated } = useAuth0();
   const { user } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Fetch featured artworks from database
+  const { data: artworks } = useQuery({
+    queryKey: ["featured-artworks"],
+    queryFn: () => artworkService.getFeatured(),
+    staleTime: 30000,
+  });
+
+  // Fetch platform statistics
+  const { data: stats } = useQuery({
+    queryKey: ["platform-stats"],
+    queryFn: () => statsService.getPlatformStats(),
+    staleTime: 60000, // Cache for 1 minute
+  });
+
+  const artworkData = artworks?.data || [];
+  const platformStats = stats?.data || {};
 
   // Handle scrolling to anchor after navigation
   useEffect(() => {
@@ -142,7 +231,7 @@ const HomePage = () => {
               <SimpleGrid columns={{ base: 2, md: 4 }} spacing={12}>
                 <VStack spacing={3}>
                   <Text fontSize="3xl" fontWeight="700" color="#ec4899">
-                    1,247
+                    {platformStats.active_auctions || 0}
                   </Text>
                   <Text fontSize="sm" color="#94a3b8" textAlign="center">
                     Active Artworks
@@ -150,7 +239,7 @@ const HomePage = () => {
                 </VStack>
                 <VStack spacing={3}>
                   <Text fontSize="3xl" fontWeight="700" color="#ec4899">
-                    $89k
+                    {platformStats.total_bids || 0}
                   </Text>
                   <Text fontSize="sm" color="#94a3b8" textAlign="center">
                     Total Bids Placed
@@ -158,18 +247,18 @@ const HomePage = () => {
                 </VStack>
                 <VStack spacing={3}>
                   <Text fontSize="3xl" fontWeight="700" color="#ec4899">
-                    156
+                    {platformStats.total_users || 0}
                   </Text>
                   <Text fontSize="sm" color="#94a3b8" textAlign="center">
-                    Artists
+                    Users
                   </Text>
                 </VStack>
                 <VStack spacing={3}>
                   <Text fontSize="3xl" fontWeight="700" color="#ec4899">
-                    24/7
+                    {platformStats.total_artworks || 0}
                   </Text>
                   <Text fontSize="sm" color="#94a3b8" textAlign="center">
-                    Live Bidding
+                    Total Artworks
                   </Text>
                 </VStack>
               </SimpleGrid>
@@ -294,110 +383,91 @@ const HomePage = () => {
       </Box>
 
       {/* Featured Artworks Section */}
-      <Box py={32}>
-        <Container maxW="7xl">
-          <VStack spacing={16}>
-            <VStack spacing={6}>
-              <Heading
-                size="3xl"
-                textAlign="center"
-                fontWeight="700"
-                background="linear-gradient(135deg, #6366f1 0%, #ec4899 100%)"
-                backgroundClip="text"
-                color="transparent"
-                mb={4}
-              >
-                Featured Artworks
-              </Heading>
-
-              <HStack spacing={2} justify="center">
-                <Box w="8px" h="8px" bg="green.400" borderRadius="full" />
-                <Text fontSize="sm" color="#94a3b8">
-                  Live bidding in progress
-                </Text>
-              </HStack>
-            </VStack>
-
-            <SimpleGrid
-              columns={{ base: 1, md: 2, lg: 3 }}
-              spacing={{ base: 16, md: 28, lg: 32 }}
-              w="full"
-            >
-              {[
-                { title: "Midnight Dreams", artist: "Sarah Chen", bid: 245, status: "active" },
-                {
-                  title: "Abstract Emotions",
-                  artist: "Michael Torres",
-                  bid: 180,
-                  status: "ending",
-                },
-                { title: "Ocean Waves", artist: "Emma Rodriguez", bid: 320, status: "active" },
-                { title: "Golden Hour", artist: "David Kim", bid: 150, status: "active" },
-                { title: "Soft Whispers", artist: "Lisa Park", bid: 275, status: "active" },
-                { title: "Desert Sunset", artist: "Alex Johnson", bid: 195, status: "ending" },
-              ].map((artwork, index) => (
-                <Box
-                  key={index}
-                  bg="#1e293b"
-                  borderRadius="xl"
-                  overflow="hidden"
-                  cursor="pointer"
-                  onClick={() => navigate(`/artwork/${index + 1}`)}
-                  border="1px solid"
-                  borderColor="rgba(255,255,255,0.1)"
-                  mx={4}
-                  my={4}
-                  _hover={{
-                    transform: "translateY(-2px)",
-                    boxShadow: "0 8px 25px rgba(0,0,0,0.3)",
-                  }}
-                  transition="all 0.3s ease"
+      {artworkData.length > 0 && (
+        <Box py={32}>
+          <Container maxW="7xl">
+            <VStack spacing={16}>
+              <VStack spacing={6}>
+                <Heading
+                  size="3xl"
+                  textAlign="center"
+                  fontWeight="700"
+                  background="linear-gradient(135deg, #6366f1 0%, #ec4899 100%)"
+                  backgroundClip="text"
+                  color="transparent"
+                  mb={4}
                 >
+                  Featured Artworks
+                </Heading>
+
+                <HStack spacing={2} justify="center">
+                  <Box w="8px" h="8px" bg="green.400" borderRadius="full" />
+                  <Text fontSize="sm" color="#94a3b8">
+                    Live bidding in progress
+                  </Text>
+                </HStack>
+              </VStack>
+
+              <SimpleGrid
+                columns={{ base: 1, md: 2, lg: 3 }}
+                spacing={{ base: 16, md: 28, lg: 32 }}
+                w="full"
+              >
+                {artworkData.slice(0, 6).map((artwork, index) => (
                   <Box
-                    h="200px"
-                    bg={`linear-gradient(45deg, ${
-                      ["#667eea", "#f093fb", "#4facfe", "#fa709a", "#a8edea", "#ffecd2"][index]
-                    } 0%, ${
-                      ["#764ba2", "#f5576c", "#00f2fe", "#fee140", "#fed6e3", "#fcb69f"][index]
-                    } 100%)`}
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
+                    key={artwork.id || index}
+                    bg="#1e293b"
+                    borderRadius="xl"
+                    overflow="hidden"
+                    cursor="pointer"
+                    onClick={() => navigate(`/artwork/${artwork.id}`)}
+                    border="1px solid"
+                    borderColor="rgba(255,255,255,0.1)"
+                    mx={4}
+                    my={4}
+                    _hover={{
+                      transform: "translateY(-2px)",
+                      boxShadow: "0 8px 25px rgba(0,0,0,0.3)",
+                    }}
+                    transition="all 0.3s ease"
                   >
-                    <Text fontSize="3rem" opacity="0.7">
-                      🎨
-                    </Text>
+                    {/* Optimized image component with lazy loading */}
+                    <ArtworkImage
+                      imageUrl={artwork.image_url}
+                      title={artwork.title}
+                      index={index}
+                    />
+
+                    <Box p={8}>
+                      <VStack align="start" spacing={5}>
+                        <HStack justify="space-between" w="full">
+                          <Heading size="md" color="white" noOfLines={1}>
+                            {artwork.title}
+                          </Heading>
+                          <Badge
+                            colorScheme={artwork.status === "active" ? "green" : "red"}
+                            fontSize="xs"
+                          >
+                            {artwork.status === "active" ? "Active" : "Ending Soon"}
+                          </Badge>
+                        </HStack>
+
+                        <Text color="#94a3b8" fontSize="sm">
+                          by {artwork.artist || artwork.artist_name || "Unknown Artist"}
+                        </Text>
+
+                        <Text fontWeight="bold" color="green.400" fontSize="lg">
+                          Current Bid: ${artwork.current_bid || artwork.current_highest_bid || 0}
+                        </Text>
+                      </VStack>
+                    </Box>
                   </Box>
-
-                  <Box p={8}>
-                    <VStack align="start" spacing={5}>
-                      <HStack justify="space-between" w="full">
-                        <Heading size="md" color="white" noOfLines={1}>
-                          {artwork.title}
-                        </Heading>
-                        <Badge
-                          colorScheme={artwork.status === "active" ? "green" : "red"}
-                          fontSize="xs"
-                        >
-                          {artwork.status === "active" ? "Active" : "Ending Soon"}
-                        </Badge>
-                      </HStack>
-
-                      <Text color="#94a3b8" fontSize="sm">
-                        by {artwork.artist}
-                      </Text>
-
-                      <Text fontWeight="bold" color="green.400" fontSize="lg">
-                        Current Bid: ${artwork.bid}
-                      </Text>
-                    </VStack>
-                  </Box>
-                </Box>
-              ))}
-            </SimpleGrid>
-          </VStack>
-        </Container>
-      </Box>
+                ))}
+              </SimpleGrid>
+            </VStack>
+          </Container>
+        </Box>
+      )}
 
       {/* About Section */}
       <Box id="about" py={32}>
