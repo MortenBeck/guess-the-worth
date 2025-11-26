@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Box,
@@ -20,16 +20,52 @@ import useFavoritesStore from "../store/favoritesStore";
 import { useRealtimeBids } from "../hooks/useRealtimeBids";
 import placeholderImg from "../assets/placeholder.jpg";
 import { toaster } from "../components/ui/toaster";
+import PaymentModal from "../components/PaymentModal";
+import socket from "../services/socket";
 
 const ArtworkPage = () => {
   const { id } = useParams();
   const { isAuthenticated } = useAuthStore();
   const { toggleFavorite, isFavorite } = useFavoritesStore();
   const [bidAmount, setBidAmount] = useState("");
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentData, setPaymentData] = useState(null);
   const queryClient = useQueryClient();
 
   // Enable real-time bid updates for this artwork
   useRealtimeBids(id);
+
+  // Listen for payment_required event
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const handlePaymentRequired = (data) => {
+      console.log('Payment required event received:', data);
+
+      // Only show payment modal if it's for this artwork
+      if (data.artwork_id === parseInt(id)) {
+        setPaymentData({
+          bidId: data.bid_id,
+          amount: data.winning_bid,
+          artworkTitle: artwork?.title || 'Unknown',
+        });
+        setShowPaymentModal(true);
+
+        toaster.create({
+          title: "Payment Required",
+          description: `Congratulations! Please complete payment of $${data.winning_bid} to secure your artwork.`,
+          type: "info",
+          duration: 10000,
+        });
+      }
+    };
+
+    socket.on('payment_required', handlePaymentRequired);
+
+    return () => {
+      socket.off('payment_required', handlePaymentRequired);
+    };
+  }, [id, isAuthenticated, artwork]);
 
   // Fetch artwork details
   const {
@@ -414,6 +450,20 @@ const ArtworkPage = () => {
           </VStack>
         </Box>
       </Container>
+
+      {/* Payment Modal */}
+      {paymentData && (
+        <PaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => {
+            setShowPaymentModal(false);
+            setPaymentData(null);
+          }}
+          bidId={paymentData.bidId}
+          amount={paymentData.amount}
+          artworkTitle={paymentData.artworkTitle}
+        />
+      )}
     </Box>
   );
 };

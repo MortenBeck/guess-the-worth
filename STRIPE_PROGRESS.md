@@ -2,7 +2,7 @@
 
 **Branch**: `stripe-integration`
 **Started**: 2025-11-24
-**Current Status**: Phase 1 - Backend Foundation (In Progress)
+**Current Status**: Phase 3 - Frontend Integration (Complete) ✅
 
 ---
 
@@ -39,63 +39,107 @@
 - ✅ Fixed `config/settings.py` to skip validation for Alembic migrations
 - ✅ Payment model relationships properly configured
 
+### Phase 1.2: Database Migration
+- ✅ Created migration `add_payments_table_and_pending_payment_status`
+- ✅ Applied migration with `alembic upgrade head`
+- ✅ Verified payments table and PENDING_PAYMENT enum created
+
+### Phase 2: Payment Router
+- ✅ Created `backend/routers/payments.py` with all endpoints
+- ✅ `POST /api/payments/create-intent` - Create payment intent for winning bid
+- ✅ `POST /api/payments/webhook` - Stripe webhook receiver (signature verification)
+- ✅ `GET /api/payments/my-payments` - User payment history
+- ✅ `GET /api/payments/{payment_id}` - Get payment details (with security checks)
+- ✅ `GET /api/payments/artwork/{artwork_id}` - Get artwork payment (seller/admin only)
+- ✅ Registered router in `main.py` at `/api/payments`
+- ✅ Added audit logging for all payment events
+- ✅ Added Socket.IO events for real-time payment updates
+
+### Phase 2: Update Bid Logic
+- ✅ Modified `backend/routers/bids.py`
+- ✅ Changed winning bid status from `SOLD` → `PENDING_PAYMENT`
+- ✅ Updated socket event from `artwork_sold` → `payment_required`
+- ✅ Added `bid_id` to payment_required event data
+
+### Docker & Environment
+- ✅ Fixed Docker venv volume issue (removed stale backend_venv)
+- ✅ Backend running successfully on http://localhost:8000
+- ✅ All payment endpoints verified and accessible
+- ✅ API docs available at http://localhost:8000/docs
+
 ---
 
-## 🔄 In Progress
-
-### USER: Get Stripe API Keys
-- 📍 Go to [Stripe Dashboard](https://dashboard.stripe.com/test/apikeys)
-- 📍 Copy **Publishable key** (pk_test_...)
-- 📍 Copy **Secret key** (sk_test_...)
-- 📍 We'll add them to `.env` files when ready
-
-### Start Docker Desktop
-- 📍 Database needs to be running for migration
+### Phase 3: Frontend Integration
+- ✅ Installed Stripe packages: `@stripe/stripe-js`, `@stripe/react-stripe-js`
+- ✅ Added Stripe publishable key to `frontend/.env`
+- ✅ Created `paymentService.js` with API integration
+- ✅ Created `PaymentModal` component with Stripe Elements
+- ✅ Integrated PaymentModal with ArtworkPage
+- ✅ Added Socket.IO listener for `payment_required` event
+- ✅ Auto-shows payment modal when user wins a bid
+- ✅ Displays artwork title and amount in payment form
+- ✅ Handles payment success and error states
 
 ---
 
 ## ⏳ Pending (Next Steps)
 
-### Phase 1.2: Database Migration
-**Blocked by**: Docker Desktop not running
-**Command**: `cd backend && alembic revision --autogenerate -m "add_payments_table_and_pending_payment_status"`
-**Then**: `alembic upgrade head`
+### Phase 4: Testing & Webhook Setup
+- Test end-to-end payment flow with test cards
+- Set up Stripe CLI for webhook testing locally
+- Configure webhook secret for local development
+- Test payment success scenario
+- Test payment failure scenario
+- Verify artwork status updates correctly
 
-### Phase 2: Payment Router
-- Create `backend/routers/payments.py`
-- Endpoints:
-  - `POST /api/payments/create-intent` - Create payment intent
-  - `POST /api/payments/webhook` - Stripe webhook receiver
-  - `GET /api/payments/my-payments` - User payment history
-  - `GET /api/payments/{id}` - Get payment details
-- Register router in `main.py`
-
-### Phase 2: Update Bid Logic
-- Modify `backend/routers/bids.py`
-- Change winning bid status from `SOLD` → `PENDING_PAYMENT`
-- Update socket event from `artwork_sold` → `payment_required`
-- Add payment_required event data (bid_id, amount)
-
-### Phase 3: Frontend Integration
-- Install Stripe packages: `@stripe/stripe-js`, `@stripe/react-stripe-js`
-- Create payment components
-- Integrate with bid flow
-- (Will start after backend is complete)
+### Phase 5: Production Considerations (Future)
+- Set up production Stripe webhook endpoint
+- Add environment-specific Stripe keys
+- Implement refund functionality (if needed)
+- Add payment history page
+- Add seller payout tracking
 
 ---
 
-## 📋 Before We Can Continue
+## 📋 How to Test
 
-1. **You need to**:
-   - Get Stripe API keys (in progress)
-   - Start Docker Desktop
-   - Start database: `docker-compose up -d`
+### 1. Start the Application
+```bash
+# Backend and database should already be running
+docker-compose up -d
 
-2. **Then I'll**:
-   - Run database migration
-   - Create payment endpoints
-   - Update bid logic
-   - Test backend integration
+# Start frontend (in a new terminal)
+cd frontend
+npm run dev
+```
+
+### 2. Test the Payment Flow
+1. Go to http://localhost:5173
+2. Log in or register a user account
+3. Navigate to an artwork
+4. Place a winning bid (above the secret threshold)
+5. **Payment modal should automatically appear!**
+6. Use Stripe test card: `4242 4242 4242 4242`
+   - Any future expiry date
+   - Any 3-digit CVC
+   - Any ZIP code
+7. Complete the payment
+8. Artwork should change status from `PENDING_PAYMENT` to `SOLD`
+
+### Stripe Test Cards
+- **Success**: `4242 4242 4242 4242`
+- **Decline**: `4000 0000 0000 0002`
+- **Requires Auth**: `4000 0025 0000 3155`
+
+### What Should Happen
+1. ✅ User places winning bid
+2. ✅ Backend emits `payment_required` Socket.IO event
+3. ✅ Frontend shows payment modal automatically
+4. ✅ User enters card details in Stripe Elements
+5. ✅ Payment processes through Stripe
+6. ✅ Webhook updates payment status to SUCCEEDED
+7. ✅ Artwork status updates to SOLD
+8. ✅ Real-time Socket.IO event notifies all users
 
 ---
 
