@@ -19,22 +19,42 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Add new columns to artworks table
-    op.add_column('artworks', sa.Column('artist_name', sa.String(), nullable=True))
-    op.add_column('artworks', sa.Column('category', sa.String(), nullable=True))
-    op.add_column('artworks', sa.Column('end_date', sa.DateTime(timezone=True), nullable=True))
+    # Idempotent migration - check what exists before adding
+    from sqlalchemy import inspect
+    conn = op.get_bind()
+    inspector = inspect(conn)
 
-    # Add indexes to artworks table
-    op.create_index('ix_artworks_seller_id', 'artworks', ['seller_id'], unique=False)
-    op.create_index('ix_artworks_category', 'artworks', ['category'], unique=False)
-    op.create_index('ix_artworks_status', 'artworks', ['status'], unique=False)
+    # Get existing columns and indexes
+    artwork_columns = [col['name'] for col in inspector.get_columns('artworks')]
+    bid_columns = [col['name'] for col in inspector.get_columns('bids')]
+    artwork_indexes = [idx['name'] for idx in inspector.get_indexes('artworks')]
+    bid_indexes = [idx['name'] for idx in inspector.get_indexes('bids')]
 
-    # Rename bid_time to created_at in bids table
-    op.alter_column('bids', 'bid_time', new_column_name='created_at')
+    # Add new columns to artworks table (if not exists)
+    if 'artist_name' not in artwork_columns:
+        op.add_column('artworks', sa.Column('artist_name', sa.String(), nullable=True))
+    if 'category' not in artwork_columns:
+        op.add_column('artworks', sa.Column('category', sa.String(), nullable=True))
+    if 'end_date' not in artwork_columns:
+        op.add_column('artworks', sa.Column('end_date', sa.DateTime(timezone=True), nullable=True))
 
-    # Add indexes to bids table
-    op.create_index('ix_bids_artwork_id', 'bids', ['artwork_id'], unique=False)
-    op.create_index('ix_bids_bidder_id', 'bids', ['bidder_id'], unique=False)
+    # Add indexes to artworks table (if not exists)
+    if 'ix_artworks_seller_id' not in artwork_indexes:
+        op.create_index('ix_artworks_seller_id', 'artworks', ['seller_id'], unique=False)
+    if 'ix_artworks_category' not in artwork_indexes:
+        op.create_index('ix_artworks_category', 'artworks', ['category'], unique=False)
+    if 'ix_artworks_status' not in artwork_indexes:
+        op.create_index('ix_artworks_status', 'artworks', ['status'], unique=False)
+
+    # Rename bid_time to created_at in bids table (if bid_time still exists)
+    if 'bid_time' in bid_columns and 'created_at' not in bid_columns:
+        op.alter_column('bids', 'bid_time', new_column_name='created_at')
+
+    # Add indexes to bids table (if not exists)
+    if 'ix_bids_artwork_id' not in bid_indexes:
+        op.create_index('ix_bids_artwork_id', 'bids', ['artwork_id'], unique=False)
+    if 'ix_bids_bidder_id' not in bid_indexes:
+        op.create_index('ix_bids_bidder_id', 'bids', ['bidder_id'], unique=False)
 
 
 def downgrade() -> None:

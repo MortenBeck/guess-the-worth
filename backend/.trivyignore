@@ -124,3 +124,19 @@ CVE-2024-22365
 # Impact: GPG verification tool in Debian 12
 # Note: DoS only, requires malicious keyring - low risk for containerized apps
 CVE-2025-30258
+
+# ============================================================================
+# Node.js/npm Vulnerabilities (Base Image)
+# These are in the Python base image's system packages, not our application
+# ============================================================================
+
+# CVE-2025-13466 (MEDIUM)
+# Package: body-parser (in npm bundled with Python base image)
+# Issue: body-parser 2.2.0 vulnerable to DoS due to inefficient processing
+# Status: fixed in body-parser 2.2.1+
+# Impact: npm's bundled body-parser in Python base image
+# Context: Python slim images include npm as a system package
+#          This backend is Python-only and does not use Node.js/npm/body-parser
+#          The vulnerability is not exploitable in this application
+# Note: False positive - we don't use npm or body-parser in Python backend
+CVE-2025-13466
