@@ -201,7 +201,12 @@ def bid(db_session, artwork, buyer_user) -> Bid:
 def buyer_token(buyer_user) -> str:
     """Generate a valid JWT token for buyer user."""
     return JWTService.create_access_token(
-        data={"sub": buyer_user.auth0_sub, "role": "BUYER"},
+        data={
+            "sub": buyer_user.auth0_sub,
+            "email": buyer_user.email,
+            "name": buyer_user.name,
+            "role": "BUYER",
+        },
         expires_delta=timedelta(hours=1),
     )
 
@@ -210,7 +215,12 @@ def buyer_token(buyer_user) -> str:
 def seller_token(seller_user) -> str:
     """Generate a valid JWT token for seller user."""
     return JWTService.create_access_token(
-        data={"sub": seller_user.auth0_sub, "role": "SELLER"},
+        data={
+            "sub": seller_user.auth0_sub,
+            "email": seller_user.email,
+            "name": seller_user.name,
+            "role": "SELLER",
+        },
         expires_delta=timedelta(hours=1),
     )
 
@@ -219,7 +229,12 @@ def seller_token(seller_user) -> str:
 def admin_token(admin_user) -> str:
     """Generate a valid JWT token for admin user."""
     return JWTService.create_access_token(
-        data={"sub": admin_user.auth0_sub, "role": "ADMIN"},
+        data={
+            "sub": admin_user.auth0_sub,
+            "email": admin_user.email,
+            "name": admin_user.name,
+            "role": "ADMIN",
+        },
         expires_delta=timedelta(hours=1),
     )
 

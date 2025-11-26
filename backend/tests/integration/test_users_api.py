@@ -177,7 +177,7 @@ class TestGetSingleUser:
         assert data["auth0_sub"] == buyer_user.auth0_sub
         assert data["email"] == buyer_user.email
         assert data["name"] == buyer_user.name
-        assert data["role"] == buyer_user.role.value
+        assert data["role"] == buyer_user.role
 
     def test_get_user_not_found(self, client):
         """Test retrieving non-existent user returns 404."""

@@ -21,60 +21,48 @@ class TestUserSchemas:
     """Test user-related Pydantic schemas."""
 
     def test_user_create_valid(self):
-        """Test UserCreate with valid data."""
+        """Test UserCreate with valid data (Auth0 migration - minimal user reference)."""
         user_data = {
-            "email": "test@example.com",
-            "name": "Test User",
             "auth0_sub": "auth0|123456",
-            "role": "BUYER",
         }
         user = UserCreate(**user_data)
-        assert user.email == "test@example.com"
-        assert user.name == "Test User"
         assert user.auth0_sub == "auth0|123456"
-        assert user.role == "BUYER"
 
     def test_user_create_default_role(self):
-        """Test UserCreate defaults to BUYER role."""
+        """Test UserCreate - role is managed in Auth0, not in UserCreate."""
+        # NOTE: After Auth0 migration, UserCreate only stores auth0_sub
+        # Roles are managed in Auth0 and attached at runtime
         user_data = {
-            "email": "buyer@example.com",
-            "name": "Default Buyer",
             "auth0_sub": "auth0|default",
         }
         user = UserCreate(**user_data)
-        assert user.role == "BUYER"
+        assert user.auth0_sub == "auth0|default"
 
     def test_user_create_invalid_email(self):
-        """Test UserCreate rejects invalid email format."""
-        with pytest.raises(ValidationError) as exc_info:
-            UserCreate(email="not-an-email", name="Test User", auth0_sub="auth0|123")
-        assert "email" in str(exc_info.value).lower()
+        """Test UserCreate - email is not part of UserCreate (managed by Auth0)."""
+        # NOTE: After Auth0 migration, email is managed by Auth0
+        # UserCreate only requires auth0_sub
+        user_data = {
+            "auth0_sub": "auth0|123",
+        }
+        user = UserCreate(**user_data)
+        assert user.auth0_sub == "auth0|123"
 
     def test_user_create_missing_required_fields(self):
-        """Test UserCreate requires email, name, and auth0_sub."""
+        """Test UserCreate requires auth0_sub."""
         with pytest.raises(ValidationError) as exc_info:
-            UserCreate(email="test@example.com")
+            UserCreate()
         errors = exc_info.value.errors()
         error_fields = [e["loc"][0] for e in errors]
-        assert "name" in error_fields
         assert "auth0_sub" in error_fields
 
     def test_user_update_optional_fields(self):
-        """Test UserUpdate allows partial updates."""
-        # Update only name
-        update1 = UserUpdate(name="New Name")
-        assert update1.name == "New Name"
-        assert update1.role is None
-
-        # Update only role
-        update2 = UserUpdate(role="SELLER")
-        assert update2.name is None
-        assert update2.role == "SELLER"
-
-        # Update both
-        update3 = UserUpdate(name="Another Name", role="ADMIN")
-        assert update3.name == "Another Name"
-        assert update3.role == "ADMIN"
+        """Test UserUpdate - user updates are managed in Auth0, not in our database."""
+        # NOTE: After Auth0 migration, UserUpdate is empty (pass statement)
+        # All user updates happen in Auth0
+        update1 = UserUpdate()
+        # UserUpdate is just an empty placeholder now
+        assert isinstance(update1, UserUpdate)
 
     def test_user_response_structure(self):
         """Test UserResponse includes all expected fields."""
@@ -307,10 +295,11 @@ class TestSchemaEdgeCases:
         assert bid.amount == 999999999.99
 
     def test_unicode_in_names(self):
-        """Test schemas handle unicode characters."""
-        user = UserCreate(email="test@example.com", name="用户名 🎨", auth0_sub="auth0|unicode")
-        assert "用户名" in user.name
-        assert "🎨" in user.name
+        """Test schemas handle unicode characters - UserCreate now minimal."""
+        # NOTE: After Auth0 migration, UserCreate only has auth0_sub
+        # Names are managed in Auth0
+        user = UserCreate(auth0_sub="auth0|unicode-用户名-🎨")
+        assert "用户名" in user.auth0_sub or "unicode" in user.auth0_sub
 
     def test_special_characters_in_description(self):
         """Test artwork description with special characters."""
