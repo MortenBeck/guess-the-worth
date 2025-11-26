@@ -73,7 +73,9 @@ def test_artwork_sold_creates_audit_log(
     bid_logs = db_session.query(AuditLog).filter(AuditLog.action == "bid_placed").all()
     assert len(bid_logs) > 0, "No audit log created for bid placement"
 
-    winning_bid_logs = db_session.query(AuditLog).filter(AuditLog.action == "winning_bid_placed").all()
+    winning_bid_logs = (
+        db_session.query(AuditLog).filter(AuditLog.action == "winning_bid_placed").all()
+    )
     assert len(winning_bid_logs) > 0, "No audit log created for winning bid"
 
     # Verify the winning_bid_placed audit log

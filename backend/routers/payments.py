@@ -1,17 +1,18 @@
 """Payment endpoints for Stripe integration."""
+
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Header
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from sqlalchemy.orm import Session, joinedload
 
-from database import get_db
-from models import Payment, Bid, User, Artwork
-from models.payment import PaymentStatus
-from schemas import PaymentCreate, PaymentResponse, PaymentIntentResponse
-from services.stripe_service import StripeService
-from services.audit_service import AuditService
-from utils.auth import get_current_user
 from config.settings import settings
+from database import get_db
+from models import Artwork, Bid, Payment, User
+from models.payment import PaymentStatus
+from schemas import PaymentCreate, PaymentIntentResponse, PaymentResponse
+from services.audit_service import AuditService
+from services.stripe_service import StripeService
+from utils.auth import get_current_user
 
 router = APIRouter()
 
@@ -44,15 +45,11 @@ async def create_payment_intent(
 
     # Security: Verify bid belongs to current user
     if bid.bidder_id != current_user.id:
-        raise HTTPException(
-            status_code=403, detail="You can only create payment for your own bids"
-        )
+        raise HTTPException(status_code=403, detail="You can only create payment for your own bids")
 
     # Verify bid is winning
     if not bid.is_winning:
-        raise HTTPException(
-            status_code=400, detail="Payment can only be created for winning bids"
-        )
+        raise HTTPException(status_code=400, detail="Payment can only be created for winning bids")
 
     # Check if payment already exists
     existing_payment = db.query(Payment).filter(Payment.bid_id == bid.id).first()
@@ -60,9 +57,7 @@ async def create_payment_intent(
     if existing_payment:
         # If payment already succeeded, don't allow recreation
         if existing_payment.status == PaymentStatus.SUCCEEDED:
-            raise HTTPException(
-                status_code=400, detail="Payment already completed for this bid"
-            )
+            raise HTTPException(status_code=400, detail="Payment already completed for this bid")
         # If payment is pending/processing, return existing client secret
         elif existing_payment.status in [
             PaymentStatus.PENDING,
@@ -243,11 +238,9 @@ async def get_payment(
     artwork = bid.artwork
 
     is_authorized = (
-        current_user.id == bid.bidder_id
-        or  # Buyer
-        current_user.id == artwork.seller_id
-        or  # Seller
-        current_user.role == "ADMIN"  # Admin
+        current_user.id == bid.bidder_id  # Buyer
+        or current_user.id == artwork.seller_id  # Seller
+        or current_user.role == "ADMIN"  # Admin
     )
 
     if not is_authorized:
@@ -273,9 +266,7 @@ async def get_artwork_payment(
         raise HTTPException(status_code=404, detail="Artwork not found")
 
     # Security check
-    is_authorized = (
-        current_user.id == artwork.seller_id or current_user.role == "ADMIN"
-    )
+    is_authorized = current_user.id == artwork.seller_id or current_user.role == "ADMIN"
 
     if not is_authorized:
         raise HTTPException(
@@ -292,8 +283,6 @@ async def get_artwork_payment(
     )
 
     if not payment:
-        raise HTTPException(
-            status_code=404, detail="No completed payment found for this artwork"
-        )
+        raise HTTPException(status_code=404, detail="No completed payment found for this artwork")
 
     return payment

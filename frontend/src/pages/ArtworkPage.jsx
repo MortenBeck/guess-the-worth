@@ -40,14 +40,14 @@ const ArtworkPage = () => {
     if (!isAuthenticated) return;
 
     const handlePaymentRequired = (data) => {
-      console.log('Payment required event received:', data);
+      console.log("Payment required event received:", data);
 
       // Only show payment modal if it's for this artwork
       if (data.artwork_id === parseInt(id)) {
         setPaymentData({
           bidId: data.bid_id,
           amount: data.winning_bid,
-          artworkTitle: artwork?.title || 'Unknown',
+          artworkTitle: artwork?.title || "Unknown",
         });
         setShowPaymentModal(true);
 
@@ -60,10 +60,10 @@ const ArtworkPage = () => {
       }
     };
 
-    socket.on('payment_required', handlePaymentRequired);
+    socket.on("payment_required", handlePaymentRequired);
 
     return () => {
-      socket.off('payment_required', handlePaymentRequired);
+      socket.off("payment_required", handlePaymentRequired);
     };
   }, [id, isAuthenticated, artwork]);
 

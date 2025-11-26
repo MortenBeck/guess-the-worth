@@ -3,26 +3,20 @@ Integration tests for payment API endpoints.
 Tests complete payment workflows, authentication, and edge cases.
 """
 
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 import pytest
-from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
-from models import Payment, Bid, Artwork
+from models import Bid, Payment
 from models.payment import PaymentStatus
-from models.artwork import ArtworkStatus
 from tests.conftest import create_auth_header
 
 
 @pytest.fixture
 def winning_bid(db_session, artwork, buyer_user):
     """Create a winning bid for payment testing."""
-    bid = Bid(
-        artwork_id=artwork.id,
-        bidder_id=buyer_user.id,
-        amount=100.0,
-        is_winning=True
-    )
+    bid = Bid(artwork_id=artwork.id, bidder_id=buyer_user.id, amount=100.0, is_winning=True)
     db_session.add(bid)
     db_session.commit()
     db_session.refresh(bid)
@@ -32,12 +26,7 @@ def winning_bid(db_session, artwork, buyer_user):
 @pytest.fixture
 def non_winning_bid(db_session, artwork, buyer_user):
     """Create a non-winning bid."""
-    bid = Bid(
-        artwork_id=artwork.id,
-        bidder_id=buyer_user.id,
-        amount=50.0,
-        is_winning=False
-    )
+    bid = Bid(artwork_id=artwork.id, bidder_id=buyer_user.id, amount=50.0, is_winning=False)
     db_session.add(bid)
     db_session.commit()
     db_session.refresh(bid)
@@ -52,7 +41,7 @@ def existing_payment(db_session, winning_bid):
         stripe_payment_intent_id="pi_existing123",
         amount=100.0,
         currency="usd",
-        status=PaymentStatus.PENDING
+        status=PaymentStatus.PENDING,
     )
     db_session.add(payment)
     db_session.commit()
@@ -75,8 +64,8 @@ def mock_stripe_payment_intent():
 class TestCreatePaymentIntent:
     """Tests for POST /payments/create-intent endpoint."""
 
-    @patch('services.stripe_service.StripeService.create_payment_intent')
-    @patch('services.audit_service.AuditService.log_action')
+    @patch("services.stripe_service.StripeService.create_payment_intent")
+    @patch("services.audit_service.AuditService.log_action")
     def test_create_payment_intent_success(
         self,
         mock_audit_log,
@@ -85,7 +74,7 @@ class TestCreatePaymentIntent:
         db_session,
         winning_bid,
         buyer_user,
-        buyer_token
+        buyer_token,
     ):
         """Test successful payment intent creation."""
         mock_create_intent.return_value = {
@@ -93,13 +82,13 @@ class TestCreatePaymentIntent:
             "payment_intent_id": "pi_test123",
             "amount": 100.0,
             "currency": "usd",
-            "payment_id": 1
+            "payment_id": 1,
         }
 
         response = client.post(
             "/api/payments/create-intent",
             json={"bid_id": winning_bid.id},
-            headers=create_auth_header(buyer_token)
+            headers=create_auth_header(buyer_token),
         )
 
         assert response.status_code == 200
@@ -119,67 +108,48 @@ class TestCreatePaymentIntent:
         assert call_args.kwargs["action"] == "payment_intent_created"
         assert call_args.kwargs["resource_type"] == "payment"
 
-    def test_create_payment_intent_unauthorized(
-        self,
-        client: TestClient,
-        winning_bid
-    ):
+    def test_create_payment_intent_unauthorized(self, client: TestClient, winning_bid):
         """Test payment intent creation without authentication."""
-        response = client.post(
-            "/api/payments/create-intent",
-            json={"bid_id": winning_bid.id}
-        )
+        response = client.post("/api/payments/create-intent", json={"bid_id": winning_bid.id})
 
         assert response.status_code == 401
 
-    def test_create_payment_intent_wrong_user(
-        self,
-        client: TestClient,
-        winning_bid,
-        seller_token
-    ):
+    def test_create_payment_intent_wrong_user(self, client: TestClient, winning_bid, seller_token):
         """Test payment intent creation by non-bid owner."""
         response = client.post(
             "/api/payments/create-intent",
             json={"bid_id": winning_bid.id},
-            headers=create_auth_header(seller_token)
+            headers=create_auth_header(seller_token),
         )
 
         assert response.status_code == 403
         assert "your own bids" in response.json()["detail"]
 
-    def test_create_payment_intent_bid_not_found(
-        self,
-        client: TestClient,
-        buyer_token
-    ):
+    def test_create_payment_intent_bid_not_found(self, client: TestClient, buyer_token):
         """Test payment intent creation for non-existent bid."""
         response = client.post(
             "/api/payments/create-intent",
             json={"bid_id": 99999},
-            headers=create_auth_header(buyer_token)
+            headers=create_auth_header(buyer_token),
         )
 
         assert response.status_code == 404
         assert "Bid not found" in response.json()["detail"]
 
     def test_create_payment_intent_not_winning(
-        self,
-        client: TestClient,
-        non_winning_bid,
-        buyer_token
+        self, client: TestClient, non_winning_bid, buyer_token
     ):
         """Test payment intent creation for non-winning bid."""
         response = client.post(
             "/api/payments/create-intent",
             json={"bid_id": non_winning_bid.id},
-            headers=create_auth_header(buyer_token)
+            headers=create_auth_header(buyer_token),
         )
 
         assert response.status_code == 400
         assert "winning bids" in response.json()["detail"]
 
-    @patch('services.stripe_service.StripeService.get_payment_intent')
+    @patch("services.stripe_service.StripeService.get_payment_intent")
     def test_create_payment_intent_already_exists_pending(
         self,
         mock_get_intent,
@@ -187,7 +157,7 @@ class TestCreatePaymentIntent:
         winning_bid,
         buyer_token,
         existing_payment,
-        mock_stripe_payment_intent
+        mock_stripe_payment_intent,
     ):
         """Test payment intent creation when payment already exists (pending)."""
         mock_get_intent.return_value = mock_stripe_payment_intent
@@ -195,7 +165,7 @@ class TestCreatePaymentIntent:
         response = client.post(
             "/api/payments/create-intent",
             json={"bid_id": winning_bid.id},
-            headers=create_auth_header(buyer_token)
+            headers=create_auth_header(buyer_token),
         )
 
         assert response.status_code == 200
@@ -203,7 +173,7 @@ class TestCreatePaymentIntent:
         # Should return existing payment intent
         assert data["payment_id"] == existing_payment.id
 
-    @patch('services.stripe_service.StripeService.get_payment_intent')
+    @patch("services.stripe_service.StripeService.get_payment_intent")
     def test_create_payment_intent_already_exists_processing(
         self,
         mock_get_intent,
@@ -211,7 +181,7 @@ class TestCreatePaymentIntent:
         db_session,
         winning_bid,
         buyer_token,
-        mock_stripe_payment_intent
+        mock_stripe_payment_intent,
     ):
         """Test payment intent creation when payment in PROCESSING status."""
         # Create payment with PROCESSING status
@@ -220,7 +190,7 @@ class TestCreatePaymentIntent:
             stripe_payment_intent_id="pi_processing123",
             amount=100.0,
             currency="usd",
-            status=PaymentStatus.PROCESSING
+            status=PaymentStatus.PROCESSING,
         )
         db_session.add(payment)
         db_session.commit()
@@ -230,7 +200,7 @@ class TestCreatePaymentIntent:
         response = client.post(
             "/api/payments/create-intent",
             json={"bid_id": winning_bid.id},
-            headers=create_auth_header(buyer_token)
+            headers=create_auth_header(buyer_token),
         )
 
         assert response.status_code == 200
@@ -239,11 +209,7 @@ class TestCreatePaymentIntent:
         assert data["payment_id"] == payment.id
 
     def test_create_payment_intent_already_succeeded(
-        self,
-        client: TestClient,
-        winning_bid,
-        buyer_token,
-        db_session
+        self, client: TestClient, winning_bid, buyer_token, db_session
     ):
         """Test payment intent creation when payment already completed."""
         # Create succeeded payment
@@ -252,7 +218,7 @@ class TestCreatePaymentIntent:
             stripe_payment_intent_id="pi_succeeded123",
             amount=100.0,
             currency="usd",
-            status=PaymentStatus.SUCCEEDED
+            status=PaymentStatus.SUCCEEDED,
         )
         db_session.add(payment)
         db_session.commit()
@@ -260,7 +226,7 @@ class TestCreatePaymentIntent:
         response = client.post(
             "/api/payments/create-intent",
             json={"bid_id": winning_bid.id},
-            headers=create_auth_header(buyer_token)
+            headers=create_auth_header(buyer_token),
         )
 
         assert response.status_code == 400
@@ -277,26 +243,23 @@ class TestStripeWebhook:
     handling, so we focus on basic endpoint validation here.
     """
 
-    def test_webhook_no_secret_configured(
-        self,
-        client: TestClient
-    ):
+    def test_webhook_no_secret_configured(self, client: TestClient):
         """Test webhook when webhook secret not configured."""
-        with patch('config.settings.settings') as mock_settings:
+        with patch("config.settings.settings") as mock_settings:
             mock_settings.stripe_webhook_secret = None
 
             response = client.post(
                 "/api/payments/webhook",
                 json={"type": "payment_intent.succeeded"},
-                headers={"stripe-signature": "test_signature"}
+                headers={"stripe-signature": "test_signature"},
             )
 
             assert response.status_code == 500
             assert "not configured" in response.json()["detail"]
 
-    @patch('services.stripe_service.StripeService.verify_webhook_signature')
-    @patch('services.stripe_service.StripeService.handle_payment_succeeded')
-    @patch('services.audit_service.AuditService.log_action')
+    @patch("services.stripe_service.StripeService.verify_webhook_signature")
+    @patch("services.stripe_service.StripeService.handle_payment_succeeded")
+    @patch("services.audit_service.AuditService.log_action")
     def test_webhook_payment_succeeded(
         self,
         mock_audit_log,
@@ -304,7 +267,7 @@ class TestStripeWebhook:
         mock_verify_webhook,
         client: TestClient,
         db_session,
-        winning_bid
+        winning_bid,
     ):
         """Test webhook handling for payment_intent.succeeded event."""
         # Create mock payment with bid relationship
@@ -313,7 +276,7 @@ class TestStripeWebhook:
             stripe_payment_intent_id="pi_test123",
             amount=100.0,
             currency="usd",
-            status=PaymentStatus.SUCCEEDED
+            status=PaymentStatus.SUCCEEDED,
         )
         db_session.add(payment)
         db_session.commit()
@@ -331,12 +294,12 @@ class TestStripeWebhook:
         mock_event.data.object = mock_payment_intent
         mock_verify_webhook.return_value = mock_event
 
-        with patch('config.settings.settings.stripe_webhook_secret', 'whsec_test123'):
-            with patch('main.sio') as mock_sio:
+        with patch("config.settings.settings.stripe_webhook_secret", "whsec_test123"):
+            with patch("main.sio"):
                 response = client.post(
                     "/api/payments/webhook",
                     json={"type": "payment_intent.succeeded"},
-                    headers={"stripe-signature": "test_sig"}
+                    headers={"stripe-signature": "test_sig"},
                 )
 
         assert response.status_code == 200
@@ -350,9 +313,9 @@ class TestStripeWebhook:
         assert call_args.kwargs["resource_type"] == "payment"
         assert call_args.kwargs["resource_id"] == payment.id
 
-    @patch('services.stripe_service.StripeService.verify_webhook_signature')
-    @patch('services.stripe_service.StripeService.handle_payment_succeeded')
-    @patch('services.audit_service.AuditService.log_action')
+    @patch("services.stripe_service.StripeService.verify_webhook_signature")
+    @patch("services.stripe_service.StripeService.handle_payment_succeeded")
+    @patch("services.audit_service.AuditService.log_action")
     def test_webhook_payment_succeeded_with_socket_emission(
         self,
         mock_audit_log,
@@ -360,7 +323,7 @@ class TestStripeWebhook:
         mock_verify_webhook,
         client: TestClient,
         db_session,
-        winning_bid
+        winning_bid,
     ):
         """Test webhook with successful socket emission."""
         payment = Payment(
@@ -368,7 +331,7 @@ class TestStripeWebhook:
             stripe_payment_intent_id="pi_test123",
             amount=100.0,
             currency="usd",
-            status=PaymentStatus.SUCCEEDED
+            status=PaymentStatus.SUCCEEDED,
         )
         db_session.add(payment)
         db_session.commit()
@@ -384,14 +347,14 @@ class TestStripeWebhook:
         mock_event.data.object = mock_payment_intent
         mock_verify_webhook.return_value = mock_event
 
-        with patch('config.settings.settings.stripe_webhook_secret', 'whsec_test123'):
-            with patch('main.sio') as mock_sio:
+        with patch("config.settings.settings.stripe_webhook_secret", "whsec_test123"):
+            with patch("main.sio") as mock_sio:
                 mock_sio.emit = MagicMock()
 
                 response = client.post(
                     "/api/payments/webhook",
                     json={"type": "payment_intent.succeeded"},
-                    headers={"stripe-signature": "test_sig"}
+                    headers={"stripe-signature": "test_sig"},
                 )
 
                 # Verify socket emission was called
@@ -404,9 +367,9 @@ class TestStripeWebhook:
 
         assert response.status_code == 200
 
-    @patch('services.stripe_service.StripeService.verify_webhook_signature')
-    @patch('services.stripe_service.StripeService.handle_payment_succeeded')
-    @patch('services.audit_service.AuditService.log_action')
+    @patch("services.stripe_service.StripeService.verify_webhook_signature")
+    @patch("services.stripe_service.StripeService.handle_payment_succeeded")
+    @patch("services.audit_service.AuditService.log_action")
     def test_webhook_payment_succeeded_socket_emission_fails(
         self,
         mock_audit_log,
@@ -414,7 +377,7 @@ class TestStripeWebhook:
         mock_verify_webhook,
         client: TestClient,
         db_session,
-        winning_bid
+        winning_bid,
     ):
         """Test webhook when socket emission fails - should still succeed."""
         payment = Payment(
@@ -422,7 +385,7 @@ class TestStripeWebhook:
             stripe_payment_intent_id="pi_test123",
             amount=100.0,
             currency="usd",
-            status=PaymentStatus.SUCCEEDED
+            status=PaymentStatus.SUCCEEDED,
         )
         db_session.add(payment)
         db_session.commit()
@@ -438,15 +401,15 @@ class TestStripeWebhook:
         mock_event.data.object = mock_payment_intent
         mock_verify_webhook.return_value = mock_event
 
-        with patch('config.settings.settings.stripe_webhook_secret', 'whsec_test123'):
-            with patch('main.sio') as mock_sio:
+        with patch("config.settings.settings.stripe_webhook_secret", "whsec_test123"):
+            with patch("main.sio") as mock_sio:
                 # Make socket emission fail
                 mock_sio.emit.side_effect = Exception("Socket error")
 
                 response = client.post(
                     "/api/payments/webhook",
                     json={"type": "payment_intent.succeeded"},
-                    headers={"stripe-signature": "test_sig"}
+                    headers={"stripe-signature": "test_sig"},
                 )
 
         # Should still return success even if socket fails
@@ -454,9 +417,9 @@ class TestStripeWebhook:
         mock_handle_succeeded.assert_called_once()
         mock_audit_log.assert_called_once()
 
-    @patch('services.stripe_service.StripeService.verify_webhook_signature')
-    @patch('services.stripe_service.StripeService.handle_payment_failed')
-    @patch('services.audit_service.AuditService.log_action')
+    @patch("services.stripe_service.StripeService.verify_webhook_signature")
+    @patch("services.stripe_service.StripeService.handle_payment_failed")
+    @patch("services.audit_service.AuditService.log_action")
     def test_webhook_payment_failed(
         self,
         mock_audit_log,
@@ -464,7 +427,7 @@ class TestStripeWebhook:
         mock_verify_webhook,
         client: TestClient,
         db_session,
-        winning_bid
+        winning_bid,
     ):
         """Test webhook handling for payment_intent.payment_failed event."""
         payment = Payment(
@@ -473,7 +436,7 @@ class TestStripeWebhook:
             amount=100.0,
             currency="usd",
             status=PaymentStatus.FAILED,
-            failure_reason="card_declined"
+            failure_reason="card_declined",
         )
         db_session.add(payment)
         db_session.commit()
@@ -489,12 +452,12 @@ class TestStripeWebhook:
         mock_event.data.object = mock_payment_intent
         mock_verify_webhook.return_value = mock_event
 
-        with patch('config.settings.settings.stripe_webhook_secret', 'whsec_test123'):
-            with patch('main.sio') as mock_sio:
+        with patch("config.settings.settings.stripe_webhook_secret", "whsec_test123"):
+            with patch("main.sio"):
                 response = client.post(
                     "/api/payments/webhook",
                     json={"type": "payment_intent.payment_failed"},
-                    headers={"stripe-signature": "test_sig"}
+                    headers={"stripe-signature": "test_sig"},
                 )
 
         assert response.status_code == 200
@@ -508,9 +471,9 @@ class TestStripeWebhook:
         assert call_args.kwargs["resource_type"] == "payment"
         assert call_args.kwargs["resource_id"] == payment.id
 
-    @patch('services.stripe_service.StripeService.verify_webhook_signature')
-    @patch('services.stripe_service.StripeService.handle_payment_failed')
-    @patch('services.audit_service.AuditService.log_action')
+    @patch("services.stripe_service.StripeService.verify_webhook_signature")
+    @patch("services.stripe_service.StripeService.handle_payment_failed")
+    @patch("services.audit_service.AuditService.log_action")
     def test_webhook_payment_failed_with_socket_emission(
         self,
         mock_audit_log,
@@ -518,7 +481,7 @@ class TestStripeWebhook:
         mock_verify_webhook,
         client: TestClient,
         db_session,
-        winning_bid
+        winning_bid,
     ):
         """Test webhook failed event with successful socket emission."""
         payment = Payment(
@@ -527,7 +490,7 @@ class TestStripeWebhook:
             amount=100.0,
             currency="usd",
             status=PaymentStatus.FAILED,
-            failure_reason="insufficient_funds"
+            failure_reason="insufficient_funds",
         )
         db_session.add(payment)
         db_session.commit()
@@ -543,14 +506,14 @@ class TestStripeWebhook:
         mock_event.data.object = mock_payment_intent
         mock_verify_webhook.return_value = mock_event
 
-        with patch('config.settings.settings.stripe_webhook_secret', 'whsec_test123'):
-            with patch('main.sio') as mock_sio:
+        with patch("config.settings.settings.stripe_webhook_secret", "whsec_test123"):
+            with patch("main.sio") as mock_sio:
                 mock_sio.emit = MagicMock()
 
                 response = client.post(
                     "/api/payments/webhook",
                     json={"type": "payment_intent.payment_failed"},
-                    headers={"stripe-signature": "test_sig"}
+                    headers={"stripe-signature": "test_sig"},
                 )
 
                 # Verify socket emission was called
@@ -563,9 +526,9 @@ class TestStripeWebhook:
 
         assert response.status_code == 200
 
-    @patch('services.stripe_service.StripeService.verify_webhook_signature')
-    @patch('services.stripe_service.StripeService.handle_payment_failed')
-    @patch('services.audit_service.AuditService.log_action')
+    @patch("services.stripe_service.StripeService.verify_webhook_signature")
+    @patch("services.stripe_service.StripeService.handle_payment_failed")
+    @patch("services.audit_service.AuditService.log_action")
     def test_webhook_payment_failed_socket_emission_fails(
         self,
         mock_audit_log,
@@ -573,7 +536,7 @@ class TestStripeWebhook:
         mock_verify_webhook,
         client: TestClient,
         db_session,
-        winning_bid
+        winning_bid,
     ):
         """Test webhook failed event when socket emission fails - should still succeed."""
         payment = Payment(
@@ -582,7 +545,7 @@ class TestStripeWebhook:
             amount=100.0,
             currency="usd",
             status=PaymentStatus.FAILED,
-            failure_reason="card_declined"
+            failure_reason="card_declined",
         )
         db_session.add(payment)
         db_session.commit()
@@ -598,15 +561,15 @@ class TestStripeWebhook:
         mock_event.data.object = mock_payment_intent
         mock_verify_webhook.return_value = mock_event
 
-        with patch('config.settings.settings.stripe_webhook_secret', 'whsec_test123'):
-            with patch('main.sio') as mock_sio:
+        with patch("config.settings.settings.stripe_webhook_secret", "whsec_test123"):
+            with patch("main.sio") as mock_sio:
                 # Make socket emission fail
                 mock_sio.emit.side_effect = Exception("Socket connection lost")
 
                 response = client.post(
                     "/api/payments/webhook",
                     json={"type": "payment_intent.payment_failed"},
-                    headers={"stripe-signature": "test_sig"}
+                    headers={"stripe-signature": "test_sig"},
                 )
 
         # Should still return success even if socket fails
@@ -619,12 +582,7 @@ class TestGetMyPayments:
     """Tests for GET /payments/my-payments endpoint."""
 
     def test_get_my_payments_success(
-        self,
-        client: TestClient,
-        db_session,
-        buyer_user,
-        buyer_token,
-        winning_bid
+        self, client: TestClient, db_session, buyer_user, buyer_token, winning_bid
     ):
         """Test retrieving user's payments."""
         # Create payments
@@ -633,39 +591,26 @@ class TestGetMyPayments:
             stripe_payment_intent_id="pi_1",
             amount=100.0,
             currency="usd",
-            status=PaymentStatus.SUCCEEDED
+            status=PaymentStatus.SUCCEEDED,
         )
         db_session.add(payment1)
         db_session.commit()
 
-        response = client.get(
-            "/api/payments/my-payments",
-            headers=create_auth_header(buyer_token)
-        )
+        response = client.get("/api/payments/my-payments", headers=create_auth_header(buyer_token))
 
         assert response.status_code == 200
         data = response.json()
         assert len(data) == 1
         assert data[0]["amount"] == "100.00"
 
-    def test_get_my_payments_empty(
-        self,
-        client: TestClient,
-        buyer_token
-    ):
+    def test_get_my_payments_empty(self, client: TestClient, buyer_token):
         """Test retrieving payments when user has none."""
-        response = client.get(
-            "/api/payments/my-payments",
-            headers=create_auth_header(buyer_token)
-        )
+        response = client.get("/api/payments/my-payments", headers=create_auth_header(buyer_token))
 
         assert response.status_code == 200
         assert response.json() == []
 
-    def test_get_my_payments_unauthorized(
-        self,
-        client: TestClient
-    ):
+    def test_get_my_payments_unauthorized(self, client: TestClient):
         """Test retrieving payments without authentication."""
         response = client.get("/api/payments/my-payments")
 
@@ -675,27 +620,20 @@ class TestGetMyPayments:
 class TestGetPaymentById:
     """Tests for GET /payments/{payment_id} endpoint."""
 
-    def test_get_payment_as_buyer(
-        self,
-        client: TestClient,
-        db_session,
-        winning_bid,
-        buyer_token
-    ):
+    def test_get_payment_as_buyer(self, client: TestClient, db_session, winning_bid, buyer_token):
         """Test buyer retrieving their payment."""
         payment = Payment(
             bid_id=winning_bid.id,
             stripe_payment_intent_id="pi_test123",
             amount=100.0,
             currency="usd",
-            status=PaymentStatus.SUCCEEDED
+            status=PaymentStatus.SUCCEEDED,
         )
         db_session.add(payment)
         db_session.commit()
 
         response = client.get(
-            f"/api/payments/{payment.id}",
-            headers=create_auth_header(buyer_token)
+            f"/api/payments/{payment.id}", headers=create_auth_header(buyer_token)
         )
 
         assert response.status_code == 200
@@ -703,62 +641,43 @@ class TestGetPaymentById:
         assert data["id"] == payment.id
         assert data["amount"] == "100.00"
 
-    def test_get_payment_as_seller(
-        self,
-        client: TestClient,
-        db_session,
-        winning_bid,
-        seller_token
-    ):
+    def test_get_payment_as_seller(self, client: TestClient, db_session, winning_bid, seller_token):
         """Test seller retrieving payment for their artwork."""
         payment = Payment(
             bid_id=winning_bid.id,
             stripe_payment_intent_id="pi_test123",
             amount=100.0,
             currency="usd",
-            status=PaymentStatus.SUCCEEDED
+            status=PaymentStatus.SUCCEEDED,
         )
         db_session.add(payment)
         db_session.commit()
 
         response = client.get(
-            f"/api/payments/{payment.id}",
-            headers=create_auth_header(seller_token)
+            f"/api/payments/{payment.id}", headers=create_auth_header(seller_token)
         )
 
         assert response.status_code == 200
 
-    def test_get_payment_as_admin(
-        self,
-        client: TestClient,
-        db_session,
-        winning_bid,
-        admin_token
-    ):
+    def test_get_payment_as_admin(self, client: TestClient, db_session, winning_bid, admin_token):
         """Test admin retrieving any payment."""
         payment = Payment(
             bid_id=winning_bid.id,
             stripe_payment_intent_id="pi_test123",
             amount=100.0,
             currency="usd",
-            status=PaymentStatus.SUCCEEDED
+            status=PaymentStatus.SUCCEEDED,
         )
         db_session.add(payment)
         db_session.commit()
 
         response = client.get(
-            f"/api/payments/{payment.id}",
-            headers=create_auth_header(admin_token)
+            f"/api/payments/{payment.id}", headers=create_auth_header(admin_token)
         )
 
         assert response.status_code == 200
 
-    def test_get_payment_unauthorized_user(
-        self,
-        client: TestClient,
-        db_session,
-        winning_bid
-    ):
+    def test_get_payment_unauthorized_user(self, client: TestClient, db_session, winning_bid):
         """Test unauthorized user cannot view payment."""
         from models.user import User
 
@@ -774,14 +693,16 @@ class TestGetPaymentById:
             stripe_payment_intent_id="pi_test123",
             amount=100.0,
             currency="usd",
-            status=PaymentStatus.SUCCEEDED
+            status=PaymentStatus.SUCCEEDED,
         )
         db_session.add(payment)
         db_session.commit()
 
         # Generate token for other user
-        from services.jwt_service import JWTService
         from datetime import timedelta
+
+        from services.jwt_service import JWTService
+
         other_token = JWTService.create_access_token(
             data={
                 "sub": other_user.auth0_sub,
@@ -793,22 +714,14 @@ class TestGetPaymentById:
         )
 
         response = client.get(
-            f"/api/payments/{payment.id}",
-            headers=create_auth_header(other_token)
+            f"/api/payments/{payment.id}", headers=create_auth_header(other_token)
         )
 
         assert response.status_code == 403
 
-    def test_get_payment_not_found(
-        self,
-        client: TestClient,
-        buyer_token
-    ):
+    def test_get_payment_not_found(self, client: TestClient, buyer_token):
         """Test retrieving non-existent payment."""
-        response = client.get(
-            "/api/payments/99999",
-            headers=create_auth_header(buyer_token)
-        )
+        response = client.get("/api/payments/99999", headers=create_auth_header(buyer_token))
 
         assert response.status_code == 404
 
@@ -817,12 +730,7 @@ class TestGetArtworkPayment:
     """Tests for GET /payments/artwork/{artwork_id} endpoint."""
 
     def test_get_artwork_payment_as_seller(
-        self,
-        client: TestClient,
-        db_session,
-        artwork,
-        winning_bid,
-        seller_token
+        self, client: TestClient, db_session, artwork, winning_bid, seller_token
     ):
         """Test seller retrieving payment for their artwork."""
         payment = Payment(
@@ -830,14 +738,13 @@ class TestGetArtworkPayment:
             stripe_payment_intent_id="pi_test123",
             amount=100.0,
             currency="usd",
-            status=PaymentStatus.SUCCEEDED
+            status=PaymentStatus.SUCCEEDED,
         )
         db_session.add(payment)
         db_session.commit()
 
         response = client.get(
-            f"/api/payments/artwork/{artwork.id}",
-            headers=create_auth_header(seller_token)
+            f"/api/payments/artwork/{artwork.id}", headers=create_auth_header(seller_token)
         )
 
         assert response.status_code == 200
@@ -845,12 +752,7 @@ class TestGetArtworkPayment:
         assert data["amount"] == "100.00"
 
     def test_get_artwork_payment_as_admin(
-        self,
-        client: TestClient,
-        db_session,
-        artwork,
-        winning_bid,
-        admin_token
+        self, client: TestClient, db_session, artwork, winning_bid, admin_token
     ):
         """Test admin retrieving artwork payment."""
         payment = Payment(
@@ -858,56 +760,38 @@ class TestGetArtworkPayment:
             stripe_payment_intent_id="pi_test123",
             amount=100.0,
             currency="usd",
-            status=PaymentStatus.SUCCEEDED
+            status=PaymentStatus.SUCCEEDED,
         )
         db_session.add(payment)
         db_session.commit()
 
         response = client.get(
-            f"/api/payments/artwork/{artwork.id}",
-            headers=create_auth_header(admin_token)
+            f"/api/payments/artwork/{artwork.id}", headers=create_auth_header(admin_token)
         )
 
         assert response.status_code == 200
 
-    def test_get_artwork_payment_unauthorized(
-        self,
-        client: TestClient,
-        artwork,
-        buyer_token
-    ):
+    def test_get_artwork_payment_unauthorized(self, client: TestClient, artwork, buyer_token):
         """Test buyer cannot view artwork payment."""
         response = client.get(
-            f"/api/payments/artwork/{artwork.id}",
-            headers=create_auth_header(buyer_token)
+            f"/api/payments/artwork/{artwork.id}", headers=create_auth_header(buyer_token)
         )
 
         assert response.status_code == 403
 
-    def test_get_artwork_payment_not_found(
-        self,
-        client: TestClient,
-        seller_token
-    ):
+    def test_get_artwork_payment_not_found(self, client: TestClient, seller_token):
         """Test retrieving payment for non-existent artwork."""
         response = client.get(
-            "/api/payments/artwork/99999",
-            headers=create_auth_header(seller_token)
+            "/api/payments/artwork/99999", headers=create_auth_header(seller_token)
         )
 
         assert response.status_code == 404
         assert "Artwork not found" in response.json()["detail"]
 
-    def test_get_artwork_payment_no_payment(
-        self,
-        client: TestClient,
-        artwork,
-        seller_token
-    ):
+    def test_get_artwork_payment_no_payment(self, client: TestClient, artwork, seller_token):
         """Test retrieving payment when artwork has no completed payment."""
         response = client.get(
-            f"/api/payments/artwork/{artwork.id}",
-            headers=create_auth_header(seller_token)
+            f"/api/payments/artwork/{artwork.id}", headers=create_auth_header(seller_token)
         )
 
         assert response.status_code == 404

@@ -53,7 +53,11 @@ class Settings(BaseSettings):
         # Skip validation in: test mode, alembic, and development environment
         import sys
 
-        if "pytest" not in sys.modules and "alembic" not in sys.modules and self.environment != "development":
+        if (
+            "pytest" not in sys.modules
+            and "alembic" not in sys.modules
+            and self.environment != "development"
+        ):
             self._validate_secrets()
 
     def _validate_secrets(self):

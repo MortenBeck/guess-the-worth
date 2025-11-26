@@ -41,7 +41,11 @@ class TestSeedUsers:
         """Test that first seller user has correct auth0_sub."""
         seed_users(db_session)
 
-        seller = db_session.query(User).filter(User.auth0_sub == "auth0|6926e831a9097688ce0c5405").first()
+        seller = (
+            db_session.query(User)
+            .filter(User.auth0_sub == "auth0|6926e831a9097688ce0c5405")
+            .first()
+        )
         assert seller is not None
         assert seller.auth0_sub == "auth0|6926e831a9097688ce0c5405"
 
@@ -65,14 +69,22 @@ class TestSeedUsers:
         seed_users(db_session)
 
         # Get first seller user
-        seller = db_session.query(User).filter(User.auth0_sub == "auth0|6926e831a9097688ce0c5405").first()
+        seller = (
+            db_session.query(User)
+            .filter(User.auth0_sub == "auth0|6926e831a9097688ce0c5405")
+            .first()
+        )
         original_id = seller.id
 
         # Second run should be idempotent
         seed_users(db_session)
 
         # Verify same user still exists with same ID
-        seller = db_session.query(User).filter(User.auth0_sub == "auth0|6926e831a9097688ce0c5405").first()
+        seller = (
+            db_session.query(User)
+            .filter(User.auth0_sub == "auth0|6926e831a9097688ce0c5405")
+            .first()
+        )
         assert seller.id == original_id
 
     def test_seed_users_all_have_auth0_sub(self, db_session):
@@ -545,7 +557,11 @@ class TestSeedBidsWarnings:
         seed_artworks(db_session)
 
         # Delete one buyer user specifically (BuyerAlice)
-        buyer = db_session.query(User).filter(User.auth0_sub == "auth0|6926e8c9d490f658706da21a").first()
+        buyer = (
+            db_session.query(User)
+            .filter(User.auth0_sub == "auth0|6926e8c9d490f658706da21a")
+            .first()
+        )
         if buyer:
             db_session.delete(buyer)
             db_session.commit()

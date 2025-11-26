@@ -94,7 +94,7 @@ const HomePage = () => {
   const location = useLocation();
 
   // Fetch featured artworks from database
-  const { data: artworks, isLoading } = useQuery({
+  const { data: artworks } = useQuery({
     queryKey: ["featured-artworks"],
     queryFn: () => artworkService.getFeatured(),
     staleTime: 30000,
@@ -432,7 +432,11 @@ const HomePage = () => {
                     transition="all 0.3s ease"
                   >
                     {/* Optimized image component with lazy loading */}
-                    <ArtworkImage imageUrl={artwork.image_url} title={artwork.title} index={index} />
+                    <ArtworkImage
+                      imageUrl={artwork.image_url}
+                      title={artwork.title}
+                      index={index}
+                    />
 
                     <Box p={8}>
                       <VStack align="start" spacing={5}>

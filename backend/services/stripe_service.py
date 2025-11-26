@@ -1,12 +1,14 @@
 """Stripe payment service for handling payment operations."""
+
+from typing import Any, Dict
+
 import stripe
-from stripe._error import StripeError, SignatureVerificationError
-from typing import Dict, Any
-from sqlalchemy.orm import Session
 from fastapi import HTTPException
+from sqlalchemy.orm import Session
+from stripe._error import SignatureVerificationError, StripeError
 
 from config.settings import settings
-from models import Payment, Bid, User
+from models import Bid, Payment, User
 from models.payment import PaymentStatus
 
 # Initialize Stripe with API key from settings
@@ -17,11 +19,7 @@ class StripeService:
     """Service for handling Stripe payment operations."""
 
     @staticmethod
-    def create_payment_intent(
-        bid: Bid,
-        buyer: User,
-        db: Session
-    ) -> Dict[str, Any]:
+    def create_payment_intent(bid: Bid, buyer: User, db: Session) -> Dict[str, Any]:
         """
         Create a Stripe Payment Intent for a winning bid.
 
@@ -71,7 +69,7 @@ class StripeService:
                     "artwork_id": artwork.id,
                     "buyer_id": buyer.id,
                     "seller_id": artwork.seller_id,
-                }
+                },
             )
 
             db.add(payment)
@@ -88,10 +86,7 @@ class StripeService:
 
         except StripeError as e:
             db.rollback()
-            raise HTTPException(
-                status_code=400,
-                detail=f"Stripe error: {str(e)}"
-            )
+            raise HTTPException(status_code=400, detail=f"Stripe error: {str(e)}")
 
     @staticmethod
     def get_payment_intent(payment_intent_id: str) -> stripe.PaymentIntent:
@@ -111,15 +106,11 @@ class StripeService:
             return stripe.PaymentIntent.retrieve(payment_intent_id)
         except StripeError as e:
             raise HTTPException(
-                status_code=400,
-                detail=f"Failed to retrieve payment intent: {str(e)}"
+                status_code=400, detail=f"Failed to retrieve payment intent: {str(e)}"
             )
 
     @staticmethod
-    def handle_payment_succeeded(
-        payment_intent: stripe.PaymentIntent,
-        db: Session
-    ) -> Payment:
+    def handle_payment_succeeded(payment_intent: stripe.PaymentIntent, db: Session) -> Payment:
         """
         Handle successful payment webhook event.
 
@@ -136,19 +127,20 @@ class StripeService:
             HTTPException: If payment not found
         """
         # Find payment record
-        payment = db.query(Payment).filter(
-            Payment.stripe_payment_intent_id == payment_intent.id
-        ).first()
+        payment = (
+            db.query(Payment).filter(Payment.stripe_payment_intent_id == payment_intent.id).first()
+        )
 
         if not payment:
             raise HTTPException(
-                status_code=404,
-                detail=f"Payment not found for intent: {payment_intent.id}"
+                status_code=404, detail=f"Payment not found for intent: {payment_intent.id}"
             )
 
         # Update payment status
         payment.status = PaymentStatus.SUCCEEDED
-        payment.stripe_charge_id = payment_intent.charges.data[0].id if payment_intent.charges.data else None
+        payment.stripe_charge_id = (
+            payment_intent.charges.data[0].id if payment_intent.charges.data else None
+        )
 
         # Get related bid and artwork
         bid = payment.bid
@@ -163,10 +155,7 @@ class StripeService:
         return payment
 
     @staticmethod
-    def handle_payment_failed(
-        payment_intent: stripe.PaymentIntent,
-        db: Session
-    ) -> Payment:
+    def handle_payment_failed(payment_intent: stripe.PaymentIntent, db: Session) -> Payment:
         """
         Handle failed payment webhook event.
 
@@ -182,14 +171,13 @@ class StripeService:
         Raises:
             HTTPException: If payment not found
         """
-        payment = db.query(Payment).filter(
-            Payment.stripe_payment_intent_id == payment_intent.id
-        ).first()
+        payment = (
+            db.query(Payment).filter(Payment.stripe_payment_intent_id == payment_intent.id).first()
+        )
 
         if not payment:
             raise HTTPException(
-                status_code=404,
-                detail=f"Payment not found for intent: {payment_intent.id}"
+                status_code=404, detail=f"Payment not found for intent: {payment_intent.id}"
             )
 
         # Update payment status
@@ -216,9 +204,7 @@ class StripeService:
 
     @staticmethod
     def verify_webhook_signature(
-        payload: bytes,
-        signature: str,
-        webhook_secret: str
+        payload: bytes, signature: str, webhook_secret: str
     ) -> stripe.Event:
         """
         Verify webhook signature and construct event.
@@ -237,9 +223,7 @@ class StripeService:
             HTTPException: If verification fails
         """
         try:
-            event = stripe.Webhook.construct_event(
-                payload, signature, webhook_secret
-            )
+            event = stripe.Webhook.construct_event(payload, signature, webhook_secret)
             return event
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid payload")

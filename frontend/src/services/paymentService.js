@@ -1,4 +1,4 @@
-import api from './api';
+import api from "./api";
 
 /**
  * Payment Service - Stripe payment integration
@@ -11,13 +11,13 @@ const paymentService = {
    */
   async createPaymentIntent(bidId) {
     try {
-      const response = await api.post('/api/payments/create-intent', {
+      const response = await api.post("/api/payments/create-intent", {
         bid_id: bidId,
         amount: 0, // Amount is fetched from the bid on the backend
       });
       return response.data;
     } catch (error) {
-      console.error('Error creating payment intent:', error);
+      console.error("Error creating payment intent:", error);
       throw error;
     }
   },
@@ -28,10 +28,10 @@ const paymentService = {
    */
   async getMyPayments() {
     try {
-      const response = await api.get('/api/payments/my-payments');
+      const response = await api.get("/api/payments/my-payments");
       return response.data;
     } catch (error) {
-      console.error('Error fetching payments:', error);
+      console.error("Error fetching payments:", error);
       throw error;
     }
   },
@@ -46,7 +46,7 @@ const paymentService = {
       const response = await api.get(`/api/payments/${paymentId}`);
       return response.data;
     } catch (error) {
-      console.error('Error fetching payment:', error);
+      console.error("Error fetching payment:", error);
       throw error;
     }
   },
@@ -61,7 +61,7 @@ const paymentService = {
       const response = await api.get(`/api/payments/artwork/${artworkId}`);
       return response.data;
     } catch (error) {
-      console.error('Error fetching artwork payment:', error);
+      console.error("Error fetching artwork payment:", error);
       throw error;
     }
   },

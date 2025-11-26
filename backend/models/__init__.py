@@ -5,4 +5,13 @@ from .bid import Bid
 from .payment import Payment, PaymentStatus
 from .user import User
 
-__all__ = ["User", "Artwork", "ArtworkStatus", "Bid", "Payment", "PaymentStatus", "AuditLog", "Base"]
+__all__ = [
+    "User",
+    "Artwork",
+    "ArtworkStatus",
+    "Bid",
+    "Payment",
+    "PaymentStatus",
+    "AuditLog",
+    "Base",
+]

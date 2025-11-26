@@ -1,8 +1,9 @@
 """Payment model for Stripe payment processing."""
+
 from datetime import datetime
 from enum import Enum
 
-from sqlalchemy import Column, Integer, String, DECIMAL, DateTime, Text, ForeignKey, Index, JSON
+from sqlalchemy import DECIMAL, JSON, Column, DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import relationship
 
 from models.base import Base
@@ -44,7 +45,10 @@ class Payment(Base):
     bid = relationship("Bid", back_populates="payment")
 
     def __repr__(self):
-        return f"<Payment(id={self.id}, bid_id={self.bid_id}, status={self.status}, amount={self.amount})>"
+        return (
+            f"<Payment(id={self.id}, bid_id={self.bid_id}, "
+            f"status={self.status}, amount={self.amount})>"
+        )
 
 
 # Create indexes for performance

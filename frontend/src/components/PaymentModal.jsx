@@ -1,12 +1,7 @@
-import { useState, useEffect } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
-import {
-  Elements,
-  PaymentElement,
-  useStripe,
-  useElements,
-} from '@stripe/react-stripe-js';
-import paymentService from '../services/paymentService';
+import { useState, useEffect, useCallback } from "react";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import paymentService from "../services/paymentService";
 
 // Initialize Stripe with publishable key
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
@@ -14,7 +9,7 @@ const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 /**
  * Payment form component (must be inside Elements provider)
  */
-function PaymentForm({ clientSecret, onSuccess, onError, amount, artworkTitle }) {
+function PaymentForm({ onSuccess, onError, amount, artworkTitle }) {
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -36,17 +31,17 @@ function PaymentForm({ clientSecret, onSuccess, onError, amount, artworkTitle })
         confirmParams: {
           return_url: `${window.location.origin}/payment-success`,
         },
-        redirect: 'if_required', // Stay on page if no redirect needed
+        redirect: "if_required", // Stay on page if no redirect needed
       });
 
       if (error) {
         setErrorMessage(error.message);
         onError(error);
-      } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+      } else if (paymentIntent && paymentIntent.status === "succeeded") {
         onSuccess(paymentIntent);
       }
     } catch (err) {
-      setErrorMessage('Payment failed. Please try again.');
+      setErrorMessage("Payment failed. Please try again.");
       onError(err);
     } finally {
       setIsProcessing(false);
@@ -78,7 +73,7 @@ function PaymentForm({ clientSecret, onSuccess, onError, amount, artworkTitle })
         disabled={!stripe || isProcessing}
         className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded transition duration-200"
       >
-        {isProcessing ? 'Processing...' : `Pay $${parseFloat(amount).toFixed(2)}`}
+        {isProcessing ? "Processing..." : `Pay $${parseFloat(amount).toFixed(2)}`}
       </button>
 
       <p className="text-xs text-gray-500 text-center">
@@ -97,13 +92,7 @@ function PaymentModal({ isOpen, onClose, bidId, amount, artworkTitle }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    if (isOpen && bidId) {
-      createPaymentIntent();
-    }
-  }, [isOpen, bidId]);
-
-  const createPaymentIntent = async () => {
+  const createPaymentIntent = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -111,23 +100,27 @@ function PaymentModal({ isOpen, onClose, bidId, amount, artworkTitle }) {
       const data = await paymentService.createPaymentIntent(bidId);
       setClientSecret(data.client_secret);
     } catch (err) {
-      console.error('Failed to create payment intent:', err);
-      setError(
-        err.response?.data?.detail || 'Failed to initialize payment. Please try again.'
-      );
+      console.error("Failed to create payment intent:", err);
+      setError(err.response?.data?.detail || "Failed to initialize payment. Please try again.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [bidId]);
+
+  useEffect(() => {
+    if (isOpen && bidId) {
+      createPaymentIntent();
+    }
+  }, [isOpen, bidId, createPaymentIntent]);
 
   const handleSuccess = (paymentIntent) => {
-    console.log('Payment successful!', paymentIntent);
-    alert('Payment successful! The artwork is now yours.');
+    console.log("Payment successful!", paymentIntent);
+    alert("Payment successful! The artwork is now yours.");
     onClose();
   };
 
   const handleError = (error) => {
-    console.error('Payment error:', error);
+    console.error("Payment error:", error);
   };
 
   if (!isOpen) return null;
@@ -136,9 +129,9 @@ function PaymentModal({ isOpen, onClose, bidId, amount, artworkTitle }) {
     ? {
         clientSecret,
         appearance: {
-          theme: 'stripe',
+          theme: "stripe",
           variables: {
-            colorPrimary: '#2563eb',
+            colorPrimary: "#2563eb",
           },
         },
       }
@@ -168,10 +161,7 @@ function PaymentModal({ isOpen, onClose, bidId, amount, artworkTitle }) {
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
             {error}
-            <button
-              onClick={createPaymentIntent}
-              className="block mt-2 text-sm underline"
-            >
+            <button onClick={createPaymentIntent} className="block mt-2 text-sm underline">
               Try again
             </button>
           </div>
@@ -180,7 +170,6 @@ function PaymentModal({ isOpen, onClose, bidId, amount, artworkTitle }) {
         {!loading && !error && clientSecret && stripeOptions && (
           <Elements stripe={stripePromise} options={stripeOptions}>
             <PaymentForm
-              clientSecret={clientSecret}
               onSuccess={handleSuccess}
               onError={handleError}
               amount={amount}
