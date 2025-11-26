@@ -294,6 +294,326 @@ class TestStripeWebhook:
             assert response.status_code == 500
             assert "not configured" in response.json()["detail"]
 
+    @patch('services.stripe_service.StripeService.verify_webhook_signature')
+    @patch('services.stripe_service.StripeService.handle_payment_succeeded')
+    @patch('services.audit_service.AuditService.log_action')
+    def test_webhook_payment_succeeded(
+        self,
+        mock_audit_log,
+        mock_handle_succeeded,
+        mock_verify_webhook,
+        client: TestClient,
+        db_session,
+        winning_bid
+    ):
+        """Test webhook handling for payment_intent.succeeded event."""
+        # Create mock payment with bid relationship
+        payment = Payment(
+            bid_id=winning_bid.id,
+            stripe_payment_intent_id="pi_test123",
+            amount=100.0,
+            currency="usd",
+            status=PaymentStatus.SUCCEEDED
+        )
+        db_session.add(payment)
+        db_session.commit()
+        db_session.refresh(payment)
+
+        # Load relationships
+        payment.bid = winning_bid
+        mock_handle_succeeded.return_value = payment
+
+        # Mock webhook event
+        mock_event = MagicMock()
+        mock_event.type = "payment_intent.succeeded"
+        mock_payment_intent = MagicMock()
+        mock_payment_intent.id = "pi_test123"
+        mock_event.data.object = mock_payment_intent
+        mock_verify_webhook.return_value = mock_event
+
+        with patch('config.settings.settings.stripe_webhook_secret', 'whsec_test123'):
+            with patch('main.sio') as mock_sio:
+                response = client.post(
+                    "/api/payments/webhook",
+                    json={"type": "payment_intent.succeeded"},
+                    headers={"stripe-signature": "test_sig"}
+                )
+
+        assert response.status_code == 200
+        assert response.json()["status"] == "success"
+        mock_handle_succeeded.assert_called_once_with(mock_payment_intent, db_session)
+        mock_audit_log.assert_called_once()
+
+        # Verify audit log details
+        call_args = mock_audit_log.call_args
+        assert call_args.kwargs["action"] == "payment_succeeded"
+        assert call_args.kwargs["resource_type"] == "payment"
+        assert call_args.kwargs["resource_id"] == payment.id
+
+    @patch('services.stripe_service.StripeService.verify_webhook_signature')
+    @patch('services.stripe_service.StripeService.handle_payment_succeeded')
+    @patch('services.audit_service.AuditService.log_action')
+    def test_webhook_payment_succeeded_with_socket_emission(
+        self,
+        mock_audit_log,
+        mock_handle_succeeded,
+        mock_verify_webhook,
+        client: TestClient,
+        db_session,
+        winning_bid
+    ):
+        """Test webhook with successful socket emission."""
+        payment = Payment(
+            bid_id=winning_bid.id,
+            stripe_payment_intent_id="pi_test123",
+            amount=100.0,
+            currency="usd",
+            status=PaymentStatus.SUCCEEDED
+        )
+        db_session.add(payment)
+        db_session.commit()
+        db_session.refresh(payment)
+
+        payment.bid = winning_bid
+        mock_handle_succeeded.return_value = payment
+
+        mock_event = MagicMock()
+        mock_event.type = "payment_intent.succeeded"
+        mock_payment_intent = MagicMock()
+        mock_payment_intent.id = "pi_test123"
+        mock_event.data.object = mock_payment_intent
+        mock_verify_webhook.return_value = mock_event
+
+        with patch('config.settings.settings.stripe_webhook_secret', 'whsec_test123'):
+            with patch('main.sio') as mock_sio:
+                mock_sio.emit = MagicMock()
+
+                response = client.post(
+                    "/api/payments/webhook",
+                    json={"type": "payment_intent.succeeded"},
+                    headers={"stripe-signature": "test_sig"}
+                )
+
+                # Verify socket emission was called
+                mock_sio.emit.assert_called_once()
+                call_args = mock_sio.emit.call_args
+                assert call_args[0][0] == "payment_completed"
+                assert call_args[0][1]["artwork_id"] == winning_bid.artwork_id
+                assert call_args[0][1]["payment_id"] == payment.id
+                assert call_args[0][1]["status"] == "SOLD"
+
+        assert response.status_code == 200
+
+    @patch('services.stripe_service.StripeService.verify_webhook_signature')
+    @patch('services.stripe_service.StripeService.handle_payment_succeeded')
+    @patch('services.audit_service.AuditService.log_action')
+    def test_webhook_payment_succeeded_socket_emission_fails(
+        self,
+        mock_audit_log,
+        mock_handle_succeeded,
+        mock_verify_webhook,
+        client: TestClient,
+        db_session,
+        winning_bid
+    ):
+        """Test webhook when socket emission fails - should still succeed."""
+        payment = Payment(
+            bid_id=winning_bid.id,
+            stripe_payment_intent_id="pi_test123",
+            amount=100.0,
+            currency="usd",
+            status=PaymentStatus.SUCCEEDED
+        )
+        db_session.add(payment)
+        db_session.commit()
+        db_session.refresh(payment)
+
+        payment.bid = winning_bid
+        mock_handle_succeeded.return_value = payment
+
+        mock_event = MagicMock()
+        mock_event.type = "payment_intent.succeeded"
+        mock_payment_intent = MagicMock()
+        mock_payment_intent.id = "pi_test123"
+        mock_event.data.object = mock_payment_intent
+        mock_verify_webhook.return_value = mock_event
+
+        with patch('config.settings.settings.stripe_webhook_secret', 'whsec_test123'):
+            with patch('main.sio') as mock_sio:
+                # Make socket emission fail
+                mock_sio.emit.side_effect = Exception("Socket error")
+
+                response = client.post(
+                    "/api/payments/webhook",
+                    json={"type": "payment_intent.succeeded"},
+                    headers={"stripe-signature": "test_sig"}
+                )
+
+        # Should still return success even if socket fails
+        assert response.status_code == 200
+        mock_handle_succeeded.assert_called_once()
+        mock_audit_log.assert_called_once()
+
+    @patch('services.stripe_service.StripeService.verify_webhook_signature')
+    @patch('services.stripe_service.StripeService.handle_payment_failed')
+    @patch('services.audit_service.AuditService.log_action')
+    def test_webhook_payment_failed(
+        self,
+        mock_audit_log,
+        mock_handle_failed,
+        mock_verify_webhook,
+        client: TestClient,
+        db_session,
+        winning_bid
+    ):
+        """Test webhook handling for payment_intent.payment_failed event."""
+        payment = Payment(
+            bid_id=winning_bid.id,
+            stripe_payment_intent_id="pi_test123",
+            amount=100.0,
+            currency="usd",
+            status=PaymentStatus.FAILED,
+            failure_reason="card_declined"
+        )
+        db_session.add(payment)
+        db_session.commit()
+        db_session.refresh(payment)
+
+        payment.bid = winning_bid
+        mock_handle_failed.return_value = payment
+
+        mock_event = MagicMock()
+        mock_event.type = "payment_intent.payment_failed"
+        mock_payment_intent = MagicMock()
+        mock_payment_intent.id = "pi_test123"
+        mock_event.data.object = mock_payment_intent
+        mock_verify_webhook.return_value = mock_event
+
+        with patch('config.settings.settings.stripe_webhook_secret', 'whsec_test123'):
+            with patch('main.sio') as mock_sio:
+                response = client.post(
+                    "/api/payments/webhook",
+                    json={"type": "payment_intent.payment_failed"},
+                    headers={"stripe-signature": "test_sig"}
+                )
+
+        assert response.status_code == 200
+        assert response.json()["status"] == "success"
+        mock_handle_failed.assert_called_once_with(mock_payment_intent, db_session)
+        mock_audit_log.assert_called_once()
+
+        # Verify audit log details
+        call_args = mock_audit_log.call_args
+        assert call_args.kwargs["action"] == "payment_failed"
+        assert call_args.kwargs["resource_type"] == "payment"
+        assert call_args.kwargs["resource_id"] == payment.id
+
+    @patch('services.stripe_service.StripeService.verify_webhook_signature')
+    @patch('services.stripe_service.StripeService.handle_payment_failed')
+    @patch('services.audit_service.AuditService.log_action')
+    def test_webhook_payment_failed_with_socket_emission(
+        self,
+        mock_audit_log,
+        mock_handle_failed,
+        mock_verify_webhook,
+        client: TestClient,
+        db_session,
+        winning_bid
+    ):
+        """Test webhook failed event with successful socket emission."""
+        payment = Payment(
+            bid_id=winning_bid.id,
+            stripe_payment_intent_id="pi_test123",
+            amount=100.0,
+            currency="usd",
+            status=PaymentStatus.FAILED,
+            failure_reason="insufficient_funds"
+        )
+        db_session.add(payment)
+        db_session.commit()
+        db_session.refresh(payment)
+
+        payment.bid = winning_bid
+        mock_handle_failed.return_value = payment
+
+        mock_event = MagicMock()
+        mock_event.type = "payment_intent.payment_failed"
+        mock_payment_intent = MagicMock()
+        mock_payment_intent.id = "pi_test123"
+        mock_event.data.object = mock_payment_intent
+        mock_verify_webhook.return_value = mock_event
+
+        with patch('config.settings.settings.stripe_webhook_secret', 'whsec_test123'):
+            with patch('main.sio') as mock_sio:
+                mock_sio.emit = MagicMock()
+
+                response = client.post(
+                    "/api/payments/webhook",
+                    json={"type": "payment_intent.payment_failed"},
+                    headers={"stripe-signature": "test_sig"}
+                )
+
+                # Verify socket emission was called
+                mock_sio.emit.assert_called_once()
+                call_args = mock_sio.emit.call_args
+                assert call_args[0][0] == "payment_failed"
+                assert call_args[0][1]["artwork_id"] == winning_bid.artwork_id
+                assert call_args[0][1]["payment_id"] == payment.id
+                assert call_args[0][1]["reason"] == "insufficient_funds"
+
+        assert response.status_code == 200
+
+    @patch('services.stripe_service.StripeService.verify_webhook_signature')
+    @patch('services.stripe_service.StripeService.handle_payment_failed')
+    @patch('services.audit_service.AuditService.log_action')
+    def test_webhook_payment_failed_socket_emission_fails(
+        self,
+        mock_audit_log,
+        mock_handle_failed,
+        mock_verify_webhook,
+        client: TestClient,
+        db_session,
+        winning_bid
+    ):
+        """Test webhook failed event when socket emission fails - should still succeed."""
+        payment = Payment(
+            bid_id=winning_bid.id,
+            stripe_payment_intent_id="pi_test123",
+            amount=100.0,
+            currency="usd",
+            status=PaymentStatus.FAILED,
+            failure_reason="card_declined"
+        )
+        db_session.add(payment)
+        db_session.commit()
+        db_session.refresh(payment)
+
+        payment.bid = winning_bid
+        mock_handle_failed.return_value = payment
+
+        mock_event = MagicMock()
+        mock_event.type = "payment_intent.payment_failed"
+        mock_payment_intent = MagicMock()
+        mock_payment_intent.id = "pi_test123"
+        mock_event.data.object = mock_payment_intent
+        mock_verify_webhook.return_value = mock_event
+
+        with patch('config.settings.settings.stripe_webhook_secret', 'whsec_test123'):
+            with patch('main.sio') as mock_sio:
+                # Make socket emission fail
+                mock_sio.emit.side_effect = Exception("Socket connection lost")
+
+                response = client.post(
+                    "/api/payments/webhook",
+                    json={"type": "payment_intent.payment_failed"},
+                    headers={"stripe-signature": "test_sig"}
+                )
+
+        # Should still return success even if socket fails
+        assert response.status_code == 200
+        mock_handle_failed.assert_called_once()
+        mock_audit_log.assert_called_once()
+
 
 class TestGetMyPayments:
     """Tests for GET /payments/my-payments endpoint."""
