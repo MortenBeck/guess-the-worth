@@ -99,9 +99,10 @@ async def create_bid(
     if bid.amount > artwork.current_highest_bid:
         artwork.current_highest_bid = bid.amount
 
-    # If winning bid, mark artwork as sold
+    # If winning bid, mark artwork as PENDING_PAYMENT
+    # Actual SOLD status will be set after payment confirmation
     if is_winning:
-        artwork.status = "SOLD"
+        artwork.status = "PENDING_PAYMENT"
 
     db.add(db_bid)
     db.commit()
@@ -144,29 +145,32 @@ async def create_bid(
         room=f"artwork_{artwork.id}",
     )
 
-    # If winning bid, emit artwork_sold event
+    # If winning bid, emit payment_required event
     if is_winning:
         await sio.emit(
-            "artwork_sold",
+            "payment_required",
             {
                 "artwork_id": artwork.id,
                 "winning_bid": float(db_bid.amount),
+                "bid_id": db_bid.id,
                 "winner_id": current_user.id,
+                "requires_payment": True,
             },
             room=f"artwork_{artwork.id}",
         )
 
-        # Add audit log for artwork sale
+        # Add audit log for winning bid (payment required)
         AuditService.log_action(
             db=db,
-            action="artwork_sold",
+            action="winning_bid_placed",
             resource_type="artwork",
             resource_id=artwork.id,
             user=current_user,
             details={
-                "final_bid": float(bid.amount),
+                "bid_amount": float(bid.amount),
                 "seller_id": artwork.seller_id,
                 "buyer_id": current_user.id,
+                "status": "PENDING_PAYMENT",
             },
             request=request,
         )

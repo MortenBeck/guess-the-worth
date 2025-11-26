@@ -12,7 +12,7 @@ from database import engine
 from middleware.rate_limit import setup_rate_limiting
 from middleware.security_headers import SecurityHeadersMiddleware
 from models.base import Base
-from routers import admin, artworks, auth, bids, health, stats, users
+from routers import admin, artworks, auth, bids, health, payments, stats, users
 from services.auth_service import AuthService
 from services.jwt_service import JWTService
 
@@ -61,6 +61,7 @@ app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(artworks.router, prefix="/api/artworks", tags=["artworks"])
 app.include_router(bids.router, prefix="/api/bids", tags=["bids"])
+app.include_router(payments.router, prefix="/api/payments", tags=["payments"])
 app.include_router(stats.router, prefix="/api/stats", tags=["stats"])
 app.include_router(admin.router)
 
