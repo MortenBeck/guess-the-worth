@@ -63,28 +63,28 @@ def seed_bids(db: Session) -> int:
         # Bids for "Sunset Over Mountains" (current: 1200)
         {
             "artwork_title": "Sunset Over Mountains",
-            "bidder_email": "buyer1@guesstheworth.demo",
+            "bidder_sub": "auth0|demo-buyer-001",
             "amount": 800.00,
             "days_ago": 5,
             "is_winning": False,
         },
         {
             "artwork_title": "Sunset Over Mountains",
-            "bidder_email": "buyer2@guesstheworth.demo",
+            "bidder_sub": "auth0|demo-buyer-002",
             "amount": 950.00,
             "days_ago": 4,
             "is_winning": False,
         },
         {
             "artwork_title": "Sunset Over Mountains",
-            "bidder_email": "buyer3@guesstheworth.demo",
+            "bidder_sub": "auth0|demo-buyer-003",
             "amount": 1100.00,
             "days_ago": 3,
             "is_winning": False,
         },
         {
             "artwork_title": "Sunset Over Mountains",
-            "bidder_email": "buyer1@guesstheworth.demo",
+            "bidder_sub": "auth0|demo-buyer-001",
             "amount": 1200.00,
             "days_ago": 2,
             "is_winning": True,
@@ -92,21 +92,21 @@ def seed_bids(db: Session) -> int:
         # Bids for "Urban Dreams" (current: 600)
         {
             "artwork_title": "Urban Dreams",
-            "bidder_email": "buyer4@guesstheworth.demo",
+            "bidder_sub": "auth0|demo-buyer-004",
             "amount": 400.00,
             "days_ago": 3,
             "is_winning": False,
         },
         {
             "artwork_title": "Urban Dreams",
-            "bidder_email": "buyer5@guesstheworth.demo",
+            "bidder_sub": "auth0|demo-buyer-005",
             "amount": 550.00,
             "days_ago": 2,
             "is_winning": False,
         },
         {
             "artwork_title": "Urban Dreams",
-            "bidder_email": "buyer2@guesstheworth.demo",
+            "bidder_sub": "auth0|demo-buyer-002",
             "amount": 600.00,
             "days_ago": 1,
             "is_winning": True,
@@ -114,21 +114,21 @@ def seed_bids(db: Session) -> int:
         # Bids for "The Dancer" (current: 1800)
         {
             "artwork_title": "The Dancer",
-            "bidder_email": "buyer3@guesstheworth.demo",
+            "bidder_sub": "auth0|demo-buyer-003",
             "amount": 1500.00,
             "days_ago": 4,
             "is_winning": False,
         },
         {
             "artwork_title": "The Dancer",
-            "bidder_email": "buyer1@guesstheworth.demo",
+            "bidder_sub": "auth0|demo-buyer-001",
             "amount": 1650.00,
             "days_ago": 3,
             "is_winning": False,
         },
         {
             "artwork_title": "The Dancer",
-            "bidder_email": "buyer5@guesstheworth.demo",
+            "bidder_sub": "auth0|demo-buyer-005",
             "amount": 1800.00,
             "days_ago": 1,
             "is_winning": True,
@@ -136,21 +136,21 @@ def seed_bids(db: Session) -> int:
         # Bids for "Ocean Waves" (current: 950)
         {
             "artwork_title": "Ocean Waves",
-            "bidder_email": "buyer2@guesstheworth.demo",
+            "bidder_sub": "auth0|demo-buyer-002",
             "amount": 700.00,
             "days_ago": 2,
             "is_winning": False,
         },
         {
             "artwork_title": "Ocean Waves",
-            "bidder_email": "buyer4@guesstheworth.demo",
+            "bidder_sub": "auth0|demo-buyer-004",
             "amount": 850.00,
             "days_ago": 1,
             "is_winning": False,
         },
         {
             "artwork_title": "Ocean Waves",
-            "bidder_email": "buyer1@guesstheworth.demo",
+            "bidder_sub": "auth0|demo-buyer-001",
             "amount": 950.00,
             "days_ago": 0,
             "is_winning": True,
@@ -158,14 +158,14 @@ def seed_bids(db: Session) -> int:
         # Bids for "Garden Bloom" (current: 450)
         {
             "artwork_title": "Garden Bloom",
-            "bidder_email": "buyer3@guesstheworth.demo",
+            "bidder_sub": "auth0|demo-buyer-003",
             "amount": 350.00,
             "days_ago": 3,
             "is_winning": False,
         },
         {
             "artwork_title": "Garden Bloom",
-            "bidder_email": "buyer5@guesstheworth.demo",
+            "bidder_sub": "auth0|demo-buyer-005",
             "amount": 450.00,
             "days_ago": 1,
             "is_winning": True,
@@ -173,21 +173,21 @@ def seed_bids(db: Session) -> int:
         # Bids for "Midnight Sky" (current: 1500)
         {
             "artwork_title": "Midnight Sky",
-            "bidder_email": "buyer1@guesstheworth.demo",
+            "bidder_sub": "auth0|demo-buyer-001",
             "amount": 1200.00,
             "days_ago": 2,
             "is_winning": False,
         },
         {
             "artwork_title": "Midnight Sky",
-            "bidder_email": "buyer4@guesstheworth.demo",
+            "bidder_sub": "auth0|demo-buyer-004",
             "amount": 1350.00,
             "days_ago": 1,
             "is_winning": False,
         },
         {
             "artwork_title": "Midnight Sky",
-            "bidder_email": "buyer2@guesstheworth.demo",
+            "bidder_sub": "auth0|demo-buyer-002",
             "amount": 1500.00,
             "days_ago": 0,
             "is_winning": True,
@@ -195,21 +195,21 @@ def seed_bids(db: Session) -> int:
         # Bids for "City Lights" (current: 850)
         {
             "artwork_title": "City Lights",
-            "bidder_email": "buyer5@guesstheworth.demo",
+            "bidder_sub": "auth0|demo-buyer-005",
             "amount": 650.00,
             "days_ago": 2,
             "is_winning": False,
         },
         {
             "artwork_title": "City Lights",
-            "bidder_email": "buyer3@guesstheworth.demo",
+            "bidder_sub": "auth0|demo-buyer-003",
             "amount": 750.00,
             "days_ago": 1,
             "is_winning": False,
         },
         {
             "artwork_title": "City Lights",
-            "bidder_email": "buyer1@guesstheworth.demo",
+            "bidder_sub": "auth0|demo-buyer-001",
             "amount": 850.00,
             "days_ago": 0,
             "is_winning": True,
@@ -217,14 +217,14 @@ def seed_bids(db: Session) -> int:
         # Bids for "Desert Mirage" (current: 750)
         {
             "artwork_title": "Desert Mirage",
-            "bidder_email": "buyer2@guesstheworth.demo",
+            "bidder_sub": "auth0|demo-buyer-002",
             "amount": 600.00,
             "days_ago": 3,
             "is_winning": False,
         },
         {
             "artwork_title": "Desert Mirage",
-            "bidder_email": "buyer4@guesstheworth.demo",
+            "bidder_sub": "auth0|demo-buyer-004",
             "amount": 750.00,
             "days_ago": 1,
             "is_winning": True,
@@ -232,21 +232,21 @@ def seed_bids(db: Session) -> int:
         # Bids for "Abstract Emotions" (current: 1100)
         {
             "artwork_title": "Abstract Emotions",
-            "bidder_email": "buyer1@guesstheworth.demo",
+            "bidder_sub": "auth0|demo-buyer-001",
             "amount": 900.00,
             "days_ago": 2,
             "is_winning": False,
         },
         {
             "artwork_title": "Abstract Emotions",
-            "bidder_email": "buyer3@guesstheworth.demo",
+            "bidder_sub": "auth0|demo-buyer-003",
             "amount": 1000.00,
             "days_ago": 1,
             "is_winning": False,
         },
         {
             "artwork_title": "Abstract Emotions",
-            "bidder_email": "buyer5@guesstheworth.demo",
+            "bidder_sub": "auth0|demo-buyer-005",
             "amount": 1100.00,
             "days_ago": 0,
             "is_winning": True,
@@ -254,14 +254,14 @@ def seed_bids(db: Session) -> int:
         # Bids for "Spring Meadow" (current: 500)
         {
             "artwork_title": "Spring Meadow",
-            "bidder_email": "buyer2@guesstheworth.demo",
+            "bidder_sub": "auth0|demo-buyer-002",
             "amount": 400.00,
             "days_ago": 2,
             "is_winning": False,
         },
         {
             "artwork_title": "Spring Meadow",
-            "bidder_email": "buyer4@guesstheworth.demo",
+            "bidder_sub": "auth0|demo-buyer-004",
             "amount": 500.00,
             "days_ago": 1,
             "is_winning": True,
@@ -278,10 +278,10 @@ def seed_bids(db: Session) -> int:
             print(f"   ⚠️  Artwork not found: {bid_data['artwork_title']}")
             continue
 
-        # Find bidder
-        bidder = buyer_map.get(bid_data["bidder_email"])
+        # Find bidder by auth0_sub
+        bidder = buyer_map.get(bid_data["bidder_sub"])
         if not bidder:
-            print(f"   ⚠️  Bidder not found: {bid_data['bidder_email']}")
+            print(f"   ⚠️  Bidder not found: {bid_data['bidder_sub']}")
             continue
 
         # Check if bid already exists (idempotency)
@@ -298,7 +298,7 @@ def seed_bids(db: Session) -> int:
         if existing_bid:
             # Update is_winning status if needed
             existing_bid.is_winning = bid_data["is_winning"]
-            print(f"   ↻ Updated bid for {artwork.title} by {bidder.name}")
+            print(f"   ↻ Updated bid for {artwork.title} by {bid_data['bidder_sub']}")
         else:
             # Create new bid with adjusted timestamp
             created_at = datetime.now(UTC) - timedelta(days=bid_data["days_ago"])
@@ -310,7 +310,7 @@ def seed_bids(db: Session) -> int:
                 created_at=created_at,
             )
             db.add(new_bid)
-            print(f"   ✓ Created bid for {artwork.title} by {bidder.name}")
+            print(f"   ✓ Created bid for {artwork.title} by {bid_data['bidder_sub']}")
 
         created_count += 1
 

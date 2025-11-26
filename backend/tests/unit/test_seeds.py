@@ -467,11 +467,11 @@ class TestSeedUsersWarnings:
         # First seed
         seed_users(db_session)
 
-        # Second seed should print update messages
+        # Second seed should print already exists messages
         seed_users(db_session)
 
         captured = capsys.readouterr()
-        assert "↻ Updated existing user:" in captured.out
+        assert "↻ User reference already exists:" in captured.out
 
 
 class TestSeedArtworksWarnings:
@@ -544,9 +544,9 @@ class TestSeedBidsWarnings:
         seed_users(db_session)
         seed_artworks(db_session)
 
-        # Delete one user
-        user = db_session.query(User).first()
-        db_session.delete(user)
+        # Delete one buyer user specifically
+        buyer = db_session.query(User).filter(User.auth0_sub == "auth0|demo-buyer-001").first()
+        db_session.delete(buyer)
         db_session.commit()
 
         # Clear existing bids
@@ -582,7 +582,7 @@ class TestSeedPrintMessages:
         seed_users(db_session)
 
         captured = capsys.readouterr()
-        assert "✓ Created new user:" in captured.out
+        assert "✓ Created user reference:" in captured.out
 
     def test_seed_artworks_prints_create_message(self, db_session, capsys):
         """Test that creating new artworks prints create message."""
