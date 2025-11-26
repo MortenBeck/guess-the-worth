@@ -1,11 +1,17 @@
 """Seed demo users for testing and demonstration.
 
-Creates minimal user records. User data (email, name, role) is managed in Auth0.
+⚠️ DEPRECATED: This script should NOT be used in production with Auth0.
 
-IMPORTANT: Before running this seed script:
-1. Create corresponding users in Auth0 Dashboard
-2. Assign them appropriate roles (ADMIN, SELLER, BUYER)
-3. Use the auth0_sub values from Auth0 here
+With Auth0 integration, user records are automatically created in the database
+when users first log in through Auth0. This script is only useful for:
+- Creating test user references for development without Auth0
+- Pre-populating user IDs for testing seed scripts
+
+PRODUCTION APPROACH:
+1. Create users in Auth0 Dashboard
+2. Assign roles (ADMIN, SELLER, BUYER) in Auth0
+3. Have users log in through Auth0 (auto-creates minimal DB records)
+4. Then run artwork/bid seed scripts
 
 This script creates only minimal database references - actual user data
 comes from Auth0.
