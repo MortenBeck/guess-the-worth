@@ -14,7 +14,7 @@ from database import get_db
 from models.artwork import Artwork, ArtworkStatus
 from models.audit_log import AuditLog
 from models.bid import Bid
-from models.user import User, UserRole
+from models.user import User
 from services.audit_service import AuditService
 from utils.auth import get_current_user
 
@@ -23,7 +23,7 @@ router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 def require_admin(current_user: User = Depends(get_current_user)) -> User:
     """Ensure user is an admin."""
-    if current_user.role != UserRole.ADMIN:
+    if not hasattr(current_user, "role") or current_user.role != "ADMIN":
         raise HTTPException(status_code=403, detail="Admin access required")
     return current_user
 
@@ -37,25 +37,16 @@ def require_admin(current_user: User = Depends(get_current_user)) -> User:
 async def list_users(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, le=100),
-    role: Optional[str] = None,
-    search: Optional[str] = None,
     current_user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     """
-    List all users with optional filtering.
-    POC: Basic implementation.
+    List all users.
+
+    NOTE: This returns minimal user data from database.
+    For full user details (email, name, role), query Auth0 Management API.
     """
     query = db.query(User)
-
-    # Filter by role
-    if role:
-        query = query.filter(User.role == role)
-
-    # Search by name or email
-    if search:
-        search_pattern = f"%{search}%"
-        query = query.filter((User.name.ilike(search_pattern)) | (User.email.ilike(search_pattern)))
 
     # Get total count
     total = query.count()
@@ -68,16 +59,14 @@ async def list_users(
         "users": [
             {
                 "id": user.id,
-                "name": user.name,
-                "email": user.email,
-                "role": user.role,
+                "auth0_sub": user.auth0_sub,
                 "created_at": user.created_at.isoformat(),
-                "is_active": True,  # POC: Always true
             }
             for user in users
         ],
         "skip": skip,
         "limit": limit,
+        "note": "For full user details (email, name, role), query Auth0 Management API",
     }
 
 
@@ -94,9 +83,7 @@ async def get_user_details(
 
     # Get user statistics
     artworks_count = db.query(Artwork).filter(Artwork.seller_id == user_id).count()
-
     bids_count = db.query(Bid).filter(Bid.bidder_id == user_id).count()
-
     total_spent = (
         db.query(func.sum(Bid.amount))
         .filter(Bid.bidder_id == user_id, Bid.is_winning.is_(True))
@@ -106,15 +93,14 @@ async def get_user_details(
 
     return {
         "id": user.id,
-        "name": user.name,
-        "email": user.email,
-        "role": user.role,
+        "auth0_sub": user.auth0_sub,
         "created_at": user.created_at.isoformat(),
         "stats": {
             "artworks_created": artworks_count,
             "bids_placed": bids_count,
             "total_spent": float(total_spent),
         },
+        "note": "For email, name, and role, query Auth0 Management API",
     }
 
 
@@ -133,7 +119,7 @@ async def ban_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    if user.role == UserRole.ADMIN:
+    if hasattr(user, "role") and user.role == "ADMIN":
         raise HTTPException(status_code=400, detail="Cannot ban admin users")
 
     # POC: Just log the action (don't actually ban)
@@ -366,23 +352,13 @@ async def get_audit_logs(
 @router.post("/stamp-migrations")
 async def stamp_migrations(
     revision: str = Query(..., description="Migration revision to stamp (e.g., 'b2d54a525fd0')"),
-    bootstrap_token: Optional[str] = Query(None, description="Temporary bootstrap token"),
-    current_user: Optional[User] = Depends(require_admin),
+    current_user: User = Depends(require_admin),
 ):
     """
     Stamp the database with a specific migration revision without running migrations.
     Use this when the database schema already matches a migration version.
-
-    TEMPORARY: Supports bootstrap token for initial stamp.
+    Requires admin authentication.
     """
-    # TEMPORARY: Allow stamping with bootstrap token
-    BOOTSTRAP_TOKEN = "TEMP_SEED_2024_REMOVE_AFTER_USE"
-    using_bootstrap = bootstrap_token == BOOTSTRAP_TOKEN
-
-    # Require authentication if not using bootstrap
-    if not using_bootstrap and not current_user:
-        raise HTTPException(status_code=401, detail="Authentication required")
-
     try:
         import subprocess
 
@@ -409,23 +385,12 @@ async def stamp_migrations(
 
 @router.post("/run-migrations")
 async def run_migrations(
-    bootstrap_token: Optional[str] = Query(None, description="Temporary bootstrap token"),
-    current_user: Optional[User] = Depends(require_admin),
+    current_user: User = Depends(require_admin),
 ):
     """
     Run database migrations (alembic upgrade head).
-    Requires admin authentication or bootstrap token.
-
-    TEMPORARY: Supports bootstrap token for initial migration.
+    Requires admin authentication.
     """
-    # TEMPORARY: Allow migrations with bootstrap token
-    BOOTSTRAP_TOKEN = "TEMP_SEED_2024_REMOVE_AFTER_USE"
-    using_bootstrap = bootstrap_token == BOOTSTRAP_TOKEN
-
-    # Require authentication if not using bootstrap
-    if not using_bootstrap and not current_user:
-        raise HTTPException(status_code=401, detail="Authentication required")
-
     try:
         import subprocess
 
@@ -458,41 +423,14 @@ async def run_migrations(
 @router.post("/seed-database")
 async def seed_database(
     confirm: str = Query(..., description="Must be 'yes' to confirm"),
-    bootstrap_token: Optional[str] = Query(None, description="Temporary bootstrap token"),
-    current_user: Optional[User] = Depends(require_admin),
+    current_user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     """
     Seed the production database with demo data.
     Requires admin authentication and explicit confirmation.
     Safe to run multiple times (idempotent).
-
-    TEMPORARY: Supports a bootstrap token for initial seeding when no admin exists.
-    Bootstrap token: TEMP_SEED_2024_REMOVE_AFTER_USE
     """
-    # TEMPORARY: Allow seeding with bootstrap token when no users exist
-    BOOTSTRAP_TOKEN = "TEMP_SEED_2024_REMOVE_AFTER_USE"
-    using_bootstrap = False
-
-    if bootstrap_token == BOOTSTRAP_TOKEN:
-        # Check if any users exist
-        user_count = db.query(User).count()
-        if user_count == 0:
-            using_bootstrap = True
-            print("⚠️  Using bootstrap token for initial seeding")
-        else:
-            raise HTTPException(
-                status_code=403,
-                detail=(
-                    "Bootstrap token can only be used when database is empty. "
-                    "Use admin authentication."
-                ),
-            )
-
-    # Require authentication if not using bootstrap
-    if not using_bootstrap and not current_user:
-        raise HTTPException(status_code=401, detail="Authentication required")
-
     if confirm.lower() != "yes":
         raise HTTPException(
             status_code=400,
@@ -510,20 +448,19 @@ async def seed_database(
         artwork_count = seed_artworks(db)
         bid_count = seed_bids(db)
 
-        # Log the seeding action (only if user exists)
-        if current_user:
-            AuditService.log_action(
-                db=db,
-                action="database_seeded",
-                resource_type="system",
-                resource_id=0,
-                user=current_user,
-                details={
-                    "users": user_count,
-                    "artworks": artwork_count,
-                    "bids": bid_count,
-                },
-            )
+        # Log the seeding action
+        AuditService.log_action(
+            db=db,
+            action="database_seeded",
+            resource_type="system",
+            resource_id=0,
+            user=current_user,
+            details={
+                "users": user_count,
+                "artworks": artwork_count,
+                "bids": bid_count,
+            },
+        )
 
         return {
             "success": True,

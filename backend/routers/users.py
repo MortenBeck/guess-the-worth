@@ -27,6 +27,9 @@ async def get_users(
     Query parameters:
     - skip: Number of records to skip (default: 0)
     - limit: Maximum number of records to return (default: 20, max: 100)
+
+    NOTE: This endpoint returns minimal user data. Full user profiles (email, name)
+    are managed in Auth0 and not available through this endpoint.
     """
     # Validate pagination parameters
     if skip < 0:
@@ -45,14 +48,41 @@ async def get_users(
         await get_current_user(credentials, db)
 
     users = db.query(User).offset(skip).limit(limit).all()
+
+    # Attach default Auth0 data for response validation
+    # (Real user data is in Auth0, not our database)
+    for user in users:
+        if not hasattr(user, "email") or not user.email:
+            user.email = f"user-{user.id}@auth0.placeholder"
+        if not hasattr(user, "name") or not user.name:
+            user.name = f"User {user.id}"
+        if not hasattr(user, "role") or not user.role:
+            user.role = "BUYER"
+
     return users
 
 
 @router.get("/{user_id}", response_model=UserResponse)
 async def get_user(user_id: int, db: Session = Depends(get_db)):
+    """
+    Get a single user by ID.
+
+    NOTE: This endpoint returns minimal user data. Full user profiles (email, name)
+    are managed in Auth0 and not available through this endpoint.
+    """
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+
+    # Attach default Auth0 data for response validation
+    # (Real user data is in Auth0, not our database)
+    if not hasattr(user, "email") or not user.email:
+        user.email = f"user-{user.id}@auth0.placeholder"
+    if not hasattr(user, "name") or not user.name:
+        user.name = f"User {user.id}"
+    if not hasattr(user, "role") or not user.role:
+        user.role = "BUYER"
+
     return user
 
 
@@ -65,12 +95,12 @@ async def update_current_user(
     """
     Update current user's profile.
 
+    NOTE: User profile data (email, name, role) is managed in Auth0.
+    This endpoint exists for compatibility but cannot update any fields.
+    To update user profile, use the Auth0 Management API or Auth0 Dashboard.
+
     SECURITY: Can only update own profile, not other users.
     """
-    # Update only provided fields
-    for field, value in user_update.dict(exclude_unset=True).items():
-        setattr(current_user, field, value)
-
-    db.commit()
-    db.refresh(current_user)
+    # User data is managed in Auth0, so there are no fields to update in our database
+    # Just return the current user with Auth0 data attached
     return current_user

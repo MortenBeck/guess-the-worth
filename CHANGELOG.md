@@ -10,17 +10,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Comprehensive project documentation (CONTRIBUTING.md, CHANGELOG.md, architecture docs)
+- Auth0 integration for centralized authentication and authorization
+- Auth0 Action for adding user roles to JWT tokens
+- Comprehensive Auth0 migration guide (AUTH0_MIGRATION_GUIDE.md)
+- Idempotent database migration to remove user fields managed by Auth0
 
 ### Changed
-- Updated dependency versions via Dependabot
+- **BREAKING**: User authentication now managed by Auth0 instead of database
+- User model simplified to minimal fields (id, auth0_sub, created_at)
+- User data (email, name, role) now attached at runtime from Auth0 JWT tokens
+- All role checks updated to use string literals instead of UserRole enum
+- Admin endpoints updated to return minimal user data with Auth0 API reference notes
+- Seed scripts updated to create minimal user references
+- All test files updated to use new Auth0-centric user creation pattern
 
-### Fixed
-- Health check endpoints now support HEAD requests for UptimeRobot monitoring compatibility
+### Removed
+- UserRole enum class (replaced with Literal type alias)
+- Database storage of user email, name, role, and password_hash fields
+- Email/password login and registration endpoints
+- Password hashing utilities
 
 ### Security
-- Known security vulnerabilities documented in SECURITY.md
-- All critical security issues remain unfixed (see SECURITY.md for details)
+- Enhanced security through Auth0's OAuth2/OpenID Connect implementation
+- Centralized user management and role assignment through Auth0 Dashboard
+- JWT token validation with Auth0 userinfo endpoint
+- Fallback JWT authentication for testing and API-only access
 
 ---
 

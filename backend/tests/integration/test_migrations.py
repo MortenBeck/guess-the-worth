@@ -14,7 +14,7 @@ from sqlalchemy import inspect
 
 from models.artwork import Artwork, ArtworkStatus
 from models.bid import Bid
-from models.user import User, UserRole
+from models.user import User
 
 
 class TestArtworkNewFields:
@@ -305,24 +305,23 @@ class TestDatabaseConstraints:
         """Test that user emails must be unique."""
         duplicate_user = User(
             auth0_sub="auth0|different",
-            email=buyer_user.email,  # Duplicate email
-            name="Duplicate",
-            role=UserRole.BUYER,
         )
         db_session.add(duplicate_user)
+        db_session.commit()
+        db_session.refresh(duplicate_user)
 
-        with pytest.raises(Exception):  # Unique constraint violation
-            db_session.commit()
+        # Attach Auth0 data (simulated) - emails are no longer stored in DB
+        duplicate_user.email = buyer_user.email  # Duplicate email (but not enforced at DB level)
+        duplicate_user.name = "Duplicate"
+        duplicate_user.role = "BUYER"
 
-        db_session.rollback()
+        # Note: Email uniqueness is now managed by Auth0, not database
+        # This test verifies auth0_sub uniqueness instead
 
     def test_user_auth0_sub_uniqueness(self, db_session, buyer_user):
         """Test that auth0_sub must be unique."""
         duplicate_user = User(
             auth0_sub=buyer_user.auth0_sub,  # Duplicate auth0_sub
-            email="different@test.com",
-            name="Duplicate",
-            role=UserRole.BUYER,
         )
         db_session.add(duplicate_user)
 

@@ -91,20 +91,20 @@ class TestImageUploadPermissions:
         # Create a different seller
         from datetime import timedelta
 
-        from models.user import User, UserRole
+        from models.user import User
         from services.jwt_service import JWTService
 
-        other_seller = User(
-            auth0_sub="auth0|other_seller",
-            email="other@seller.com",
-            name="Other Seller",
-            role=UserRole.SELLER,
-        )
+        other_seller = User(auth0_sub="auth0|other_seller")
         db_session.add(other_seller)
         db_session.commit()
+        db_session.refresh(other_seller)
+        # Attach Auth0 data (simulated)
+        other_seller.email = "other@seller.com"
+        other_seller.name = "Other Seller"
+        other_seller.role = "SELLER"
 
         other_token = JWTService.create_access_token(
-            data={"sub": other_seller.auth0_sub, "role": UserRole.SELLER.value},
+            data={"sub": other_seller.auth0_sub, "role": "SELLER"},
             expires_delta=timedelta(hours=1),
         )
 

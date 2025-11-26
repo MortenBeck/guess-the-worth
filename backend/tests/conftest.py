@@ -18,7 +18,7 @@ from main import app
 from models.artwork import Artwork, ArtworkStatus
 from models.base import Base
 from models.bid import Bid
-from models.user import User, UserRole
+from models.user import User
 from schemas.auth import AuthUser
 from services.jwt_service import JWTService
 
@@ -113,39 +113,42 @@ def client(db_session) -> TestClient:
 @pytest.fixture
 def buyer_user(db_session) -> User:
     """Create a test buyer user."""
-    user = User(
-        auth0_sub="auth0|buyer123", email="buyer@test.com", name="Test Buyer", role=UserRole.BUYER
-    )
+    user = User(auth0_sub="auth0|buyer123")
     db_session.add(user)
     db_session.commit()
     db_session.refresh(user)
+    # Attach Auth0 data (simulated)
+    user.email = "buyer@test.com"
+    user.name = "Test Buyer"
+    user.role = "BUYER"
     return user
 
 
 @pytest.fixture
 def seller_user(db_session) -> User:
     """Create a test seller user."""
-    user = User(
-        auth0_sub="auth0|seller123",
-        email="seller@test.com",
-        name="Test Seller",
-        role=UserRole.SELLER,
-    )
+    user = User(auth0_sub="auth0|seller123")
     db_session.add(user)
     db_session.commit()
     db_session.refresh(user)
+    # Attach Auth0 data (simulated)
+    user.email = "seller@test.com"
+    user.name = "Test Seller"
+    user.role = "SELLER"
     return user
 
 
 @pytest.fixture
 def admin_user(db_session) -> User:
     """Create a test admin user."""
-    user = User(
-        auth0_sub="auth0|admin123", email="admin@test.com", name="Test Admin", role=UserRole.ADMIN
-    )
+    user = User(auth0_sub="auth0|admin123")
     db_session.add(user)
     db_session.commit()
     db_session.refresh(user)
+    # Attach Auth0 data (simulated)
+    user.email = "admin@test.com"
+    user.name = "Test Admin"
+    user.role = "ADMIN"
     return user
 
 
@@ -198,7 +201,12 @@ def bid(db_session, artwork, buyer_user) -> Bid:
 def buyer_token(buyer_user) -> str:
     """Generate a valid JWT token for buyer user."""
     return JWTService.create_access_token(
-        data={"sub": buyer_user.auth0_sub, "role": UserRole.BUYER.value},
+        data={
+            "sub": buyer_user.auth0_sub,
+            "email": buyer_user.email,
+            "name": buyer_user.name,
+            "role": "BUYER",
+        },
         expires_delta=timedelta(hours=1),
     )
 
@@ -207,7 +215,12 @@ def buyer_token(buyer_user) -> str:
 def seller_token(seller_user) -> str:
     """Generate a valid JWT token for seller user."""
     return JWTService.create_access_token(
-        data={"sub": seller_user.auth0_sub, "role": UserRole.SELLER.value},
+        data={
+            "sub": seller_user.auth0_sub,
+            "email": seller_user.email,
+            "name": seller_user.name,
+            "role": "SELLER",
+        },
         expires_delta=timedelta(hours=1),
     )
 
@@ -216,7 +229,12 @@ def seller_token(seller_user) -> str:
 def admin_token(admin_user) -> str:
     """Generate a valid JWT token for admin user."""
     return JWTService.create_access_token(
-        data={"sub": admin_user.auth0_sub, "role": UserRole.ADMIN.value},
+        data={
+            "sub": admin_user.auth0_sub,
+            "email": admin_user.email,
+            "name": admin_user.name,
+            "role": "ADMIN",
+        },
         expires_delta=timedelta(hours=1),
     )
 

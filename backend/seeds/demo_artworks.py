@@ -8,7 +8,7 @@ from datetime import UTC, datetime, timedelta
 from sqlalchemy.orm import Session
 
 from models.artwork import Artwork, ArtworkStatus
-from models.user import User, UserRole
+from models.user import User
 
 
 def seed_artworks(db: Session) -> int:
@@ -17,21 +17,28 @@ def seed_artworks(db: Session) -> int:
     This function is idempotent - safe to run multiple times.
     Artworks are identified by a combination of seller and title.
 
+    NOTE: Users must be seeded first with matching auth0_sub values.
+
     Args:
-        db: Database session
+        db: Session
 
     Returns:
         Number of artworks created or verified
     """
-    # Get demo sellers
-    sellers = db.query(User).filter(User.role == UserRole.SELLER).all()
+    # Get demo sellers by auth0_sub (seller users)
+    seller_subs = [
+        "auth0|demo-seller-001",
+        "auth0|demo-seller-002",
+        "auth0|demo-seller-003",
+    ]
+    sellers = db.query(User).filter(User.auth0_sub.in_(seller_subs)).all()
 
     if not sellers:
         print("   ⚠️  No sellers found! Please seed users first.")
         return 0
 
-    # Map sellers by email for easy access
-    seller_map = {seller.email: seller for seller in sellers}
+    # Map sellers by auth0_sub for easy access
+    seller_map = {seller.auth0_sub: seller for seller in sellers}
 
     # Calculate dates for auctions
     now = datetime.now(UTC)
@@ -41,9 +48,9 @@ def seed_artworks(db: Session) -> int:
     past_date = now - timedelta(days=1)
 
     demo_artworks = [
-        # Alice Johnson's artworks (seller1)
+        # Seller 1's artworks
         {
-            "seller_email": "seller1@guesstheworth.demo",
+            "seller_sub": "auth0|demo-seller-001",
             "title": "Sunset Over Mountains",
             "artist_name": "Alice Johnson",
             "category": "Landscape",
@@ -58,7 +65,7 @@ def seed_artworks(db: Session) -> int:
             "image_url": None,
         },
         {
-            "seller_email": "seller1@guesstheworth.demo",
+            "seller_sub": "auth0|demo-seller-001",
             "title": "Urban Dreams",
             "artist_name": "Alice Johnson",
             "category": "Abstract",
@@ -72,7 +79,7 @@ def seed_artworks(db: Session) -> int:
             "image_url": None,
         },
         {
-            "seller_email": "seller1@guesstheworth.demo",
+            "seller_sub": "auth0|demo-seller-001",
             "title": "Morning Coffee",
             "artist_name": "Alice Johnson",
             "category": "Still Life",
@@ -85,7 +92,7 @@ def seed_artworks(db: Session) -> int:
         },
         # Bob Martinez's artworks (seller2)
         {
-            "seller_email": "seller2@guesstheworth.demo",
+            "seller_sub": "auth0|demo-seller-002",
             "title": "The Dancer",
             "artist_name": "Bob Martinez",
             "category": "Portrait",
@@ -97,7 +104,7 @@ def seed_artworks(db: Session) -> int:
             "image_url": None,
         },
         {
-            "seller_email": "seller2@guesstheworth.demo",
+            "seller_sub": "auth0|demo-seller-002",
             "title": "Ocean Waves",
             "artist_name": "Bob Martinez",
             "category": "Seascape",
@@ -109,7 +116,7 @@ def seed_artworks(db: Session) -> int:
             "image_url": None,
         },
         {
-            "seller_email": "seller2@guesstheworth.demo",
+            "seller_sub": "auth0|demo-seller-002",
             "title": "Jazz Night",
             "artist_name": "Bob Martinez",
             "category": "Abstract",
@@ -122,7 +129,7 @@ def seed_artworks(db: Session) -> int:
         },
         # Carol Chen's artworks (seller3)
         {
-            "seller_email": "seller3@guesstheworth.demo",
+            "seller_sub": "auth0|demo-seller-003",
             "title": "Garden Bloom",
             "artist_name": "Carol Chen",
             "category": "Floral",
@@ -136,7 +143,7 @@ def seed_artworks(db: Session) -> int:
             "image_url": None,
         },
         {
-            "seller_email": "seller3@guesstheworth.demo",
+            "seller_sub": "auth0|demo-seller-003",
             "title": "Midnight Sky",
             "artist_name": "Carol Chen",
             "category": "Landscape",
@@ -148,7 +155,7 @@ def seed_artworks(db: Session) -> int:
             "image_url": None,
         },
         {
-            "seller_email": "seller3@guesstheworth.demo",
+            "seller_sub": "auth0|demo-seller-003",
             "title": "City Lights",
             "artist_name": "Carol Chen",
             "category": "Urban",
@@ -160,7 +167,7 @@ def seed_artworks(db: Session) -> int:
             "image_url": None,
         },
         {
-            "seller_email": "seller3@guesstheworth.demo",
+            "seller_sub": "auth0|demo-seller-003",
             "title": "Autumn Forest",
             "artist_name": "Carol Chen",
             "category": "Landscape",
@@ -172,7 +179,7 @@ def seed_artworks(db: Session) -> int:
             "image_url": None,
         },
         {
-            "seller_email": "seller3@guesstheworth.demo",
+            "seller_sub": "auth0|demo-seller-003",
             "title": "Vintage Portrait",
             "artist_name": "Carol Chen",
             "category": "Portrait",
@@ -185,7 +192,7 @@ def seed_artworks(db: Session) -> int:
         },
         # Additional artworks for variety
         {
-            "seller_email": "seller1@guesstheworth.demo",
+            "seller_sub": "auth0|demo-seller-001",
             "title": "Desert Mirage",
             "artist_name": "Alice Johnson",
             "category": "Landscape",
@@ -197,7 +204,7 @@ def seed_artworks(db: Session) -> int:
             "image_url": None,
         },
         {
-            "seller_email": "seller2@guesstheworth.demo",
+            "seller_sub": "auth0|demo-seller-002",
             "title": "Winter Wonderland",
             "artist_name": "Bob Martinez",
             "category": "Landscape",
@@ -209,7 +216,7 @@ def seed_artworks(db: Session) -> int:
             "image_url": None,
         },
         {
-            "seller_email": "seller3@guesstheworth.demo",
+            "seller_sub": "auth0|demo-seller-003",
             "title": "Abstract Emotions",
             "artist_name": "Carol Chen",
             "category": "Abstract",
@@ -221,7 +228,7 @@ def seed_artworks(db: Session) -> int:
             "image_url": None,
         },
         {
-            "seller_email": "seller1@guesstheworth.demo",
+            "seller_sub": "auth0|demo-seller-001",
             "title": "Spring Meadow",
             "artist_name": "Alice Johnson",
             "category": "Floral",
@@ -238,11 +245,11 @@ def seed_artworks(db: Session) -> int:
 
     for artwork_data in demo_artworks:
         # Get seller
-        seller_email = artwork_data.pop("seller_email")
-        seller = seller_map.get(seller_email)
+        seller_sub = artwork_data.pop("seller_sub")
+        seller = seller_map.get(seller_sub)
 
         if not seller:
-            print(f"   ⚠️  Seller not found: {seller_email}")
+            print(f"   ⚠️  Seller not found: {seller_sub}")
             continue
 
         # Check if artwork already exists (idempotency)
