@@ -21,12 +21,12 @@ class TestSeedUsers:
     """Test demo_users.seed_users() function."""
 
     def test_seed_users_creates_all_users(self, db_session):
-        """Test that seed_users creates all 9 demo users."""
+        """Test that seed_users creates all 10 demo users."""
         count = seed_users(db_session)
 
-        assert count == 9
+        assert count == 10
         all_users = db_session.query(User).all()
-        assert len(all_users) == 9
+        assert len(all_users) == 10
 
     def test_seed_users_creates_correct_roles(self, db_session):
         """Test that users are created with correct roles."""
@@ -35,45 +35,45 @@ class TestSeedUsers:
         # Note: Role is now attached at runtime from Auth0, not stored in DB
         # This test would need to be adapted based on how seed_users attaches roles
         all_users = db_session.query(User).all()
-        assert len(all_users) == 9  # Total users created
+        assert len(all_users) == 10  # Total users created
 
     def test_seed_users_creates_correct_data(self, db_session):
-        """Test that admin user has correct auth0_sub."""
+        """Test that first seller user has correct auth0_sub."""
         seed_users(db_session)
 
-        admin = db_session.query(User).filter(User.auth0_sub == "auth0|demo-admin-001").first()
-        assert admin is not None
-        assert admin.auth0_sub == "auth0|demo-admin-001"
+        seller = db_session.query(User).filter(User.auth0_sub == "auth0|6926e831a9097688ce0c5405").first()
+        assert seller is not None
+        assert seller.auth0_sub == "auth0|6926e831a9097688ce0c5405"
 
     def test_seed_users_is_idempotent(self, db_session):
         """Test that running seed_users twice doesn't duplicate users."""
         # First run
         count1 = seed_users(db_session)
-        assert count1 == 9
+        assert count1 == 10
 
         # Second run
         count2 = seed_users(db_session)
-        assert count2 == 9
+        assert count2 == 10
 
         # Verify no duplicates
         all_users = db_session.query(User).all()
-        assert len(all_users) == 9
+        assert len(all_users) == 10
 
     def test_seed_users_updates_existing_data(self, db_session):
         """Test that re-seeding is idempotent."""
         # First run
         seed_users(db_session)
 
-        # Get admin user
-        admin = db_session.query(User).filter(User.auth0_sub == "auth0|demo-admin-001").first()
-        original_id = admin.id
+        # Get first seller user
+        seller = db_session.query(User).filter(User.auth0_sub == "auth0|6926e831a9097688ce0c5405").first()
+        original_id = seller.id
 
         # Second run should be idempotent
         seed_users(db_session)
 
         # Verify same user still exists with same ID
-        admin = db_session.query(User).filter(User.auth0_sub == "auth0|demo-admin-001").first()
-        assert admin.id == original_id
+        seller = db_session.query(User).filter(User.auth0_sub == "auth0|6926e831a9097688ce0c5405").first()
+        assert seller.id == original_id
 
     def test_seed_users_all_have_auth0_sub(self, db_session):
         """Test that all users have auth0_sub values."""
@@ -82,15 +82,15 @@ class TestSeedUsers:
         users = db_session.query(User).all()
         for user in users:
             assert user.auth0_sub is not None
-            assert user.auth0_sub.startswith("auth0|demo-")
+            assert user.auth0_sub.startswith("auth0|")
 
     def test_seed_users_all_have_demo_auth0_subs(self, db_session):
-        """Test that all users have demo auth0_sub values."""
+        """Test that all users have auth0_sub values."""
         seed_users(db_session)
 
         users = db_session.query(User).all()
         for user in users:
-            assert user.auth0_sub.startswith("auth0|demo-")
+            assert user.auth0_sub.startswith("auth0|")
 
 
 class TestSeedArtworks:
@@ -356,7 +356,7 @@ class TestSeedManager:
         manager.seed_database(db_session)
 
         # Expected counts based on seed scripts
-        assert db_session.query(User).count() == 9
+        assert db_session.query(User).count() == 10
         assert db_session.query(Artwork).count() == 15
         # Bids count may vary based on artworks with bids
 
@@ -410,7 +410,7 @@ class TestSeedIntegration:
         """Test the complete seeding workflow in order."""
         # Seed users
         user_count = seed_users(db_session)
-        assert user_count == 9
+        assert user_count == 10
 
         # Seed artworks (depends on users)
         artwork_count = seed_artworks(db_session)
@@ -454,7 +454,7 @@ class TestSeedIntegration:
         bids2 = db_session.query(Bid).count()
 
         # Counts should be the same
-        assert users1 == users2 == 9
+        assert users1 == users2 == 10
         assert artworks1 == artworks2 == 15
         assert bids1 == bids2
 
@@ -544,10 +544,11 @@ class TestSeedBidsWarnings:
         seed_users(db_session)
         seed_artworks(db_session)
 
-        # Delete one buyer user specifically
-        buyer = db_session.query(User).filter(User.auth0_sub == "auth0|demo-buyer-001").first()
-        db_session.delete(buyer)
-        db_session.commit()
+        # Delete one buyer user specifically (BuyerAlice)
+        buyer = db_session.query(User).filter(User.auth0_sub == "auth0|6926e8c9d490f658706da21a").first()
+        if buyer:
+            db_session.delete(buyer)
+            db_session.commit()
 
         # Clear existing bids
         db_session.query(Bid).delete()

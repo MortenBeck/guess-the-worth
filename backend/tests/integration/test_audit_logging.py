@@ -69,24 +69,26 @@ def test_artwork_sold_creates_audit_log(
     )
     assert response.status_code == 200
 
-    # Check that audit logs were created (both bid_placed and artwork_sold)
+    # Check that audit logs were created (both bid_placed and winning_bid_placed)
     bid_logs = db_session.query(AuditLog).filter(AuditLog.action == "bid_placed").all()
     assert len(bid_logs) > 0, "No audit log created for bid placement"
 
-    sold_logs = db_session.query(AuditLog).filter(AuditLog.action == "artwork_sold").all()
-    assert len(sold_logs) > 0, "No audit log created for artwork sold"
+    winning_bid_logs = db_session.query(AuditLog).filter(AuditLog.action == "winning_bid_placed").all()
+    assert len(winning_bid_logs) > 0, "No audit log created for winning bid"
 
-    # Verify the artwork_sold audit log
-    latest_sold_log = sold_logs[-1]
-    assert latest_sold_log.action == "artwork_sold"
-    assert latest_sold_log.resource_type == "artwork"
-    assert latest_sold_log.resource_id == artwork.id
-    assert latest_sold_log.user_id == buyer_user.id
-    assert latest_sold_log.details is not None
-    assert "final_bid" in latest_sold_log.details
-    assert latest_sold_log.details["final_bid"] == artwork.secret_threshold
-    assert "seller_id" in latest_sold_log.details
-    assert "buyer_id" in latest_sold_log.details
+    # Verify the winning_bid_placed audit log
+    latest_winning_log = winning_bid_logs[-1]
+    assert latest_winning_log.action == "winning_bid_placed"
+    assert latest_winning_log.resource_type == "artwork"
+    assert latest_winning_log.resource_id == artwork.id
+    assert latest_winning_log.user_id == buyer_user.id
+    assert latest_winning_log.details is not None
+    assert "bid_amount" in latest_winning_log.details
+    assert latest_winning_log.details["bid_amount"] == artwork.secret_threshold
+    assert "seller_id" in latest_winning_log.details
+    assert "buyer_id" in latest_winning_log.details
+    assert "status" in latest_winning_log.details
+    assert latest_winning_log.details["status"] == "PENDING_PAYMENT"
 
 
 def test_audit_log_contains_request_metadata(

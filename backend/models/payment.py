@@ -2,8 +2,7 @@
 from datetime import datetime
 from enum import Enum
 
-from sqlalchemy import Column, Integer, String, DECIMAL, DateTime, Text, ForeignKey, Index
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import Column, Integer, String, DECIMAL, DateTime, Text, ForeignKey, Index, JSON
 from sqlalchemy.orm import relationship
 
 from models.base import Base
@@ -37,7 +36,7 @@ class Payment(Base):
     currency = Column(String(3), default="usd")
     status = Column(String(50), nullable=False, default=PaymentStatus.PENDING)
     failure_reason = Column(Text, nullable=True)
-    payment_metadata = Column(JSONB, nullable=True)  # 'metadata' is reserved in SQLAlchemy
+    payment_metadata = Column(JSON, nullable=True)  # 'metadata' is reserved in SQLAlchemy
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
