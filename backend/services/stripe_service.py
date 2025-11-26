@@ -1,5 +1,6 @@
 """Stripe payment service for handling payment operations."""
 import stripe
+from stripe._error import StripeError, SignatureVerificationError
 from typing import Dict, Any
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
@@ -85,7 +86,7 @@ class StripeService:
                 "payment_id": payment.id,
             }
 
-        except stripe.error.StripeError as e:
+        except StripeError as e:
             db.rollback()
             raise HTTPException(
                 status_code=400,
@@ -108,7 +109,7 @@ class StripeService:
         """
         try:
             return stripe.PaymentIntent.retrieve(payment_intent_id)
-        except stripe.error.StripeError as e:
+        except StripeError as e:
             raise HTTPException(
                 status_code=400,
                 detail=f"Failed to retrieve payment intent: {str(e)}"
@@ -242,5 +243,5 @@ class StripeService:
             return event
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid payload")
-        except stripe.error.SignatureVerificationError:
+        except SignatureVerificationError:
             raise HTTPException(status_code=400, detail="Invalid signature")

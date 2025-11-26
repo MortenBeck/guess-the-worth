@@ -13,7 +13,7 @@ class PaymentBase(BaseModel):
     currency: str = Field(default="usd", max_length=3)
 
 
-class PaymentCreate(PaymentBase):
+class PaymentCreate(BaseModel):
     """Schema for creating a new payment intent."""
 
     bid_id: int = Field(..., description="ID of the winning bid")
