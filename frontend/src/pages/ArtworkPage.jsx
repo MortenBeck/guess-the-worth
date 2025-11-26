@@ -35,6 +35,20 @@ const ArtworkPage = () => {
   // Enable real-time bid updates for this artwork
   useRealtimeBids(id);
 
+  // Fetch artwork details
+  const {
+    data: artwork,
+    isLoading: artworkLoading,
+    error: artworkError,
+  } = useQuery({
+    queryKey: ["artwork", id],
+    queryFn: async () => {
+      const response = await artworkService.getById(id);
+      return response.data;
+    },
+    staleTime: 10000,
+  });
+
   // Listen for payment_required event
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -66,20 +80,6 @@ const ArtworkPage = () => {
       socket.off("payment_required", handlePaymentRequired);
     };
   }, [id, isAuthenticated, artwork]);
-
-  // Fetch artwork details
-  const {
-    data: artwork,
-    isLoading: artworkLoading,
-    error: artworkError,
-  } = useQuery({
-    queryKey: ["artwork", id],
-    queryFn: async () => {
-      const response = await artworkService.getById(id);
-      return response.data;
-    },
-    staleTime: 10000,
-  });
 
   // Fetch recent bids
   const { data: recentBids = [], isLoading: bidsLoading } = useQuery({
