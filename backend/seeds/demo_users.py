@@ -41,15 +41,18 @@ def seed_users(db: Session) -> int:
     # These auth0_sub values must match users created in Auth0
     # Format: auth0|<user-id> or google-oauth2|<id> or other provider format
     demo_users = [
-        {"auth0_sub": "auth0|demo-admin-001"},  # Assign ADMIN role in Auth0
-        {"auth0_sub": "auth0|demo-seller-001"},  # Assign SELLER role in Auth0
-        {"auth0_sub": "auth0|demo-seller-002"},  # Assign SELLER role in Auth0
-        {"auth0_sub": "auth0|demo-seller-003"},  # Assign SELLER role in Auth0
-        {"auth0_sub": "auth0|demo-buyer-001"},  # Assign BUYER role in Auth0
-        {"auth0_sub": "auth0|demo-buyer-002"},  # Assign BUYER role in Auth0
-        {"auth0_sub": "auth0|demo-buyer-003"},  # Assign BUYER role in Auth0
-        {"auth0_sub": "auth0|demo-buyer-004"},  # Assign BUYER role in Auth0
-        {"auth0_sub": "auth0|demo-buyer-005"},  # Assign BUYER role in Auth0
+        # Seller accounts (5)
+        {"auth0_sub": "auth0|6926e831a9097688ce0c5405"},  # SellerAdam
+        {"auth0_sub": "auth0|6926e8dab9d364fc82c5472e"},  # SellerBrian
+        {"auth0_sub": "auth0|6926e8f4c5c25e4533a50903"},  # SellerCharles
+        {"auth0_sub": "auth0|6926e90fa9097688ce0c54f5"},  # SellerDaniel
+        {"auth0_sub": "auth0|6926e926ec0b07c94d935a5b"},  # SellerEdward
+        # Buyer accounts (5)
+        {"auth0_sub": "auth0|6926e8c9d490f658706da21a"},  # BuyerAlice
+        {"auth0_sub": "auth0|6926e8e9304088403bef3ee3"},  # BuyerBella
+        {"auth0_sub": "auth0|6926e902cbec956206df1912"},  # BuyerClaire
+        {"auth0_sub": "auth0|6926e91b4a5f2c59dd974374"},  # BuyerDiana
+        {"auth0_sub": "auth0|6926e931ec0b07c94d935a66"},  # BuyerElla
     ]
 
     created_count = 0
