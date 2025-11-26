@@ -33,7 +33,7 @@ describe("authStore", () => {
         id: 1,
         email: "test@example.com",
         name: "Test User",
-        role: "buyer",
+        role: "BUYER",
       };
       const mockToken = "test-token-123";
 
@@ -51,13 +51,13 @@ describe("authStore", () => {
         id: 2,
         email: "seller@example.com",
         name: "Seller User",
-        role: "seller",
+        role: "SELLER",
       };
 
       useAuthStore.getState().setAuth(sellerUser, "seller-token");
 
       const state = useAuthStore.getState();
-      expect(state.user.role).toBe("seller");
+      expect(state.user.role).toBe("SELLER");
       expect(state.isAuthenticated).toBe(true);
     });
 
@@ -66,13 +66,13 @@ describe("authStore", () => {
         id: 3,
         email: "admin@example.com",
         name: "Admin User",
-        role: "admin",
+        role: "ADMIN",
       };
 
       useAuthStore.getState().setAuth(adminUser, "admin-token");
 
       const state = useAuthStore.getState();
-      expect(state.user.role).toBe("admin");
+      expect(state.user.role).toBe("ADMIN");
       expect(state.isAuthenticated).toBe(true);
     });
   });
@@ -80,7 +80,7 @@ describe("authStore", () => {
   describe("clearAuth", () => {
     it("should clear all auth data", () => {
       // First set some auth data
-      const mockUser = { id: 1, email: "test@example.com", role: "buyer" };
+      const mockUser = { id: 1, email: "test@example.com", role: "BUYER" };
       useAuthStore.getState().setAuth(mockUser, "test-token");
 
       // Then clear it
@@ -122,7 +122,7 @@ describe("authStore", () => {
         id: 1,
         email: "test@example.com",
         name: "Test User",
-        role: "buyer",
+        role: "BUYER",
       };
 
       useAuthStore.getState().setAuth(initialUser, "token");
@@ -140,7 +140,7 @@ describe("authStore", () => {
         id: 1,
         email: "test@example.com",
         name: "Test User",
-        role: "buyer",
+        role: "BUYER",
       };
 
       useAuthStore.getState().setAuth(initialUser, "token");
@@ -153,43 +153,43 @@ describe("authStore", () => {
       const state = useAuthStore.getState();
       expect(state.user.name).toBe("New Name");
       expect(state.user.email).toBe("newemail@example.com");
-      expect(state.user.role).toBe("buyer"); // Unchanged
+      expect(state.user.role).toBe("BUYER"); // Unchanged
     });
   });
 
   describe("hasRole", () => {
     it("should return true for matching role", () => {
-      const user = { id: 1, email: "test@example.com", role: "buyer" };
+      const user = { id: 1, email: "test@example.com", role: "BUYER" };
       useAuthStore.getState().setAuth(user, "token");
 
-      const hasRole = useAuthStore.getState().hasRole("buyer");
+      const hasRole = useAuthStore.getState().hasRole("BUYER");
       expect(hasRole).toBe(true);
     });
 
     it("should return false for non-matching role", () => {
-      const user = { id: 1, email: "test@example.com", role: "buyer" };
+      const user = { id: 1, email: "test@example.com", role: "BUYER" };
       useAuthStore.getState().setAuth(user, "token");
 
-      const hasRole = useAuthStore.getState().hasRole("admin");
+      const hasRole = useAuthStore.getState().hasRole("ADMIN");
       expect(hasRole).toBe(false);
     });
 
     it("should return false when user is null", () => {
-      const hasRole = useAuthStore.getState().hasRole("buyer");
+      const hasRole = useAuthStore.getState().hasRole("BUYER");
       expect(hasRole).toBe(false);
     });
   });
 
   describe("isAdmin", () => {
     it("should return true for admin user", () => {
-      const user = { id: 1, email: "admin@example.com", role: "admin" };
+      const user = { id: 1, email: "admin@example.com", role: "ADMIN" };
       useAuthStore.getState().setAuth(user, "token");
 
       expect(useAuthStore.getState().isAdmin()).toBe(true);
     });
 
     it("should return false for non-admin user", () => {
-      const user = { id: 1, email: "buyer@example.com", role: "buyer" };
+      const user = { id: 1, email: "buyer@example.com", role: "BUYER" };
       useAuthStore.getState().setAuth(user, "token");
 
       expect(useAuthStore.getState().isAdmin()).toBe(false);
@@ -202,21 +202,21 @@ describe("authStore", () => {
 
   describe("isSeller", () => {
     it("should return true for seller role", () => {
-      const user = { id: 1, email: "seller@example.com", role: "seller" };
+      const user = { id: 1, email: "seller@example.com", role: "SELLER" };
       useAuthStore.getState().setAuth(user, "token");
 
       expect(useAuthStore.getState().isSeller()).toBe(true);
     });
 
     it("should return true for admin role (admin can sell)", () => {
-      const user = { id: 1, email: "admin@example.com", role: "admin" };
+      const user = { id: 1, email: "admin@example.com", role: "ADMIN" };
       useAuthStore.getState().setAuth(user, "token");
 
       expect(useAuthStore.getState().isSeller()).toBe(true);
     });
 
     it("should return false for buyer role", () => {
-      const user = { id: 1, email: "buyer@example.com", role: "buyer" };
+      const user = { id: 1, email: "buyer@example.com", role: "BUYER" };
       useAuthStore.getState().setAuth(user, "token");
 
       expect(useAuthStore.getState().isSeller()).toBe(false);
@@ -229,21 +229,21 @@ describe("authStore", () => {
 
   describe("isBuyer", () => {
     it("should return true for buyer role", () => {
-      const user = { id: 1, email: "buyer@example.com", role: "buyer" };
+      const user = { id: 1, email: "buyer@example.com", role: "BUYER" };
       useAuthStore.getState().setAuth(user, "token");
 
       expect(useAuthStore.getState().isBuyer()).toBe(true);
     });
 
     it("should return true for seller role (seller can buy)", () => {
-      const user = { id: 1, email: "seller@example.com", role: "seller" };
+      const user = { id: 1, email: "seller@example.com", role: "SELLER" };
       useAuthStore.getState().setAuth(user, "token");
 
       expect(useAuthStore.getState().isBuyer()).toBe(true);
     });
 
     it("should return true for admin role (admin can buy)", () => {
-      const user = { id: 1, email: "admin@example.com", role: "admin" };
+      const user = { id: 1, email: "admin@example.com", role: "ADMIN" };
       useAuthStore.getState().setAuth(user, "token");
 
       expect(useAuthStore.getState().isBuyer()).toBe(true);
@@ -265,7 +265,7 @@ describe("authStore", () => {
     });
 
     it("should handle empty token", () => {
-      const user = { id: 1, email: "test@example.com", role: "buyer" };
+      const user = { id: 1, email: "test@example.com", role: "BUYER" };
       useAuthStore.getState().setAuth(user, "");
 
       const state = useAuthStore.getState();
