@@ -52,11 +52,11 @@ async def get_users(
     # Attach default Auth0 data for response validation
     # (Real user data is in Auth0, not our database)
     for user in users:
-        if not hasattr(user, "email"):
+        if not hasattr(user, "email") or not user.email:
             user.email = f"user-{user.id}@auth0.placeholder"
-        if not hasattr(user, "name"):
+        if not hasattr(user, "name") or not user.name:
             user.name = f"User {user.id}"
-        if not hasattr(user, "role"):
+        if not hasattr(user, "role") or not user.role:
             user.role = "BUYER"
 
     return users
@@ -76,11 +76,11 @@ async def get_user(user_id: int, db: Session = Depends(get_db)):
 
     # Attach default Auth0 data for response validation
     # (Real user data is in Auth0, not our database)
-    if not hasattr(user, "email"):
+    if not hasattr(user, "email") or not user.email:
         user.email = f"user-{user.id}@auth0.placeholder"
-    if not hasattr(user, "name"):
+    if not hasattr(user, "name") or not user.name:
         user.name = f"User {user.id}"
-    if not hasattr(user, "role"):
+    if not hasattr(user, "role") or not user.role:
         user.role = "BUYER"
 
     return user
