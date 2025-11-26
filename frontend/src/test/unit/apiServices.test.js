@@ -368,6 +368,8 @@ describe("API Services", () => {
       });
 
       it("should return mock data if API fails", async () => {
+        // Mock both calls to fail since getPlatformStats makes 2 parallel requests
+        fetch.mockRejectedValueOnce(new Error("API Error"));
         fetch.mockRejectedValueOnce(new Error("API Error"));
 
         const result = await statsService.getPlatformStats();
