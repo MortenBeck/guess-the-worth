@@ -65,12 +65,12 @@ async def update_current_user(
     """
     Update current user's profile.
 
+    NOTE: User profile data (email, name, role) is managed in Auth0.
+    This endpoint exists for compatibility but cannot update any fields.
+    To update user profile, use the Auth0 Management API or Auth0 Dashboard.
+
     SECURITY: Can only update own profile, not other users.
     """
-    # Update only provided fields
-    for field, value in user_update.dict(exclude_unset=True).items():
-        setattr(current_user, field, value)
-
-    db.commit()
-    db.refresh(current_user)
+    # User data is managed in Auth0, so there are no fields to update in our database
+    # Just return the current user with Auth0 data attached
     return current_user

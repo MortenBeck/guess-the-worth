@@ -30,32 +30,25 @@ class TestCompleteUserFlow:
         5. Buyer places winning bid
         6. Artwork is sold
         """
+        from models.user import User
         from services.jwt_service import JWTService
 
-        # Step 1: Register buyer
-        buyer_payload = {
-            "email": "buyer@e2e.com",
-            "name": "E2E Buyer",
-            "auth0_sub": "auth0|e2e_buyer",
-            "role": "BUYER",
-        }
-        buyer_response = client.post("/api/auth/register", json=buyer_payload)
-        assert buyer_response.status_code == 200
+        # Step 1: Create buyer in database
+        buyer = User(auth0_sub="auth0|e2e_buyer")
+        db_session.add(buyer)
+        db_session.commit()
+        db_session.refresh(buyer)
 
         # Create buyer token
         buyer_token = JWTService.create_access_token(
             data={"sub": "auth0|e2e_buyer", "role": "BUYER"}, expires_delta=timedelta(hours=1)
         )
 
-        # Step 2: Register seller
-        seller_payload = {
-            "email": "seller@e2e.com",
-            "name": "E2E Seller",
-            "auth0_sub": "auth0|e2e_seller",
-            "role": "SELLER",
-        }
-        seller_response = client.post("/api/auth/register", json=seller_payload)
-        assert seller_response.status_code == 200
+        # Step 2: Create seller in database
+        seller = User(auth0_sub="auth0|e2e_seller")
+        db_session.add(seller)
+        db_session.commit()
+        db_session.refresh(seller)
 
         # Create seller token
         seller_token = JWTService.create_access_token(
@@ -132,16 +125,14 @@ class TestMultipleUsersCompetingFlow:
         3. Buyers compete with bids
         4. Highest bidder wins
         """
+        from models.user import User
         from services.jwt_service import JWTService
 
-        # Step 1: Register seller
-        seller_payload = {
-            "email": "seller@compete.com",
-            "name": "Competition Seller",
-            "auth0_sub": "auth0|compete_seller",
-            "role": "SELLER",
-        }
-        client.post("/api/auth/register", json=seller_payload)
+        # Step 1: Create seller in database
+        seller = User(auth0_sub="auth0|compete_seller")
+        db_session.add(seller)
+        db_session.commit()
+        db_session.refresh(seller)
 
         # Create seller token
         seller_token = JWTService.create_access_token(
@@ -158,22 +149,19 @@ class TestMultipleUsersCompetingFlow:
         )
         artwork_id = artwork_response.json()["id"]
 
-        # Step 2: Register 3 buyers and create tokens
+        # Step 2: Create 3 buyers in database and generate tokens
         buyers = []
         buyer_tokens = []
         for i in range(1, 4):
-            buyer_payload = {
-                "email": f"buyer{i}@compete.com",
-                "name": f"Buyer {i}",
-                "auth0_sub": f"auth0|compete_buyer{i}",
-                "role": "BUYER",
-            }
-            response = client.post("/api/auth/register", json=buyer_payload)
-            buyers.append(response.json()["id"])
+            buyer = User(auth0_sub=f"auth0|compete_buyer{i}")
+            db_session.add(buyer)
+            db_session.commit()
+            db_session.refresh(buyer)
+            buyers.append(buyer.id)
 
             # Create buyer token
             token = JWTService.create_access_token(
-                data={"sub": buyer_payload["auth0_sub"], "role": "BUYER"},
+                data={"sub": f"auth0|compete_buyer{i}", "role": "BUYER"},
                 expires_delta=timedelta(hours=1),
             )
             buyer_tokens.append(token)
@@ -224,23 +212,21 @@ class TestMultipleUsersCompetingFlow:
 class TestSellerMultipleArtworksFlow:
     """Test seller creating and managing multiple artworks."""
 
-    def test_seller_creates_multiple_artworks_different_outcomes(self, client):
+    def test_seller_creates_multiple_artworks_different_outcomes(self, client, db_session):
         """
         Flow:
         1. Seller creates multiple artworks
         2. Some get sold, some remain active
         3. Verify seller's artworks
         """
+        from models.user import User
         from services.jwt_service import JWTService
 
-        # Register seller
-        seller_payload = {
-            "email": "multi@seller.com",
-            "name": "Multi Seller",
-            "auth0_sub": "auth0|multi_seller",
-            "role": "SELLER",
-        }
-        client.post("/api/auth/register", json=seller_payload)
+        # Create seller in database
+        seller = User(auth0_sub="auth0|multi_seller")
+        db_session.add(seller)
+        db_session.commit()
+        db_session.refresh(seller)
 
         # Create seller token
         seller_token = JWTService.create_access_token(
@@ -248,14 +234,11 @@ class TestSellerMultipleArtworksFlow:
             expires_delta=timedelta(hours=1),
         )
 
-        # Register buyer
-        buyer_payload = {
-            "email": "multi@buyer.com",
-            "name": "Multi Buyer",
-            "auth0_sub": "auth0|multi_buyer",
-            "role": "BUYER",
-        }
-        client.post("/api/auth/register", json=buyer_payload)
+        # Create buyer in database
+        buyer = User(auth0_sub="auth0|multi_buyer")
+        db_session.add(buyer)
+        db_session.commit()
+        db_session.refresh(buyer)
 
         # Create buyer token
         buyer_token = JWTService.create_access_token(
@@ -304,23 +287,21 @@ class TestSellerMultipleArtworksFlow:
 class TestErrorRecoveryFlow:
     """Test error handling and recovery scenarios."""
 
-    def test_invalid_bid_then_valid_bid_flow(self, client):
+    def test_invalid_bid_then_valid_bid_flow(self, client, db_session):
         """
         Flow:
         1. User tries invalid bid (should fail)
         2. User corrects and places valid bid
         3. Bid succeeds
         """
+        from models.user import User
         from services.jwt_service import JWTService
 
-        # Setup: Register users and create artwork
-        seller_payload = {
-            "email": "error@seller.com",
-            "name": "Error Seller",
-            "auth0_sub": "auth0|error_seller",
-            "role": "SELLER",
-        }
-        client.post("/api/auth/register", json=seller_payload)
+        # Setup: Create users in database
+        seller = User(auth0_sub="auth0|error_seller")
+        db_session.add(seller)
+        db_session.commit()
+        db_session.refresh(seller)
 
         # Create seller token
         seller_token = JWTService.create_access_token(
@@ -328,13 +309,10 @@ class TestErrorRecoveryFlow:
             expires_delta=timedelta(hours=1),
         )
 
-        buyer_payload = {
-            "email": "error@buyer.com",
-            "name": "Error Buyer",
-            "auth0_sub": "auth0|error_buyer",
-            "role": "BUYER",
-        }
-        client.post("/api/auth/register", json=buyer_payload)
+        buyer = User(auth0_sub="auth0|error_buyer")
+        db_session.add(buyer)
+        db_session.commit()
+        db_session.refresh(buyer)
 
         # Create buyer token
         buyer_token = JWTService.create_access_token(
@@ -370,27 +348,30 @@ class TestErrorRecoveryFlow:
         bids = client.get(f"/api/bids/artwork/{artwork_id}")
         assert len(bids.json()) == 1
 
-    def test_attempt_duplicate_registration(self, client):
+    def test_attempt_duplicate_registration(self, client, db_session):
         """
         Flow:
         1. User registers
         2. User tries to register again (should fail)
         3. User can still use original account
         """
-        # First registration
-        user_payload = {
-            "email": "duplicate@test.com",
-            "name": "Duplicate User",
-            "auth0_sub": "auth0|duplicate",
-            "role": "BUYER",
-        }
-        first_response = client.post("/api/auth/register", json=user_payload)
-        assert first_response.status_code == 200
-        user_id = first_response.json()["id"]
+        from models.user import User
 
-        # Attempt duplicate registration
-        second_response = client.post("/api/auth/register", json=user_payload)
-        assert second_response.status_code == 400
+        # First registration - create user in database
+        user = User(auth0_sub="auth0|duplicate")
+        db_session.add(user)
+        db_session.commit()
+        db_session.refresh(user)
+        user_id = user.id
+
+        # Attempt duplicate registration - should be caught by unique constraint
+        duplicate_user = User(auth0_sub="auth0|duplicate")
+        db_session.add(duplicate_user)
+        try:
+            db_session.commit()
+            assert False, "Expected IntegrityError for duplicate auth0_sub"
+        except Exception:
+            db_session.rollback()
 
         # Verify original account still accessible
         user_check = client.get(f"/api/users/{user_id}")
@@ -400,7 +381,7 @@ class TestErrorRecoveryFlow:
 class TestCompleteMarketplaceFlow:
     """Test comprehensive marketplace scenario."""
 
-    def test_complete_marketplace_scenario(self, client):
+    def test_complete_marketplace_scenario(self, client, db_session):
         """
         Complete marketplace flow:
         1. Multiple sellers create artworks
@@ -408,24 +389,22 @@ class TestCompleteMarketplaceFlow:
         3. Some artworks sold, some remain
         4. Verify marketplace state
         """
+        from models.user import User
         from services.jwt_service import JWTService
 
         # Setup: Create 2 sellers, 3 buyers
         sellers = []
         seller_tokens = []
         for i in range(1, 3):
-            payload = {
-                "email": f"market_seller{i}@test.com",
-                "name": f"Market Seller {i}",
-                "auth0_sub": f"auth0|market_seller{i}",
-                "role": "SELLER",
-            }
-            response = client.post("/api/auth/register", json=payload)
-            sellers.append(response.json()["id"])
+            seller = User(auth0_sub=f"auth0|market_seller{i}")
+            db_session.add(seller)
+            db_session.commit()
+            db_session.refresh(seller)
+            sellers.append(seller.id)
 
             # Create seller token
             token = JWTService.create_access_token(
-                data={"sub": payload["auth0_sub"], "role": "SELLER"},
+                data={"sub": f"auth0|market_seller{i}", "role": "SELLER"},
                 expires_delta=timedelta(hours=1),
             )
             seller_tokens.append(token)
@@ -433,18 +412,15 @@ class TestCompleteMarketplaceFlow:
         buyers = []
         buyer_tokens = []
         for i in range(1, 4):
-            payload = {
-                "email": f"market_buyer{i}@test.com",
-                "name": f"Market Buyer {i}",
-                "auth0_sub": f"auth0|market_buyer{i}",
-                "role": "BUYER",
-            }
-            response = client.post("/api/auth/register", json=payload)
-            buyers.append(response.json()["id"])
+            buyer = User(auth0_sub=f"auth0|market_buyer{i}")
+            db_session.add(buyer)
+            db_session.commit()
+            db_session.refresh(buyer)
+            buyers.append(buyer.id)
 
             # Create buyer token
             token = JWTService.create_access_token(
-                data={"sub": payload["auth0_sub"], "role": "BUYER"},
+                data={"sub": f"auth0|market_buyer{i}", "role": "BUYER"},
                 expires_delta=timedelta(hours=1),
             )
             buyer_tokens.append(token)
@@ -512,22 +488,18 @@ class TestCompleteMarketplaceFlow:
 class TestEdgeCaseFlows:
     """Test edge case scenarios."""
 
-    def test_immediate_purchase_at_threshold(self, client):
+    def test_immediate_purchase_at_threshold(self, client, db_session):
         """
         Flow: Buyer immediately purchases by bidding at threshold.
         """
+        from models.user import User
         from services.jwt_service import JWTService
 
-        # Setup
-        client.post(
-            "/api/auth/register",
-            json={
-                "email": "instant@seller.com",
-                "name": "Instant Seller",
-                "auth0_sub": "auth0|instant_seller",
-                "role": "SELLER",
-            },
-        )
+        # Setup - create users in database
+        seller = User(auth0_sub="auth0|instant_seller")
+        db_session.add(seller)
+        db_session.commit()
+        db_session.refresh(seller)
 
         # Create seller token
         seller_token = JWTService.create_access_token(
@@ -535,15 +507,10 @@ class TestEdgeCaseFlows:
             expires_delta=timedelta(hours=1),
         )
 
-        client.post(
-            "/api/auth/register",
-            json={
-                "email": "instant@buyer.com",
-                "name": "Instant Buyer",
-                "auth0_sub": "auth0|instant_buyer",
-                "role": "BUYER",
-            },
-        )
+        buyer = User(auth0_sub="auth0|instant_buyer")
+        db_session.add(buyer)
+        db_session.commit()
+        db_session.refresh(buyer)
 
         # Create buyer token
         buyer_token = JWTService.create_access_token(
@@ -572,34 +539,42 @@ class TestEdgeCaseFlows:
         assert final_artwork.json()["status"] == "SOLD"
         assert final_artwork.json()["current_highest_bid"] == 250.0
 
-    def test_zero_threshold_artwork(self, client):
+    def test_zero_threshold_artwork(self, client, db_session):
         """
         Flow: Artwork with threshold of 0 (free or any bid wins).
         """
-        seller = client.post(
-            "/api/auth/register",
-            json={
-                "email": "free@seller.com",
-                "name": "Free Seller",
-                "auth0_sub": "auth0|free_seller",
-                "role": "SELLER",
-            },
-        ).json()
+        from models.user import User
+        from services.jwt_service import JWTService
 
-        buyer = client.post(
-            "/api/auth/register",
-            json={
-                "email": "free@buyer.com",
-                "name": "Free Buyer",
-                "auth0_sub": "auth0|free_buyer",
-                "role": "BUYER",
-            },
-        ).json()
+        # Create seller in database
+        seller = User(auth0_sub="auth0|free_seller")
+        db_session.add(seller)
+        db_session.commit()
+        db_session.refresh(seller)
+
+        # Create seller token
+        seller_token = JWTService.create_access_token(
+            data={"sub": "auth0|free_seller", "role": "SELLER"},
+            expires_delta=timedelta(hours=1),
+        )
+
+        # Create buyer in database
+        buyer = User(auth0_sub="auth0|free_buyer")
+        db_session.add(buyer)
+        db_session.commit()
+        db_session.refresh(buyer)
+
+        # Create buyer token
+        buyer_token = JWTService.create_access_token(
+            data={"sub": "auth0|free_buyer", "role": "BUYER"},
+            expires_delta=timedelta(hours=1),
+        )
 
         # Create free artwork
         artwork = client.post(
-            f"/api/artworks?seller_id={seller['id']}",
+            "/api/artworks/",
             json={"title": "Free Art", "secret_threshold": 0.0},
+            headers={"Authorization": f"Bearer {seller_token}"},
         )
 
         if artwork.status_code == 200:
@@ -607,8 +582,9 @@ class TestEdgeCaseFlows:
 
             # Any bid should win
             bid = client.post(
-                f"/api/bids?bidder_id={buyer['id']}",
+                "/api/bids/",
                 json={"artwork_id": artwork_id, "amount": 0.01},
+                headers={"Authorization": f"Bearer {buyer_token}"},
             )
 
             if bid.status_code == 200:

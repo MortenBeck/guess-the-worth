@@ -454,16 +454,17 @@ class TestUpdateUser:
     """Test PUT /api/users/me endpoint."""
 
     def test_update_current_user(self, client, buyer_user, buyer_token):
-        """Test updating current user's profile."""
+        """Test updating current user's profile - returns current data from Auth0."""
         response = client.put(
             "/api/users/me",
             headers={"Authorization": f"Bearer {buyer_token}"},
-            json={"name": "Updated Name"},
+            json={},  # No fields to update since data is in Auth0
         )
 
         assert response.status_code == 200
         data = response.json()
-        assert data["name"] == "Updated Name"
+        # Should return the user's current Auth0 data
+        assert data["name"] == buyer_user.name  # Name from Auth0, not updated
 
     def test_update_current_user_without_auth(self, client):
         """Test updating user without authentication fails."""

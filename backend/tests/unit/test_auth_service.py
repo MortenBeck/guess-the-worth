@@ -33,7 +33,7 @@ class TestAuth0Service:
             "name": "Test User",
             "picture": "https://example.com/pic.jpg",
             "email_verified": True,
-            "https://guesstheworth.com/roles": ["buyer"],
+            "https://guesstheworth.demo/roles": ["buyer"],  # Updated namespace
         }
         mock_get.return_value = mock_response
 
@@ -299,7 +299,7 @@ class TestAuthIntegration:
             "name": "Integration User",
             "picture": "https://example.com/pic.jpg",
             "email_verified": True,
-            "https://guesstheworth.com/roles": ["seller"],
+            "https://guesstheworth.demo/roles": ["seller"],  # Updated namespace
         }
         mock_get.return_value = mock_response
 
@@ -350,7 +350,7 @@ class TestAuthIntegration:
             "name": "Promoted User",
             "picture": "https://example.com/pic.jpg",
             "email_verified": True,
-            "https://guesstheworth.com/roles": ["buyer"],
+            "https://guesstheworth.demo/roles": ["buyer"],  # Updated namespace
         }
         mock_get.return_value = mock_response
 
@@ -359,10 +359,10 @@ class TestAuthIntegration:
         assert user.role == "BUYER"
 
         # User gets promoted to seller in Auth0
-        mock_response.json.return_value["https://guesstheworth.com/roles"] = ["seller"]
+        mock_response.json.return_value["https://guesstheworth.demo/roles"] = ["seller"]
         auth_user2 = AuthService.verify_auth0_token("token2")
         updated_user = AuthService.get_or_create_user(db_session, auth_user2)
 
-        # Same user, updated role
+        # Same user, updated role (attached at runtime from Auth0)
         assert updated_user.id == user.id
         assert updated_user.role == "SELLER"

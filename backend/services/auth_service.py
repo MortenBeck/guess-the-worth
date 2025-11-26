@@ -80,6 +80,14 @@ class AuthService:
             return "BUYER"
 
     @staticmethod
+    def map_auth0_role_to_user_role(auth0_roles: list[str]) -> str:
+        """Map Auth0 roles to user role (alias for extract_primary_role).
+
+        Returns the highest priority role: ADMIN > SELLER > BUYER
+        """
+        return AuthService.extract_primary_role(auth0_roles)
+
+    @staticmethod
     def get_user_by_auth0_sub(db: Session, auth0_sub: str) -> Optional[User]:
         """Get user by Auth0 subject ID"""
         return db.query(User).filter(User.auth0_sub == auth0_sub).first()
