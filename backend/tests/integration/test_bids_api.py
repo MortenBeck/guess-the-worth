@@ -440,9 +440,7 @@ class TestBidThresholdLogic:
         from services.jwt_service import JWTService
 
         # Create another buyer
-        buyer2 = User(
-            auth0_sub="auth0|buyer2"
-        )
+        buyer2 = User(auth0_sub="auth0|buyer2")
         db_session.add(buyer2)
         db_session.commit()
         db_session.refresh(buyer2)

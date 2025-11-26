@@ -9,6 +9,7 @@ import pytest
 from pydantic import ValidationError
 
 from models.artwork import ArtworkStatus
+
 # UserRole enum removed - now using string literals
 from schemas.artwork import ArtworkCreate, ArtworkResponse, ArtworkUpdate, ArtworkWithSecretResponse
 from schemas.auth import AuthUser, TokenResponse

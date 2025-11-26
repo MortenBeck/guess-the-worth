@@ -11,6 +11,7 @@ import pytest
 from jwt import DecodeError, ExpiredSignatureError
 
 from config.settings import Settings
+
 # UserRole enum removed - now using string literals
 from schemas.auth import AuthUser
 from services.auth_service import AuthService
@@ -94,9 +95,7 @@ class TestAuth0Service:
     def test_map_auth0_role_to_user_role_admin(self):
         """Test mapping Auth0 admin role (highest priority)."""
         assert AuthService.map_auth0_role_to_user_role(["admin"]) == "ADMIN"
-        assert (
-            AuthService.map_auth0_role_to_user_role(["buyer", "seller", "admin"]) == "ADMIN"
-        )
+        assert AuthService.map_auth0_role_to_user_role(["buyer", "seller", "admin"]) == "ADMIN"
         assert AuthService.map_auth0_role_to_user_role(["admin", "seller"]) == "ADMIN"
 
     def test_map_auth0_role_to_user_role_case_insensitive(self):

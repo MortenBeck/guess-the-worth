@@ -12,6 +12,7 @@ class User(Base):
     User data (email, name, role) is managed in Auth0 and attached
     to the user object at runtime from the JWT token.
     """
+
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
