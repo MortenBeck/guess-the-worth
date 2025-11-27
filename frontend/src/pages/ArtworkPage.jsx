@@ -56,24 +56,37 @@ const ArtworkPage = () => {
     const handlePaymentRequired = (data) => {
       console.log("Payment required event received:", data);
 
+      // Validate data exists and has required fields
+      if (!data || typeof data.artwork_id === 'undefined') {
+        console.error("Invalid payment_required data:", data);
+        return;
+      }
+
       // Only show payment modal if it's for this artwork
       if (data.artwork_id === parseInt(id)) {
+        const winningBid = data.winning_bid ?? 0;
+        const artworkTitle = artwork?.title || "Unknown Artwork";
+
         setPaymentData({
           bidId: data.bid_id,
-          amount: data.winning_bid,
-          artworkTitle: artwork?.title || "Unknown",
+          amount: winningBid,
+          artworkTitle: artworkTitle,
         });
         setShowPaymentModal(true);
 
-        const winningBid = data.winning_bid ?? 0;
-        toaster.create({
-          title: "Payment Required",
-          description: String(
-            `Congratulations! Please complete payment of $${winningBid} to secure your artwork.`
-          ),
-          type: "info",
-          duration: 10000,
-        });
+        // Small delay to prevent collision with bid success toast
+        setTimeout(() => {
+          try {
+            toaster.create({
+              title: "Payment Required",
+              description: `Congratulations! Please complete payment of $${winningBid} to secure your artwork.`,
+              type: "info",
+              duration: 10000,
+            });
+          } catch (error) {
+            console.error("Failed to create payment toast:", error);
+          }
+        }, 150);
       }
     };
 
@@ -102,39 +115,59 @@ const ArtworkPage = () => {
         amount: parseFloat(amount),
       }),
     onSuccess: (response) => {
-      const bid = response?.data;
-      if (!bid) {
-        console.error("No bid data in response:", response);
-        return;
+      try {
+        const bid = response?.data;
+        if (!bid || typeof bid.amount === 'undefined') {
+          console.error("Invalid bid data in response:", response);
+          toaster.create({
+            title: "Bid placed",
+            description: "Your bid was placed but we couldn't retrieve the details.",
+            type: "info",
+            duration: 3000,
+          });
+          return;
+        }
+
+        const bidAmount = bid.amount ?? 0;
+        const isWinning = bid.is_winning ?? false;
+        const title = isWinning ? "Congratulations! You won!" : "Bid placed successfully";
+        const description = isWinning
+          ? `Your bid of $${bidAmount} met the threshold!`
+          : `Your bid of $${bidAmount} has been recorded.`;
+
+        toaster.create({
+          title: title,
+          description: description,
+          type: isWinning ? "success" : "info",
+          duration: 5000,
+        });
+
+        // Refresh artwork and bids
+        queryClient.invalidateQueries(["artwork", id]);
+        queryClient.invalidateQueries(["bids", id]);
+
+        setBidAmount("");
+      } catch (error) {
+        console.error("Error in bid success handler:", error);
+        // Still show a success message even if toast fails
+        setBidAmount("");
+        queryClient.invalidateQueries(["artwork", id]);
+        queryClient.invalidateQueries(["bids", id]);
       }
-
-      const bidAmount = bid.amount ?? 0;
-      const title = bid.is_winning ? "Congratulations! You won!" : "Bid placed successfully";
-      const description = bid.is_winning
-        ? `Your bid of $${bidAmount} met the threshold!`
-        : `Your bid of $${bidAmount} has been recorded.`;
-
-      toaster.create({
-        title: String(title),
-        description: String(description),
-        type: bid.is_winning ? "success" : "info",
-        duration: 5000,
-      });
-
-      // Refresh artwork and bids
-      queryClient.invalidateQueries(["artwork", id]);
-      queryClient.invalidateQueries(["bids", id]);
-
-      setBidAmount("");
     },
     onError: (error) => {
-      const errorMessage = error?.data?.detail || error?.message || "Failed to place bid";
-      toaster.create({
-        title: "Bid failed",
-        description: String(errorMessage),
-        type: "error",
-        duration: 5000,
-      });
+      try {
+        const errorMessage = error?.data?.detail || error?.message || "Failed to place bid";
+        toaster.create({
+          title: "Bid failed",
+          description: errorMessage,
+          type: "error",
+          duration: 5000,
+        });
+      } catch (toastError) {
+        console.error("Failed to show error toast:", toastError);
+        console.error("Original error:", error);
+      }
     },
   });
 
