@@ -4,8 +4,8 @@ on:
   push:
     branches: [main]
     paths:
-      - 'backend/**'
-      - '.github/workflows/backend-ci.yml'
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
   pull_request:
     branches: [main, dev]
     # No path filters for PRs to ensure branch protection checks always run
@@ -30,8 +30,8 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.13'
-          cache: 'pip'
+          python-version: "3.13"
+          cache: "pip"
           cache-dependency-path: backend/requirements.txt
 
       - name: Install dependencies
@@ -91,8 +91,8 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.13'
-          cache: 'pip'
+          python-version: "3.13"
+          cache: "pip"
           cache-dependency-path: backend/requirements.txt
 
       - name: Install dependencies
@@ -114,7 +114,7 @@ jobs:
             --cov-fail-under=80
 
       - name: Upload coverage reports
-        if: always()  # Upload even if tests fail
+        if: always() # Upload even if tests fail
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -171,8 +171,8 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.13'
-          cache: 'pip'
+          python-version: "3.13"
+          cache: "pip"
           cache-dependency-path: backend/requirements.txt
 
       - name: Install dependencies
@@ -204,13 +204,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
         with:
-          fetch-depth: 0  # Required for TruffleHog
+          fetch-depth: 0 # Required for TruffleHog
 
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.13'
-          cache: 'pip'
+          python-version: "3.13"
+          cache: "pip"
           cache-dependency-path: backend/requirements.txt
 
       - name: Install dependencies
@@ -275,23 +275,23 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ghcr.io/${{ env.REPO_LOWERCASE }}/backend:latest
-          format: 'table'
-          severity: 'MEDIUM,HIGH,CRITICAL'
-          exit-code: '1'
-          trivyignores: 'backend/.trivyignore'
+          format: "table"
+          severity: "MEDIUM,HIGH,CRITICAL"
+          exit-code: "1"
+          trivyignores: "backend/.trivyignore"
 
       - name: Run Trivy vulnerability scanner (SARIF output)
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ghcr.io/${{ env.REPO_LOWERCASE }}/backend:latest
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'MEDIUM,HIGH,CRITICAL'
-          exit-code: '0'
-          trivyignores: 'backend/.trivyignore'
+          format: "sarif"
+          output: "trivy-results.sarif"
+          severity: "MEDIUM,HIGH,CRITICAL"
+          exit-code: "0"
+          trivyignores: "backend/.trivyignore"
 
       - name: Upload Trivy results to GitHub Security
         if: always()
         uses: github/codeql-action/upload-sarif@v4
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: "trivy-results.sarif"

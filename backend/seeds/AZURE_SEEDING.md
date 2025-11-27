@@ -26,6 +26,7 @@ export BACKEND_URL="https://your-backend-app.azurewebsites.net"
 ```
 
 The script will:
+
 1. Login with admin credentials
 2. Trigger database seeding
 3. Show you the results
@@ -37,6 +38,7 @@ The script will:
    - Or create your own admin user in the database
 
 2. **Login to Get Access Token**
+
    ```bash
    # Replace with your actual backend URL
    BACKEND_URL="https://your-backend-app.azurewebsites.net"
@@ -51,6 +53,7 @@ The script will:
    ```
 
 3. **Trigger Database Seeding**
+
    ```bash
    curl -X POST "$BACKEND_URL/api/admin/seed-database?confirm=yes" \
      -H "Authorization: Bearer $TOKEN" \
@@ -99,11 +102,13 @@ The script will:
    - Wait for the terminal to load
 
 4. **Navigate to Application Directory**
+
    ```bash
    cd /home/site/wwwroot
    ```
 
 5. **Verify Environment**
+
    ```bash
    # Check Python is available
    python --version
@@ -113,6 +118,7 @@ The script will:
    ```
 
 6. **Run Seeding Script**
+
    ```bash
    python seeds/seed_manager.py --env production
    ```
@@ -154,6 +160,7 @@ python seeds/seed_manager.py --env production
 After seeding, verify the data was created:
 
 1. **Check via API**
+
    ```bash
    curl https://<your-backend-app-name>.azurewebsites.net/api/artworks
    ```
@@ -166,29 +173,35 @@ After seeding, verify the data was created:
 ## Troubleshooting
 
 ### "SSH CONN CLOSE" or SSH Terminal Not Working
+
 - **Issue**: Azure App Service SSH requires an SSH daemon in the container
 - **Solution**: Use Method 1 (API endpoint) instead - it doesn't require SSH
 
 ### "401 Unauthorized" when calling API endpoint
+
 - **Issue**: Token expired or invalid
 - **Solution**: Login again to get a fresh token
 
 ### "403 Forbidden" when calling API endpoint
+
 - **Issue**: User is not an admin
 - **Solution**: Verify you're using an admin account (role must be "admin")
 
 ### "role 'postgres' does not exist"
+
 - **Issue**: Database connection not configured
 - **Solution**: Check Azure App Service → Configuration → Application Settings
   - Verify `DATABASE_URL` is set correctly
 
 ### "Module not found"
+
 - **Issue**: Dependencies not installed
 - **Solution**: Rebuild and redeploy the backend container
 
 ## Safety Features
 
 The seeding script includes safety checks:
+
 - ✅ **Environment verification** - Confirms target environment matches current environment
 - ✅ **Production warning** - Requires explicit "yes" confirmation
 - ✅ **Idempotency** - Safe to run multiple times without duplicating data
@@ -197,11 +210,13 @@ The seeding script includes safety checks:
 ## When to Seed
 
 **Recommended times to run production seeding:**
+
 - Initial deployment (first time)
 - After major demo resets
 - For grading/presentation demos
 
 **NOT recommended:**
+
 - During active user sessions
 - On every deployment (keep data persistent)
 - If production already has real user data
@@ -209,6 +224,7 @@ The seeding script includes safety checks:
 ## Seeded Data Summary
 
 Running the seed script will create:
+
 - **9 users** (1 admin, 3 sellers, 5 buyers)
 - **15 artworks** (various categories and statuses)
 - **27 bids** (realistic bidding history)

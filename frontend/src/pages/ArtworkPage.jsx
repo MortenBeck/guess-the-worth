@@ -68,7 +68,9 @@ const ArtworkPage = () => {
         const winningBid = data.winning_bid ?? 0;
         toaster.create({
           title: "Payment Required",
-          description: String(`Congratulations! Please complete payment of $${winningBid} to secure your artwork.`),
+          description: String(
+            `Congratulations! Please complete payment of $${winningBid} to secure your artwork.`
+          ),
           type: "info",
           duration: 10000,
         });

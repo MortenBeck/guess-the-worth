@@ -23,16 +23,20 @@
 ## Overview
 
 ### Business Context
+
 Guess The Worth uses a unique "secret threshold" bidding system where:
+
 - Each artwork has a hidden price threshold set by the seller
 - Buyers place bids without knowing the threshold
 - When a bid meets or exceeds the threshold → **Artwork is sold**
 - Payment must be processed to complete the transaction
 
 ### Integration Goal
+
 Implement Stripe payment processing in **test mode** to handle payments when winning bids are placed, ensuring secure, PCI-compliant payment collection before finalizing artwork sales.
 
 ### Scope
+
 - ✅ Test mode only (no production deployment)
 - ✅ One-time payments (no subscriptions)
 - ✅ Card payments via Payment Intents
@@ -58,6 +62,7 @@ Implement Stripe payment processing in **test mode** to handle payments when win
 2. **Configuration Infrastructure**
    - Settings class in [settings.py](backend/config/settings.py:27-30) has Stripe fields
    - Environment variables defined in [.env.example](backend/.env.example:19-23)
+
    ```python
    stripe_secret_key: str = ""
    stripe_publishable_key: str = ""
@@ -185,6 +190,7 @@ CREATE INDEX idx_payments_status ON payments(status);
 #### Update Artwork Status Enum
 
 Add new status to [artwork.py](backend/models/artwork.py):
+
 ```python
 class ArtworkStatus(str, Enum):
     ACTIVE = "ACTIVE"
@@ -198,15 +204,15 @@ class ArtworkStatus(str, Enum):
 
 #### Payment Routes (`/api/payments`)
 
-| Method | Endpoint | Auth | Purpose |
-|--------|----------|------|---------|
-| POST | `/create-intent` | Buyer | Create payment intent for winning bid |
-| GET | `/intent/{payment_intent_id}` | Buyer | Get payment intent status |
-| POST | `/webhook` | Public* | Stripe webhook receiver (*with signature verification) |
-| GET | `/my-payments` | User | List user's payment history |
-| GET | `/{id}` | User/Admin | Get payment details |
-| POST | `/{id}/refund` | Admin | Process refund |
-| GET | `/artwork/{artwork_id}` | Seller/Admin | Get payment for artwork |
+| Method | Endpoint                      | Auth         | Purpose                                                 |
+| ------ | ----------------------------- | ------------ | ------------------------------------------------------- |
+| POST   | `/create-intent`              | Buyer        | Create payment intent for winning bid                   |
+| GET    | `/intent/{payment_intent_id}` | Buyer        | Get payment intent status                               |
+| POST   | `/webhook`                    | Public\*     | Stripe webhook receiver (\*with signature verification) |
+| GET    | `/my-payments`                | User         | List user's payment history                             |
+| GET    | `/{id}`                       | User/Admin   | Get payment details                                     |
+| POST   | `/{id}/refund`                | Admin        | Process refund                                          |
+| GET    | `/artwork/{artwork_id}`       | Seller/Admin | Get payment for artwork                                 |
 
 ### Frontend Components
 
@@ -238,7 +244,9 @@ frontend/src/
 ### Phase 1: Backend Foundation (Day 1)
 
 #### 1.1 Get Stripe Test Credentials
+
 **Tasks:**
+
 - [ ] Sign up for Stripe account (if needed)
 - [ ] Navigate to [Stripe Dashboard](https://dashboard.stripe.com/test/apikeys)
 - [ ] Copy test API keys:
@@ -251,12 +259,14 @@ frontend/src/
   ```
 
 **Verification:**
+
 ```bash
 cd backend
 python -c "from config.settings import settings; print(f'Stripe key loaded: {settings.stripe_secret_key[:20]}...')"
 ```
 
 #### 1.2 Create Payment Model
+
 **File:** `backend/models/payment.py`
 
 ```python
@@ -308,12 +318,14 @@ Index("idx_payments_status", Payment.status)
 ```
 
 **File:** Update `backend/models/bid.py`
+
 ```python
 # Add to Bid model
 payment = relationship("Payment", back_populates="bid", uselist=False)
 ```
 
 **File:** Update `backend/models/__init__.py`
+
 ```python
 from models.payment import Payment, PaymentStatus
 
@@ -321,7 +333,9 @@ __all__ = [..., "Payment", "PaymentStatus"]
 ```
 
 #### 1.3 Create Database Migration
+
 **Commands:**
+
 ```bash
 cd backend
 alembic revision --autogenerate -m "add_payments_table"
@@ -329,12 +343,14 @@ alembic upgrade head
 ```
 
 **Verification:**
+
 ```bash
 # Connect to database and verify
 psql $DATABASE_URL -c "\d payments"
 ```
 
 #### 1.4 Create Payment Schemas
+
 **File:** `backend/schemas/payment.py`
 
 ```python
@@ -381,6 +397,7 @@ class RefundCreate(BaseModel):
 ```
 
 **File:** Update `backend/schemas/__init__.py`
+
 ```python
 from schemas.payment import (
     PaymentCreate,
@@ -397,6 +414,7 @@ __all__ = [..., "PaymentCreate", "PaymentResponse", "PaymentIntentResponse", "Re
 ### Phase 2: Stripe Service Layer (Day 1-2)
 
 #### 2.1 Create Stripe Service
+
 **File:** `backend/services/stripe_service.py`
 
 ```python
@@ -649,6 +667,7 @@ class StripeService:
 ### Phase 3: Payment Endpoints (Day 2)
 
 #### 3.1 Create Payment Router
+
 **File:** `backend/routers/payments.py`
 
 ```python
@@ -1006,6 +1025,7 @@ async def get_artwork_payment(
 ```
 
 #### 3.2 Register Router in Main App
+
 **File:** Update `backend/main.py`
 
 ```python
@@ -1021,9 +1041,11 @@ app.include_router(payments.router, prefix="/api/payments", tags=["payments"])
 ### Phase 4: Update Bid Logic (Day 2)
 
 #### 4.1 Modify Bid Creation Flow
+
 **File:** Update `backend/routers/bids.py`
 
 Replace lines 102-104:
+
 ```python
 # OLD CODE:
 # If winning bid, mark artwork as sold
@@ -1032,6 +1054,7 @@ if is_winning:
 ```
 
 With:
+
 ```python
 # NEW CODE:
 # If winning bid, mark artwork as PENDING_PAYMENT
@@ -1041,6 +1064,7 @@ if is_winning:
 ```
 
 Update socket event at line 148:
+
 ```python
 # If winning bid, emit payment_required event
 if is_winning:
@@ -1061,16 +1085,18 @@ if is_winning:
 ### Phase 5: Frontend Integration (Day 3-4)
 
 #### 5.1 Install Dependencies
+
 ```bash
 cd frontend
 npm install @stripe/stripe-js @stripe/react-stripe-js
 ```
 
 #### 5.2 Create Stripe Configuration
+
 **File:** `frontend/src/config/stripe.js`
 
 ```javascript
-import { loadStripe } from '@stripe/stripe-js';
+import { loadStripe } from "@stripe/stripe-js";
 
 // Load Stripe publishable key from environment
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
@@ -1079,22 +1105,24 @@ export { stripePromise };
 ```
 
 **File:** Update `frontend/.env.example`
+
 ```env
 VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key
 ```
 
 #### 5.3 Create Payment Service
+
 **File:** `frontend/src/services/paymentService.js`
 
 ```javascript
-import api from './api';
+import api from "./api";
 
 export const paymentService = {
   /**
    * Create a payment intent for a winning bid
    */
   async createPaymentIntent(bidId) {
-    const response = await api.post('/api/payments/create-intent', {
+    const response = await api.post("/api/payments/create-intent", {
       bid_id: bidId,
       amount: 0, // Amount comes from bid on backend
     });
@@ -1113,7 +1141,7 @@ export const paymentService = {
    * Get my payment history
    */
   async getMyPayments() {
-    const response = await api.get('/api/payments/my-payments');
+    const response = await api.get("/api/payments/my-payments");
     return response.data;
   },
 
@@ -1131,10 +1159,11 @@ export const paymentService = {
 ```
 
 #### 5.4 Create Payment Store
+
 **File:** `frontend/src/store/paymentStore.js`
 
 ```javascript
-import { create } from 'zustand';
+import { create } from "zustand";
 
 const usePaymentStore = create((set, get) => ({
   // State
@@ -1155,23 +1184,25 @@ const usePaymentStore = create((set, get) => ({
 
   setError: (error) => set({ error }),
 
-  resetPayment: () => set({
-    currentPayment: null,
-    clientSecret: null,
-    paymentStatus: null,
-    isProcessing: false,
-    error: null,
-  }),
+  resetPayment: () =>
+    set({
+      currentPayment: null,
+      clientSecret: null,
+      paymentStatus: null,
+      isProcessing: false,
+      error: null,
+    }),
 }));
 
 export default usePaymentStore;
 ```
 
 #### 5.5 Create Payment Modal Component
+
 **File:** `frontend/src/components/Payment/PaymentModal.jsx`
 
 ```javascript
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -1184,15 +1215,15 @@ import {
   Box,
   Image,
   Divider,
-} from '@chakra-ui/react';
-import { Elements } from '@stripe/react-stripe-js';
-import { stripePromise } from '../../config/stripe';
-import PaymentForm from './PaymentForm';
-import PaymentProcessing from './PaymentProcessing';
-import PaymentSuccess from './PaymentSuccess';
-import PaymentFailed from './PaymentFailed';
-import { paymentService } from '../../services/paymentService';
-import usePaymentStore from '../../store/paymentStore';
+} from "@chakra-ui/react";
+import { Elements } from "@stripe/react-stripe-js";
+import { stripePromise } from "../../config/stripe";
+import PaymentForm from "./PaymentForm";
+import PaymentProcessing from "./PaymentProcessing";
+import PaymentSuccess from "./PaymentSuccess";
+import PaymentFailed from "./PaymentFailed";
+import { paymentService } from "../../services/paymentService";
+import usePaymentStore from "../../store/paymentStore";
 
 const PaymentModal = ({ isOpen, onClose, bid, artwork }) => {
   const {
@@ -1222,8 +1253,8 @@ const PaymentModal = ({ isOpen, onClose, bid, artwork }) => {
       const response = await paymentService.createPaymentIntent(bid.id);
       setClientSecret(response.client_secret);
     } catch (error) {
-      console.error('Failed to create payment intent:', error);
-      setError(error.response?.data?.detail || 'Failed to initialize payment');
+      console.error("Failed to create payment intent:", error);
+      setError(error.response?.data?.detail || "Failed to initialize payment");
     } finally {
       setLoading(false);
     }
@@ -1239,12 +1270,14 @@ const PaymentModal = ({ isOpen, onClose, bid, artwork }) => {
       return <PaymentProcessing message="Initializing payment..." />;
     }
 
-    if (paymentStatus === 'succeeded') {
+    if (paymentStatus === "succeeded") {
       return <PaymentSuccess artwork={artwork} onClose={handleClose} />;
     }
 
-    if (paymentStatus === 'failed') {
-      return <PaymentFailed onRetry={createPaymentIntent} onClose={handleClose} />;
+    if (paymentStatus === "failed") {
+      return (
+        <PaymentFailed onRetry={createPaymentIntent} onClose={handleClose} />
+      );
     }
 
     return clientSecret ? (
@@ -1252,15 +1285,20 @@ const PaymentModal = ({ isOpen, onClose, bid, artwork }) => {
         <PaymentForm
           artwork={artwork}
           amount={bid.amount}
-          onSuccess={() => setPaymentStatus('succeeded')}
-          onError={() => setPaymentStatus('failed')}
+          onSuccess={() => setPaymentStatus("succeeded")}
+          onError={() => setPaymentStatus("failed")}
         />
       </Elements>
     ) : null;
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} size="lg" closeOnOverlayClick={false}>
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      size="lg"
+      closeOnOverlayClick={false}
+    >
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>Complete Payment</ModalHeader>
@@ -1270,7 +1308,7 @@ const PaymentModal = ({ isOpen, onClose, bid, artwork }) => {
             {/* Artwork Summary */}
             <Box>
               <Image
-                src={artwork?.image_url || '/placeholder.jpg'}
+                src={artwork?.image_url || "/placeholder.jpg"}
                 alt={artwork?.title}
                 borderRadius="md"
                 maxH="200px"
@@ -1303,24 +1341,18 @@ export default PaymentModal;
 ```
 
 #### 5.6 Create Payment Form Component
+
 **File:** `frontend/src/components/Payment/PaymentForm.jsx`
 
 ```javascript
-import React, { useState } from 'react';
-import {
-  Button,
-  VStack,
-  Text,
-  Alert,
-  AlertIcon,
-  Box,
-} from '@chakra-ui/react';
+import React, { useState } from "react";
+import { Button, VStack, Text, Alert, AlertIcon, Box } from "@chakra-ui/react";
 import {
   PaymentElement,
   useStripe,
   useElements,
-} from '@stripe/react-stripe-js';
-import usePaymentStore from '../../store/paymentStore';
+} from "@stripe/react-stripe-js";
+import usePaymentStore from "../../store/paymentStore";
 
 const PaymentForm = ({ artwork, amount, onSuccess, onError }) => {
   const stripe = useStripe();
@@ -1346,7 +1378,7 @@ const PaymentForm = ({ artwork, amount, onSuccess, onError }) => {
       confirmParams: {
         return_url: `${window.location.origin}/payment/success`,
       },
-      redirect: 'if_required',
+      redirect: "if_required",
     });
 
     if (error) {
@@ -1404,12 +1436,13 @@ export default PaymentForm;
 ```
 
 #### 5.7 Create Success/Failure Components
+
 **File:** `frontend/src/components/Payment/PaymentSuccess.jsx`
 
 ```javascript
-import React from 'react';
-import { VStack, Text, Icon, Button } from '@chakra-ui/react';
-import { CheckCircleIcon } from '@chakra-ui/icons';
+import React from "react";
+import { VStack, Text, Icon, Button } from "@chakra-ui/react";
+import { CheckCircleIcon } from "@chakra-ui/icons";
 
 const PaymentSuccess = ({ artwork, onClose }) => {
   return (
@@ -1435,9 +1468,9 @@ export default PaymentSuccess;
 **File:** `frontend/src/components/Payment/PaymentFailed.jsx`
 
 ```javascript
-import React from 'react';
-import { VStack, Text, Icon, Button, HStack } from '@chakra-ui/react';
-import { WarningIcon } from '@chakra-ui/icons';
+import React from "react";
+import { VStack, Text, Icon, Button, HStack } from "@chakra-ui/react";
+import { WarningIcon } from "@chakra-ui/icons";
 
 const PaymentFailed = ({ onRetry, onClose }) => {
   return (
@@ -1468,10 +1501,10 @@ export default PaymentFailed;
 **File:** `frontend/src/components/Payment/PaymentProcessing.jsx`
 
 ```javascript
-import React from 'react';
-import { VStack, Spinner, Text } from '@chakra-ui/react';
+import React from "react";
+import { VStack, Spinner, Text } from "@chakra-ui/react";
 
-const PaymentProcessing = ({ message = 'Processing payment...' }) => {
+const PaymentProcessing = ({ message = "Processing payment..." }) => {
   return (
     <VStack spacing={4} py={8}>
       <Spinner size="xl" color="blue.500" thickness="4px" />
@@ -1486,11 +1519,12 @@ export default PaymentProcessing;
 ```
 
 #### 5.8 Integrate with Artwork Detail Page
+
 **File:** Update where bid is placed (e.g., `frontend/src/pages/ArtworkDetailPage.jsx`)
 
 ```javascript
-import { useState } from 'react';
-import PaymentModal from '../components/Payment/PaymentModal';
+import { useState } from "react";
+import PaymentModal from "../components/Payment/PaymentModal";
 
 // In your component:
 const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -1498,7 +1532,7 @@ const [winningBid, setWinningBid] = useState(null);
 
 // Listen for winning bid via socket
 useEffect(() => {
-  socket.on('payment_required', (data) => {
+  socket.on("payment_required", (data) => {
     if (data.artwork_id === artworkId) {
       setWinningBid({
         id: data.bid_id,
@@ -1509,7 +1543,7 @@ useEffect(() => {
   });
 
   return () => {
-    socket.off('payment_required');
+    socket.off("payment_required");
   };
 }, [artworkId]);
 
@@ -1519,7 +1553,7 @@ useEffect(() => {
   onClose={() => setShowPaymentModal(false)}
   bid={winningBid}
   artwork={artwork}
-/>
+/>;
 ```
 
 ---
@@ -1527,7 +1561,9 @@ useEffect(() => {
 ### Phase 6: Webhook Setup (Day 4)
 
 #### 6.1 Install Stripe CLI
+
 **Windows:**
+
 ```powershell
 # Using Scoop
 scoop install stripe
@@ -1536,16 +1572,19 @@ scoop install stripe
 ```
 
 **Verify installation:**
+
 ```bash
 stripe --version
 ```
 
 #### 6.2 Login to Stripe CLI
+
 ```bash
 stripe login
 ```
 
 #### 6.3 Forward Webhooks to Local Server
+
 ```bash
 # Start your backend server first
 cd backend
@@ -1556,16 +1595,19 @@ stripe listen --forward-to localhost:8000/api/payments/webhook
 ```
 
 **Copy the webhook signing secret** from the output:
+
 ```
 > Ready! Your webhook signing secret is whsec_xxxxxxxxxxxxx
 ```
 
 **Add to backend/.env:**
+
 ```env
 STRIPE_WEBHOOK_SECRET=whsec_xxxxxxxxxxxxx
 ```
 
 #### 6.4 Test Webhook Events
+
 ```bash
 # Trigger test payment success event
 stripe trigger payment_intent.succeeded
@@ -1579,6 +1621,7 @@ stripe trigger payment_intent.payment_failed
 ### Phase 7: Testing (Day 5)
 
 #### 7.1 Backend Unit Tests
+
 **File:** `backend/tests/unit/test_stripe_service.py`
 
 ```python
@@ -1656,6 +1699,7 @@ def test_create_payment_intent_stripe_error(mock_create, db, mock_bid):
 ```
 
 #### 7.2 Integration Tests
+
 **File:** `backend/tests/integration/test_payment_endpoints.py`
 
 ```python
@@ -1707,43 +1751,46 @@ def test_webhook_valid_signature(client, db):
 ```
 
 #### 7.3 Frontend Component Tests
+
 **File:** `frontend/src/components/Payment/__tests__/PaymentForm.test.jsx`
 
 ```javascript
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { Elements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
-import PaymentForm from '../PaymentForm';
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { Elements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+import PaymentForm from "../PaymentForm";
 
-const stripePromise = loadStripe('pk_test_fake');
+const stripePromise = loadStripe("pk_test_fake");
 
-describe('PaymentForm', () => {
-  it('renders payment form', () => {
+describe("PaymentForm", () => {
+  it("renders payment form", () => {
     render(
       <Elements stripe={stripePromise}>
         <PaymentForm
-          artwork={{ title: 'Test Art' }}
+          artwork={{ title: "Test Art" }}
           amount={100.0}
           onSuccess={jest.fn()}
           onError={jest.fn()}
         />
-      </Elements>
+      </Elements>,
     );
 
     expect(screen.getByText(/Enter your payment details/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Pay \$100.00/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Pay \$100.00/i }),
+    ).toBeInTheDocument();
   });
 
-  it('shows test card hint', () => {
+  it("shows test card hint", () => {
     render(
       <Elements stripe={stripePromise}>
         <PaymentForm
-          artwork={{ title: 'Test Art' }}
+          artwork={{ title: "Test Art" }}
           amount={100.0}
           onSuccess={jest.fn()}
           onError={jest.fn()}
         />
-      </Elements>
+      </Elements>,
     );
 
     expect(screen.getByText(/4242 4242 4242 4242/i)).toBeInTheDocument();
@@ -1754,6 +1801,7 @@ describe('PaymentForm', () => {
 #### 7.4 Manual Testing Checklist
 
 **Setup:**
+
 - [ ] Stripe test keys configured in backend/.env
 - [ ] Stripe publishable key in frontend/.env
 - [ ] Webhook secret configured
@@ -1865,6 +1913,7 @@ describe('PaymentForm', () => {
 ### 🔄 State Management
 
 1. **Artwork Status Flow**
+
    ```
    ACTIVE → (winning bid) → PENDING_PAYMENT → (payment success) → SOLD
                                             → (payment failed) → ACTIVE
@@ -1872,6 +1921,7 @@ describe('PaymentForm', () => {
    ```
 
 2. **Payment Status Flow**
+
    ```
    PENDING → PROCESSING → SUCCEEDED
                        → FAILED
@@ -1901,6 +1951,7 @@ describe('PaymentForm', () => {
 ### 🧪 Testing
 
 1. **Test Cards**
+
    ```
    Success: 4242 4242 4242 4242
    Decline: 4000 0000 0000 0002
@@ -1964,6 +2015,7 @@ describe('PaymentForm', () => {
 ## Success Criteria
 
 ### Phase 1-3 (Backend)
+
 - [ ] Payment model created and migrated
 - [ ] StripeService implemented with core methods
 - [ ] Payment endpoints created and registered
@@ -1972,6 +2024,7 @@ describe('PaymentForm', () => {
 - [ ] All backend unit tests passing
 
 ### Phase 4-5 (Frontend)
+
 - [ ] Stripe packages installed
 - [ ] Payment modal component created
 - [ ] Payment form with Stripe Elements
@@ -1980,6 +2033,7 @@ describe('PaymentForm', () => {
 - [ ] Socket.IO listening for payment events
 
 ### Phase 6 (Webhook Testing)
+
 - [ ] Stripe CLI installed and configured
 - [ ] Webhooks forwarding to local server
 - [ ] Payment success webhook tested
@@ -1987,6 +2041,7 @@ describe('PaymentForm', () => {
 - [ ] Webhook signing secret configured
 
 ### Phase 7 (Testing)
+
 - [ ] All test scenarios completed successfully
 - [ ] Backend tests passing (unit + integration)
 - [ ] Frontend component tests passing
@@ -1994,6 +2049,7 @@ describe('PaymentForm', () => {
 - [ ] Edge cases handled (timeouts, concurrent bids, etc.)
 
 ### Documentation
+
 - [ ] Environment setup documented
 - [ ] Test process documented
 - [ ] Known issues listed

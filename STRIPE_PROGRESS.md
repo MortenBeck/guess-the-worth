@@ -9,6 +9,7 @@
 ## ✅ Completed
 
 ### Phase 1.1: Payment Model
+
 - ✅ Created `backend/models/payment.py` with PaymentStatus enum
 - ✅ Added all required fields (bid_id, stripe_payment_intent_id, amount, status, etc.)
 - ✅ Fixed `metadata` → `payment_metadata` (SQLAlchemy reserved word issue)
@@ -18,6 +19,7 @@
 - ✅ Added `PENDING_PAYMENT` status to ArtworkStatus enum
 
 ### Phase 1.3: Payment Schemas
+
 - ✅ Created `backend/schemas/payment.py`
 - ✅ PaymentCreate schema (for creating payment intents)
 - ✅ PaymentIntentResponse schema (returns client_secret to frontend)
@@ -25,6 +27,7 @@
 - ✅ Updated `schemas/__init__.py` to export payment schemas
 
 ### Phase 1.4: Stripe Service Layer
+
 - ✅ Created `backend/services/stripe_service.py`
 - ✅ `create_payment_intent()` - Creates Stripe payment intent + DB record
 - ✅ `get_payment_intent()` - Retrieves payment intent from Stripe
@@ -36,15 +39,18 @@
 - ✅ Metadata tracking for artwork, buyer, seller
 
 ### Configuration Updates
+
 - ✅ Fixed `config/settings.py` to skip validation for Alembic migrations
 - ✅ Payment model relationships properly configured
 
 ### Phase 1.2: Database Migration
+
 - ✅ Created migration `add_payments_table_and_pending_payment_status`
 - ✅ Applied migration with `alembic upgrade head`
 - ✅ Verified payments table and PENDING_PAYMENT enum created
 
 ### Phase 2: Payment Router
+
 - ✅ Created `backend/routers/payments.py` with all endpoints
 - ✅ `POST /api/payments/create-intent` - Create payment intent for winning bid
 - ✅ `POST /api/payments/webhook` - Stripe webhook receiver (signature verification)
@@ -56,12 +62,14 @@
 - ✅ Added Socket.IO events for real-time payment updates
 
 ### Phase 2: Update Bid Logic
+
 - ✅ Modified `backend/routers/bids.py`
 - ✅ Changed winning bid status from `SOLD` → `PENDING_PAYMENT`
 - ✅ Updated socket event from `artwork_sold` → `payment_required`
 - ✅ Added `bid_id` to payment_required event data
 
 ### Docker & Environment
+
 - ✅ Fixed Docker venv volume issue (removed stale backend_venv)
 - ✅ Backend running successfully on http://localhost:8000
 - ✅ All payment endpoints verified and accessible
@@ -70,6 +78,7 @@
 ---
 
 ### Phase 3: Frontend Integration
+
 - ✅ Installed Stripe packages: `@stripe/stripe-js`, `@stripe/react-stripe-js`
 - ✅ Added Stripe publishable key to `frontend/.env`
 - ✅ Created `paymentService.js` with API integration
@@ -85,6 +94,7 @@
 ## ⏳ Pending (Next Steps)
 
 ### Phase 4: Testing & Webhook Setup
+
 - Test end-to-end payment flow with test cards
 - Set up Stripe CLI for webhook testing locally
 - Configure webhook secret for local development
@@ -93,6 +103,7 @@
 - Verify artwork status updates correctly
 
 ### Phase 5: Production Considerations (Future)
+
 - Set up production Stripe webhook endpoint
 - Add environment-specific Stripe keys
 - Implement refund functionality (if needed)
@@ -104,6 +115,7 @@
 ## 📋 How to Test
 
 ### 1. Start the Application
+
 ```bash
 # Backend and database should already be running
 docker-compose up -d
@@ -114,6 +126,7 @@ npm run dev
 ```
 
 ### 2. Test the Payment Flow
+
 1. Go to http://localhost:5173
 2. Log in or register a user account
 3. Navigate to an artwork
@@ -127,11 +140,13 @@ npm run dev
 8. Artwork should change status from `PENDING_PAYMENT` to `SOLD`
 
 ### Stripe Test Cards
+
 - **Success**: `4242 4242 4242 4242`
 - **Decline**: `4000 0000 0000 0002`
 - **Requires Auth**: `4000 0025 0000 3155`
 
 ### What Should Happen
+
 1. ✅ User places winning bid
 2. ✅ Backend emits `payment_required` Socket.IO event
 3. ✅ Frontend shows payment modal automatically
@@ -146,6 +161,7 @@ npm run dev
 ## 🎯 What We Have So Far
 
 ### Database Schema Ready
+
 ```sql
 CREATE TABLE payments (
     id SERIAL PRIMARY KEY,
@@ -163,6 +179,7 @@ CREATE TABLE payments (
 ```
 
 ### Payment Flow Ready
+
 ```
 Winning Bid
     ↓
@@ -184,11 +201,13 @@ Artwork status → SOLD
 ```
 
 ### Code Files Created
+
 - ✅ `backend/models/payment.py`
 - ✅ `backend/schemas/payment.py`
 - ✅ `backend/services/stripe_service.py`
 
 ### Code Files Modified
+
 - ✅ `backend/models/bid.py` (added payment relationship)
 - ✅ `backend/models/artwork.py` (added PENDING_PAYMENT status)
 - ✅ `backend/models/__init__.py` (exports)
@@ -212,6 +231,7 @@ Artwork status → SOLD
 ## 📝 Notes
 
 ### Important Decisions Made
+
 - ✅ 10-minute payment timeout
 - ✅ Block concurrent bids during payment
 - ✅ Buyer pays fees (test mode)
@@ -219,6 +239,7 @@ Artwork status → SOLD
 - ✅ NO refunds (simplified implementation)
 
 ### Technical Notes
+
 - Fixed SQLAlchemy reserved word conflict (`metadata` → `payment_metadata`)
 - Alembic validation bypass added for migrations
 - All payment amounts stored as DECIMAL(10, 2) to avoid float precision issues

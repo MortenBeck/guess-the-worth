@@ -4,9 +4,9 @@
 
 We take security seriously and strive to keep our application secure. The following versions are currently supported with security updates:
 
-| Version | Supported          |
-| ------- | ------------------ |
-| Latest (main)   | :white_check_mark: |
+| Version           | Supported          |
+| ----------------- | ------------------ |
+| Latest (main)     | :white_check_mark: |
 | Development (dev) | :white_check_mark: |
 
 ## Reporting a Vulnerability
@@ -76,6 +76,7 @@ The following security issues have been identified through comprehensive securit
 ### 🔴 CRITICAL Severity
 
 #### 1. Hardcoded Auth0 Credentials
+
 - **File**: `backend/config/settings.py` (lines 18-20)
 - **Issue**: `auth0_client_secret` and other sensitive credentials are hardcoded in source code
 - **Risk**: Anyone with repository access can compromise the Auth0 tenant
@@ -84,6 +85,7 @@ The following security issues have been identified through comprehensive securit
 - **CVSSv3**: 9.8 (Critical)
 
 #### 2. ID-Based Authorization Bypass
+
 - **Files**: `backend/routers/artworks.py:30`, `backend/routers/bids.py:20`
 - **Issue**: `seller_id` and `bidder_id` are passed as query parameters instead of extracted from authenticated tokens
 - **Exploit**: Any user can create artworks or place bids as any other user by manipulating query parameters
@@ -97,6 +99,7 @@ The following security issues have been identified through comprehensive securit
 - **CVSSv3**: 9.1 (Critical)
 
 #### 3. Insecure User Lookup Endpoint
+
 - **File**: `backend/routers/auth.py:37-42`
 - **Issue**: `GET /api/auth/me?auth0_sub=<value>` allows looking up any user by providing their auth0_sub as a query parameter
 - **Risk**: User enumeration, privacy violation, information disclosure
@@ -107,6 +110,7 @@ The following security issues have been identified through comprehensive securit
 ### 🟠 HIGH Severity
 
 #### 4. Unauthenticated WebSocket Connections
+
 - **File**: `backend/main.py:55-76`
 - **Issue**: WebSocket connections do not validate authentication tokens
 - **Risk**: Unauthorized access to real-time bid data, potential for fake event injection
@@ -115,6 +119,7 @@ The following security issues have been identified through comprehensive securit
 - **CVSSv3**: 7.5 (High)
 
 #### 5. Missing Real-Time Bid Events
+
 - **File**: `backend/routers/bids.py:65-67`
 - **Issue**: Socket.IO event emission is commented out, but endpoint is still vulnerable to abuse
 - **Risk**: While feature is disabled, the infrastructure is still exposed without proper authentication
@@ -123,6 +128,7 @@ The following security issues have been identified through comprehensive securit
 - **CVSSv3**: 6.5 (Medium-High)
 
 #### 6. No Auction Expiration Logic
+
 - **File**: `backend/models/artwork.py`
 - **Issue**: Missing `end_date` field and expiration logic - auctions never automatically end
 - **Risk**: Business logic vulnerability, indefinite exposure of auction data
@@ -133,6 +139,7 @@ The following security issues have been identified through comprehensive securit
 ### 🟡 MEDIUM Severity
 
 #### 7. Missing Database Indexes
+
 - **Files**: `backend/models/artwork.py`, `backend/models/bid.py`
 - **Issue**: Foreign keys (`seller_id`, `artwork_id`, `bidder_id`) are not indexed
 - **Risk**: Performance degradation enabling potential DoS through slow queries
@@ -140,6 +147,7 @@ The following security issues have been identified through comprehensive securit
 - **Remediation**: Stage 2 of [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)
 
 #### 8. N+1 Query Vulnerabilities
+
 - **Files**: `backend/routers/bids.py:15`, `backend/routers/artworks.py:14`
 - **Issue**: Lazy loading of relationships causes N+1 queries
 - **Risk**: Database performance issues, potential DoS vector
@@ -147,6 +155,7 @@ The following security issues have been identified through comprehensive securit
 - **Remediation**: Stage 9 of [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)
 
 #### 9. No Pagination Limits
+
 - **Files**: `backend/routers/artworks.py:14`, `backend/routers/users.py:18`
 - **Issue**: No maximum limit enforced on pagination (client can request `?limit=999999`)
 - **Risk**: Resource exhaustion, potential DoS
@@ -154,6 +163,7 @@ The following security issues have been identified through comprehensive securit
 - **Remediation**: Stage 8 of [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)
 
 #### 10. Incomplete Image Upload Implementation
+
 - **File**: `backend/routers/artworks.py:51-59`
 - **Issue**: Image upload endpoint returns placeholder message only, no actual file handling
 - **Risk**: If implemented incorrectly later, could lead to arbitrary file upload vulnerabilities
@@ -162,16 +172,17 @@ The following security issues have been identified through comprehensive securit
 
 ### 📊 Security Issue Summary
 
-| Severity | Count | Fixed | Unfixed |
-|----------|-------|-------|---------|
-| 🔴 Critical | 3 | 0 | 3 |
-| 🟠 High | 3 | 0 | 3 |
-| 🟡 Medium | 4 | 0 | 4 |
-| **TOTAL** | **10** | **0** | **10** |
+| Severity    | Count  | Fixed | Unfixed |
+| ----------- | ------ | ----- | ------- |
+| 🔴 Critical | 3      | 0     | 3       |
+| 🟠 High     | 3      | 0     | 3       |
+| 🟡 Medium   | 4      | 0     | 4       |
+| **TOTAL**   | **10** | **0** | **10**  |
 
 ### ⚠️ Deployment Warning
 
 **DO NOT DEPLOY TO PRODUCTION** until at minimum:
+
 - ✅ Stage 0 complete (environment security)
 - ✅ Stage 1 complete (authentication & authorization fixes)
 - ✅ Stage 2 complete (database security)
