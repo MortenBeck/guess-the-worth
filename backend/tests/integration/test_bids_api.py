@@ -667,6 +667,71 @@ class TestBidAmountValidation:
         assert "higher" in response.json()["detail"].lower()
 
 
+class TestSocketErrorHandling:
+    """Test socket.io error handling."""
+
+    def test_bid_succeeds_even_when_socket_fails(
+        self, client, db_session, artwork, buyer_user, buyer_token
+    ):
+        """Test that bid is created successfully even when socket emit fails."""
+        from unittest.mock import AsyncMock, patch
+
+        # Mock socket.io to raise an exception
+        with patch("routers.bids.get_sio") as mock_get_sio:
+            mock_sio = AsyncMock()
+            mock_sio.emit.side_effect = Exception("Socket connection failed")
+            mock_get_sio.return_value = mock_sio
+
+            # Place a bid that should succeed despite socket failure
+            payload = {"artwork_id": artwork.id, "amount": 75.0}
+            response = client.post(
+                "/api/bids/",
+                json=payload,
+                headers={"Authorization": f"Bearer {buyer_token}"},
+            )
+
+            # Bid should still succeed
+            assert response.status_code == 200
+            data = response.json()
+            assert data["amount"] == 75.0
+            assert data["is_winning"] is False
+
+            # Verify bid was saved to database
+            db_session.refresh(artwork)
+            assert artwork.current_highest_bid == 75.0
+
+    def test_winning_bid_succeeds_even_when_socket_fails(
+        self, client, db_session, artwork, buyer_user, buyer_token
+    ):
+        """Test that winning bid is created successfully even when socket emit fails."""
+        from unittest.mock import AsyncMock, patch
+
+        # Mock socket.io to raise an exception
+        with patch("routers.bids.get_sio") as mock_get_sio:
+            mock_sio = AsyncMock()
+            mock_sio.emit.side_effect = Exception("Socket connection failed")
+            mock_get_sio.return_value = mock_sio
+
+            # Place a winning bid that should succeed despite socket failure
+            payload = {"artwork_id": artwork.id, "amount": 100.0}
+            response = client.post(
+                "/api/bids/",
+                json=payload,
+                headers={"Authorization": f"Bearer {buyer_token}"},
+            )
+
+            # Bid should still succeed
+            assert response.status_code == 200
+            data = response.json()
+            assert data["amount"] == 100.0
+            assert data["is_winning"] is True
+
+            # Verify bid was saved to database and artwork status updated
+            db_session.refresh(artwork)
+            assert artwork.current_highest_bid == 100.0
+            assert artwork.status == ArtworkStatus.PENDING_PAYMENT
+
+
 class TestGetMyBids:
     """Test GET /api/bids/my-bids endpoint."""
 
