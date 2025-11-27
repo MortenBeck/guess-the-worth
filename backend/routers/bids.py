@@ -124,56 +124,64 @@ async def create_bid(
     )
 
     # Emit socket event for real-time bidding
-    sio = get_sio()
-    await sio.emit(
-        "new_bid",
-        {
-            "bid": {
-                "id": db_bid.id,
-                "artwork_id": db_bid.artwork_id,
-                "bidder_id": db_bid.bidder_id,
-                "amount": float(db_bid.amount),
-                "is_winning": db_bid.is_winning,
-                "created_at": db_bid.created_at.isoformat(),
-            },
-            "artwork": {
-                "id": artwork.id,
-                "current_highest_bid": float(artwork.current_highest_bid),
-                "status": artwork.status.value,
-            },
-        },
-        room=f"artwork_{artwork.id}",
-    )
-
-    # If winning bid, emit payment_required event
-    if is_winning:
+    # Wrapped in try-except to ensure HTTP response is sent even if socket fails
+    try:
+        sio = get_sio()
         await sio.emit(
-            "payment_required",
+            "new_bid",
             {
-                "artwork_id": artwork.id,
-                "winning_bid": float(db_bid.amount),
-                "bid_id": db_bid.id,
-                "winner_id": current_user.id,
-                "requires_payment": True,
+                "bid": {
+                    "id": db_bid.id,
+                    "artwork_id": db_bid.artwork_id,
+                    "bidder_id": db_bid.bidder_id,
+                    "amount": float(db_bid.amount),
+                    "is_winning": db_bid.is_winning,
+                    "created_at": db_bid.created_at.isoformat(),
+                },
+                "artwork": {
+                    "id": artwork.id,
+                    "current_highest_bid": float(artwork.current_highest_bid),
+                    "status": artwork.status.value,
+                },
             },
             room=f"artwork_{artwork.id}",
         )
 
-        # Add audit log for winning bid (payment required)
-        AuditService.log_action(
-            db=db,
-            action="winning_bid_placed",
-            resource_type="artwork",
-            resource_id=artwork.id,
-            user=current_user,
-            details={
-                "bid_amount": float(bid.amount),
-                "seller_id": artwork.seller_id,
-                "buyer_id": current_user.id,
-                "status": "PENDING_PAYMENT",
-            },
-            request=request,
-        )
+        # If winning bid, emit payment_required event
+        if is_winning:
+            await sio.emit(
+                "payment_required",
+                {
+                    "artwork_id": artwork.id,
+                    "winning_bid": float(db_bid.amount),
+                    "bid_id": db_bid.id,
+                    "winner_id": current_user.id,
+                    "requires_payment": True,
+                },
+                room=f"artwork_{artwork.id}",
+            )
+
+            # Add audit log for winning bid (payment required)
+            AuditService.log_action(
+                db=db,
+                action="winning_bid_placed",
+                resource_type="artwork",
+                resource_id=artwork.id,
+                user=current_user,
+                details={
+                    "bid_amount": float(bid.amount),
+                    "seller_id": artwork.seller_id,
+                    "buyer_id": current_user.id,
+                    "status": "PENDING_PAYMENT",
+                },
+                request=request,
+            )
+    except Exception as socket_error:
+        # Log socket error but don't fail the bid request
+        # The bid was already committed to the database successfully
+        print(f"Socket emit failed for bid {db_bid.id}: {socket_error}")
+        import traceback
+        traceback.print_exc()
 
     return db_bid
 
