@@ -5,10 +5,11 @@ Creates realistic bid history for artworks with active bidding.
 
 from datetime import UTC, datetime, timedelta
 
+from sqlalchemy.orm import Session
+
 from models.artwork import Artwork, ArtworkStatus
 from models.bid import Bid
 from models.user import User
-from sqlalchemy.orm import Session
 
 
 def seed_bids(db: Session) -> int:
@@ -271,9 +272,7 @@ def seed_bids(db: Session) -> int:
 
     for bid_data in demo_bids:
         # Find artwork by title
-        artwork = (
-            db.query(Artwork).filter(Artwork.title == bid_data["artwork_title"]).first()
-        )
+        artwork = db.query(Artwork).filter(Artwork.title == bid_data["artwork_title"]).first()
 
         if not artwork:
             print(f"   ⚠️  Artwork not found: {bid_data['artwork_title']}")

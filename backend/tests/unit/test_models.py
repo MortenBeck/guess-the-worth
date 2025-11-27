@@ -6,10 +6,11 @@ Tests model creation, relationships, constraints, and enums.
 from datetime import datetime
 
 import pytest
+from sqlalchemy.exc import IntegrityError
+
 from models.artwork import Artwork, ArtworkStatus
 from models.bid import Bid
 from models.user import User
-from sqlalchemy.exc import IntegrityError
 
 
 class TestUserModel:
@@ -104,12 +105,8 @@ class TestUserModel:
 
     def test_user_artworks_relationship(self, db_session, seller_user):
         """Test User.artworks relationship."""
-        artwork1 = Artwork(
-            seller_id=seller_user.id, title="Art 1", secret_threshold=100.0
-        )
-        artwork2 = Artwork(
-            seller_id=seller_user.id, title="Art 2", secret_threshold=200.0
-        )
+        artwork1 = Artwork(seller_id=seller_user.id, title="Art 1", secret_threshold=100.0)
+        artwork2 = Artwork(seller_id=seller_user.id, title="Art 2", secret_threshold=200.0)
         db_session.add_all([artwork1, artwork2])
         db_session.commit()
 
@@ -158,9 +155,7 @@ class TestArtworkModel:
 
     def test_artwork_default_values(self, db_session, seller_user):
         """Test artwork defaults (current_highest_bid=0, status=ACTIVE)."""
-        artwork = Artwork(
-            seller_id=seller_user.id, title="Default Art", secret_threshold=100.0
-        )
+        artwork = Artwork(seller_id=seller_user.id, title="Default Art", secret_threshold=100.0)
         db_session.add(artwork)
         db_session.commit()
         db_session.refresh(artwork)
@@ -170,9 +165,7 @@ class TestArtworkModel:
 
     def test_artwork_optional_fields(self, db_session, seller_user):
         """Test artwork with optional description and image_url."""
-        artwork = Artwork(
-            seller_id=seller_user.id, title="Minimal Art", secret_threshold=50.0
-        )
+        artwork = Artwork(seller_id=seller_user.id, title="Minimal Art", secret_threshold=50.0)
         db_session.add(artwork)
         db_session.commit()
         db_session.refresh(artwork)
@@ -210,9 +203,7 @@ class TestArtworkModel:
 
     def test_artwork_seller_relationship(self, db_session, seller_user):
         """Test Artwork.seller relationship."""
-        artwork = Artwork(
-            seller_id=seller_user.id, title="Test Art", secret_threshold=100.0
-        )
+        artwork = Artwork(seller_id=seller_user.id, title="Test Art", secret_threshold=100.0)
         db_session.add(artwork)
         db_session.commit()
         db_session.refresh(artwork)
@@ -316,25 +307,19 @@ class TestBidModel:
 
     def test_bid_foreign_key_artwork(self, db_session, buyer_user):
         """Test bid requires valid artwork_id."""
-        bid = Bid(
-            artwork_id=99999, bidder_id=buyer_user.id, amount=100.0
-        )  # Non-existent artwork
+        bid = Bid(artwork_id=99999, bidder_id=buyer_user.id, amount=100.0)  # Non-existent artwork
         db_session.add(bid)
         with pytest.raises(IntegrityError):
             db_session.commit()
 
     def test_bid_foreign_key_bidder(self, db_session, artwork):
         """Test bid requires valid bidder_id."""
-        bid = Bid(
-            artwork_id=artwork.id, bidder_id=99999, amount=100.0
-        )  # Non-existent user
+        bid = Bid(artwork_id=artwork.id, bidder_id=99999, amount=100.0)  # Non-existent user
         db_session.add(bid)
         with pytest.raises(IntegrityError):
             db_session.commit()
 
-    def test_multiple_bids_same_artwork(
-        self, db_session, artwork, buyer_user, seller_user
-    ):
+    def test_multiple_bids_same_artwork(self, db_session, artwork, buyer_user, seller_user):
         """Test multiple users can bid on same artwork."""
         bid1 = Bid(artwork_id=artwork.id, bidder_id=buyer_user.id, amount=50.0)
 
@@ -375,9 +360,7 @@ class TestModelRelationships:
     def test_user_deletion_cascades(self, db_session, seller_user, buyer_user):
         """Test deleting user cascades to artworks and bids."""
         # Create artwork by seller
-        artwork = Artwork(
-            seller_id=seller_user.id, title="To Be Deleted", secret_threshold=100.0
-        )
+        artwork = Artwork(seller_id=seller_user.id, title="To Be Deleted", secret_threshold=100.0)
         db_session.add(artwork)
         db_session.commit()
 
@@ -395,9 +378,7 @@ class TestModelRelationships:
         db_session.commit()
 
         # Verify artwork and bid are deleted
-        deleted_artwork = (
-            db_session.query(Artwork).filter(Artwork.id == artwork_id).first()
-        )
+        deleted_artwork = db_session.query(Artwork).filter(Artwork.id == artwork_id).first()
         deleted_bid = db_session.query(Bid).filter(Bid.id == bid_id).first()
 
         assert deleted_artwork is None
@@ -409,9 +390,7 @@ class TestModelRelationships:
 
     def test_artwork_with_multiple_relationships(self, db_session, seller_user):
         """Test artwork with multiple bids from multiple users."""
-        artwork = Artwork(
-            seller_id=seller_user.id, title="Popular Art", secret_threshold=100.0
-        )
+        artwork = Artwork(seller_id=seller_user.id, title="Popular Art", secret_threshold=100.0)
         db_session.add(artwork)
         db_session.commit()
 

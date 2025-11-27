@@ -3,23 +3,20 @@ Tests for admin API endpoints.
 """
 
 from fastapi.testclient import TestClient
-from models.user import User
 from sqlalchemy.orm import Session
+
+from models.user import User
 
 
 def test_list_users_requires_admin(client: TestClient, buyer_token: str):
     """Non-admin users cannot access user list."""
-    response = client.get(
-        "/api/admin/users", headers={"Authorization": f"Bearer {buyer_token}"}
-    )
+    response = client.get("/api/admin/users", headers={"Authorization": f"Bearer {buyer_token}"})
     assert response.status_code == 403
 
 
 def test_list_users_as_admin(client: TestClient, admin_token: str, db_session: Session):
     """Admin can list users."""
-    response = client.get(
-        "/api/admin/users", headers={"Authorization": f"Bearer {admin_token}"}
-    )
+    response = client.get("/api/admin/users", headers={"Authorization": f"Bearer {admin_token}"})
     assert response.status_code == 200
     data = response.json()
     assert "users" in data
@@ -104,9 +101,7 @@ def test_get_audit_logs(client: TestClient, admin_token: str):
     assert "total" in data
 
 
-def test_list_users_with_role_filter(
-    client: TestClient, admin_token: str, buyer_user: User
-):
+def test_list_users_with_role_filter(client: TestClient, admin_token: str, buyer_user: User):
     """Admin can filter users by role."""
     response = client.get(
         "/api/admin/users?role=BUYER",
@@ -158,9 +153,7 @@ def test_get_flagged_auctions(client: TestClient, admin_token: str):
     assert "flagged_auctions" in data
 
 
-def test_get_audit_logs_with_filters(
-    client: TestClient, admin_token: str, buyer_user: User
-):
+def test_get_audit_logs_with_filters(client: TestClient, admin_token: str, buyer_user: User):
     """Admin can filter audit logs by action and user."""
     response = client.get(
         f"/api/admin/audit-logs?action=user_banned&user_id={buyer_user.id}",
@@ -190,9 +183,7 @@ def test_seed_database_requires_confirmation(client: TestClient, admin_token: st
     assert "confirm" in response.json()["detail"].lower()
 
 
-def test_seed_database_success(
-    client: TestClient, admin_token: str, db_session: Session
-):
+def test_seed_database_success(client: TestClient, admin_token: str, db_session: Session):
     """Admin can successfully seed the database."""
     response = client.post(
         "/api/admin/seed-database?confirm=yes",
@@ -230,9 +221,7 @@ def test_seed_database_is_idempotent(client: TestClient, admin_token: str):
     assert response2.json()["success"] is True
 
 
-def test_seed_database_creates_audit_log(
-    client: TestClient, admin_token: str, db_session: Session
-):
+def test_seed_database_creates_audit_log(client: TestClient, admin_token: str, db_session: Session):
     """Seeding creates an audit log entry."""
     # Seed the database
     response = client.post(
@@ -255,9 +244,7 @@ def test_seed_database_creates_audit_log(
     assert "bids" in logs[0]["details"]
 
 
-def test_seed_database_handles_errors(
-    client: TestClient, admin_token: str, monkeypatch
-):
+def test_seed_database_handles_errors(client: TestClient, admin_token: str, monkeypatch):
     """Seeding handles database errors gracefully."""
 
     # Mock seed_users to raise an exception

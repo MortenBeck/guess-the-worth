@@ -24,13 +24,9 @@ limiter = Limiter(
 )
 
 
-async def rate_limit_exceeded_handler(
-    request: Request, exc: RateLimitExceeded
-) -> JSONResponse:
+async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
     """Custom handler for rate limit exceeded errors."""
-    logger.warning(
-        f"Rate limit exceeded for {request.client.host} " f"on {request.url.path}"
-    )
+    logger.warning(f"Rate limit exceeded for {request.client.host} " f"on {request.url.path}")
     return JSONResponse(
         status_code=429,
         content={

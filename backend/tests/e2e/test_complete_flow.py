@@ -220,9 +220,7 @@ class TestMultipleUsersCompetingFlow:
 class TestSellerMultipleArtworksFlow:
     """Test seller creating and managing multiple artworks."""
 
-    def test_seller_creates_multiple_artworks_different_outcomes(
-        self, client, db_session
-    ):
+    def test_seller_creates_multiple_artworks_different_outcomes(self, client, db_session):
         """
         Flow:
         1. Seller creates multiple artworks
@@ -484,9 +482,7 @@ class TestCompleteMarketplaceFlow:
         assert len(artwork_list) == 4
 
         # Count pending payment vs active
-        pending_payment_count = sum(
-            1 for a in artwork_list if a["status"] == "PENDING_PAYMENT"
-        )
+        pending_payment_count = sum(1 for a in artwork_list if a["status"] == "PENDING_PAYMENT")
         active_count = sum(1 for a in artwork_list if a["status"] == "ACTIVE")
 
         assert pending_payment_count >= 1  # At least artwork 1 is pending payment
@@ -670,9 +666,7 @@ class TestAdminOversightFlow:
         transactions = response_data["transactions"]
         assert len(transactions) > 0
         # Verify our transaction is in the list (check artwork_title field)
-        assert any(
-            t.get("artwork_title") == "Admin Oversight Test" for t in transactions
-        )
+        assert any(t.get("artwork_title") == "Admin Oversight Test" for t in transactions)
 
         # Step 5: Admin views audit logs
         audit_logs_response = client.get(
@@ -700,9 +694,7 @@ class TestAdminOversightFlow:
         assert stats["auctions"]["total"] >= 0
         assert "transactions" in stats
 
-    def test_admin_user_management(
-        self, client, buyer_user, admin_user, buyer_token, admin_token
-    ):
+    def test_admin_user_management(self, client, buyer_user, admin_user, buyer_token, admin_token):
         """Test admin user management capabilities."""
         # Step 1: Admin lists all users
         users_response = client.get(

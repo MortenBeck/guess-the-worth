@@ -1,9 +1,10 @@
 import os
 
-from config.settings import settings
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool, QueuePool
+
+from config.settings import settings
 
 # Enable SQL query logging in development
 # Set ENVIRONMENT=development in .env to enable query logging

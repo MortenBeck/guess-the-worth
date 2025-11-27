@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
+
 from models import Bid, Payment
 from models.payment import PaymentStatus
 from tests.conftest import create_auth_header
@@ -15,9 +16,7 @@ from tests.conftest import create_auth_header
 @pytest.fixture
 def winning_bid(db_session, artwork, buyer_user):
     """Create a winning bid for payment testing."""
-    bid = Bid(
-        artwork_id=artwork.id, bidder_id=buyer_user.id, amount=100.0, is_winning=True
-    )
+    bid = Bid(artwork_id=artwork.id, bidder_id=buyer_user.id, amount=100.0, is_winning=True)
     db_session.add(bid)
     db_session.commit()
     db_session.refresh(bid)
@@ -27,9 +26,7 @@ def winning_bid(db_session, artwork, buyer_user):
 @pytest.fixture
 def non_winning_bid(db_session, artwork, buyer_user):
     """Create a non-winning bid."""
-    bid = Bid(
-        artwork_id=artwork.id, bidder_id=buyer_user.id, amount=50.0, is_winning=False
-    )
+    bid = Bid(artwork_id=artwork.id, bidder_id=buyer_user.id, amount=50.0, is_winning=False)
     db_session.add(bid)
     db_session.commit()
     db_session.refresh(bid)
@@ -113,15 +110,11 @@ class TestCreatePaymentIntent:
 
     def test_create_payment_intent_unauthorized(self, client: TestClient, winning_bid):
         """Test payment intent creation without authentication."""
-        response = client.post(
-            "/api/payments/create-intent", json={"bid_id": winning_bid.id}
-        )
+        response = client.post("/api/payments/create-intent", json={"bid_id": winning_bid.id})
 
         assert response.status_code == 401
 
-    def test_create_payment_intent_wrong_user(
-        self, client: TestClient, winning_bid, seller_token
-    ):
+    def test_create_payment_intent_wrong_user(self, client: TestClient, winning_bid, seller_token):
         """Test payment intent creation by non-bid owner."""
         response = client.post(
             "/api/payments/create-intent",
@@ -603,9 +596,7 @@ class TestGetMyPayments:
         db_session.add(payment1)
         db_session.commit()
 
-        response = client.get(
-            "/api/payments/my-payments", headers=create_auth_header(buyer_token)
-        )
+        response = client.get("/api/payments/my-payments", headers=create_auth_header(buyer_token))
 
         assert response.status_code == 200
         data = response.json()
@@ -614,9 +605,7 @@ class TestGetMyPayments:
 
     def test_get_my_payments_empty(self, client: TestClient, buyer_token):
         """Test retrieving payments when user has none."""
-        response = client.get(
-            "/api/payments/my-payments", headers=create_auth_header(buyer_token)
-        )
+        response = client.get("/api/payments/my-payments", headers=create_auth_header(buyer_token))
 
         assert response.status_code == 200
         assert response.json() == []
@@ -631,9 +620,7 @@ class TestGetMyPayments:
 class TestGetPaymentById:
     """Tests for GET /payments/{payment_id} endpoint."""
 
-    def test_get_payment_as_buyer(
-        self, client: TestClient, db_session, winning_bid, buyer_token
-    ):
+    def test_get_payment_as_buyer(self, client: TestClient, db_session, winning_bid, buyer_token):
         """Test buyer retrieving their payment."""
         payment = Payment(
             bid_id=winning_bid.id,
@@ -654,9 +641,7 @@ class TestGetPaymentById:
         assert data["id"] == payment.id
         assert data["amount"] == "100.00"
 
-    def test_get_payment_as_seller(
-        self, client: TestClient, db_session, winning_bid, seller_token
-    ):
+    def test_get_payment_as_seller(self, client: TestClient, db_session, winning_bid, seller_token):
         """Test seller retrieving payment for their artwork."""
         payment = Payment(
             bid_id=winning_bid.id,
@@ -674,9 +659,7 @@ class TestGetPaymentById:
 
         assert response.status_code == 200
 
-    def test_get_payment_as_admin(
-        self, client: TestClient, db_session, winning_bid, admin_token
-    ):
+    def test_get_payment_as_admin(self, client: TestClient, db_session, winning_bid, admin_token):
         """Test admin retrieving any payment."""
         payment = Payment(
             bid_id=winning_bid.id,
@@ -694,9 +677,7 @@ class TestGetPaymentById:
 
         assert response.status_code == 200
 
-    def test_get_payment_unauthorized_user(
-        self, client: TestClient, db_session, winning_bid
-    ):
+    def test_get_payment_unauthorized_user(self, client: TestClient, db_session, winning_bid):
         """Test unauthorized user cannot view payment."""
         from models.user import User
 
@@ -740,9 +721,7 @@ class TestGetPaymentById:
 
     def test_get_payment_not_found(self, client: TestClient, buyer_token):
         """Test retrieving non-existent payment."""
-        response = client.get(
-            "/api/payments/99999", headers=create_auth_header(buyer_token)
-        )
+        response = client.get("/api/payments/99999", headers=create_auth_header(buyer_token))
 
         assert response.status_code == 404
 
@@ -794,9 +773,7 @@ class TestGetArtworkPayment:
 
         assert response.status_code == 200
 
-    def test_get_artwork_payment_unauthorized(
-        self, client: TestClient, artwork, buyer_token
-    ):
+    def test_get_artwork_payment_unauthorized(self, client: TestClient, artwork, buyer_token):
         """Test buyer cannot view artwork payment."""
         response = client.get(
             f"/api/payments/artwork/{artwork.id}",
@@ -814,9 +791,7 @@ class TestGetArtworkPayment:
         assert response.status_code == 404
         assert "Artwork not found" in response.json()["detail"]
 
-    def test_get_artwork_payment_no_payment(
-        self, client: TestClient, artwork, seller_token
-    ):
+    def test_get_artwork_payment_no_payment(self, client: TestClient, artwork, seller_token):
         """Test retrieving payment when artwork has no completed payment."""
         response = client.get(
             f"/api/payments/artwork/{artwork.id}",
