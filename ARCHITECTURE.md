@@ -32,6 +32,7 @@ Guess The Worth is a web-based auction platform for an artist collective, featur
 3. **Data Layer** - PostgreSQL relational database
 
 ### Key Features
+
 - Secret threshold bidding system
 - Real-time bid updates via WebSockets
 - Role-based access control (Buyer, Seller, Admin)
@@ -41,6 +42,7 @@ Guess The Worth is a web-based auction platform for an artist collective, featur
 - Audit logging for security events
 
 ### Architecture Principles
+
 - **Separation of Concerns** - Clear boundaries between layers
 - **Stateless API** - JWT-based authentication, no server-side sessions
 - **Real-time First** - WebSocket integration for live updates
@@ -115,52 +117,56 @@ External Services:
 ## Technology Stack
 
 ### Backend
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| Python | 3.11+ | Primary backend language |
-| FastAPI | Latest | High-performance web framework |
-| SQLAlchemy | Latest | ORM for database interactions |
-| Alembic | Latest | Database migration tool |
-| Pydantic | Latest | Data validation and serialization |
-| Socket.IO | Latest | WebSocket communication |
-| Auth0 | N/A | Authentication provider |
-| PyJWT | Latest | JWT token handling |
-| Uvicorn | Latest | ASGI server |
-| Pytest | Latest | Testing framework |
-| Bandit | Latest | Security linting |
-| Black | Latest | Code formatting |
+
+| Technology | Version | Purpose                           |
+| ---------- | ------- | --------------------------------- |
+| Python     | 3.11+   | Primary backend language          |
+| FastAPI    | Latest  | High-performance web framework    |
+| SQLAlchemy | Latest  | ORM for database interactions     |
+| Alembic    | Latest  | Database migration tool           |
+| Pydantic   | Latest  | Data validation and serialization |
+| Socket.IO  | Latest  | WebSocket communication           |
+| Auth0      | N/A     | Authentication provider           |
+| PyJWT      | Latest  | JWT token handling                |
+| Uvicorn    | Latest  | ASGI server                       |
+| Pytest     | Latest  | Testing framework                 |
+| Bandit     | Latest  | Security linting                  |
+| Black      | Latest  | Code formatting                   |
 
 ### Frontend
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| React | 19 | UI library |
-| Vite | Latest | Build tool and dev server |
-| Zustand | Latest | State management |
-| TanStack Query | Latest | Server state management |
-| Chakra UI | Latest | Component library |
-| React Router | Latest | Client-side routing |
-| Socket.io-client | Latest | WebSocket client |
-| Axios | Latest | HTTP client |
-| Vitest | Latest | Testing framework |
-| ESLint | Latest | Code linting |
-| Prettier | Latest | Code formatting |
+
+| Technology       | Version | Purpose                   |
+| ---------------- | ------- | ------------------------- |
+| React            | 19      | UI library                |
+| Vite             | Latest  | Build tool and dev server |
+| Zustand          | Latest  | State management          |
+| TanStack Query   | Latest  | Server state management   |
+| Chakra UI        | Latest  | Component library         |
+| React Router     | Latest  | Client-side routing       |
+| Socket.io-client | Latest  | WebSocket client          |
+| Axios            | Latest  | HTTP client               |
+| Vitest           | Latest  | Testing framework         |
+| ESLint           | Latest  | Code linting              |
+| Prettier         | Latest  | Code formatting           |
 
 ### Database
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| PostgreSQL | 15+ | Primary database |
+
+| Technology | Version | Purpose          |
+| ---------- | ------- | ---------------- |
+| PostgreSQL | 15+     | Primary database |
 
 ### DevOps & Infrastructure
-| Technology | Purpose |
-|------------|---------|
-| Docker | Containerization |
-| Docker Compose | Local development orchestration |
-| GitHub Actions | CI/CD pipeline |
-| Azure App Services | Hosting (backend and frontend) |
-| Sentry | Error tracking and monitoring |
-| UptimeRobot | Uptime monitoring |
-| Trivy | Container vulnerability scanning |
-| TruffleHog | Secret scanning |
+
+| Technology         | Purpose                          |
+| ------------------ | -------------------------------- |
+| Docker             | Containerization                 |
+| Docker Compose     | Local development orchestration  |
+| GitHub Actions     | CI/CD pipeline                   |
+| Azure App Services | Hosting (backend and frontend)   |
+| Sentry             | Error tracking and monitoring    |
+| UptimeRobot        | Uptime monitoring                |
+| Trivy              | Container vulnerability scanning |
+| TruffleHog         | Secret scanning                  |
 
 ---
 
@@ -241,6 +247,7 @@ backend/
 ### Key Components
 
 #### 1. Main Application ([main.py](backend/main.py))
+
 - FastAPI app initialization
 - Socket.IO server setup
 - Middleware registration
@@ -248,11 +255,13 @@ backend/
 - CORS configuration
 
 #### 2. Database Layer ([database.py](backend/database.py))
+
 - SQLAlchemy engine and session factory
 - Connection pooling
 - Session management with dependency injection
 
 #### 3. Models
+
 **Object-Relational Mapping (ORM) using SQLAlchemy**
 
 - **User Model** - User accounts with Auth0 integration
@@ -261,15 +270,18 @@ backend/
 - **AuditLog Model** - Security and action logging
 
 #### 4. Routers
+
 **RESTful API endpoints organized by resource**
 
 Each router handles specific resource operations:
+
 - Authentication and authorization
 - CRUD operations
 - Business logic invocation
 - Response serialization
 
 #### 5. Services
+
 **Encapsulated business logic**
 
 - **AuthService** - JWT validation, user context
@@ -277,6 +289,7 @@ Each router handles specific resource operations:
 - Separates business rules from HTTP layer
 
 #### 6. Middleware
+
 **Request/response interceptors**
 
 - **Security Headers** - CSP, XSS protection, HSTS
@@ -358,6 +371,7 @@ frontend/
 ### Key Patterns
 
 #### 1. State Management
+
 **Zustand for client state, TanStack Query for server state**
 
 ```javascript
@@ -366,11 +380,12 @@ const useAuthStore = create((set) => ({
   user: null,
   token: null,
   login: (user, token) => set({ user, token }),
-  logout: () => set({ user: null, token: null })
+  logout: () => set({ user: null, token: null }),
 }));
 ```
 
 #### 2. Component Composition
+
 **Small, focused components with clear responsibilities**
 
 - **Pages** - Route-level components
@@ -378,6 +393,7 @@ const useAuthStore = create((set) => ({
 - **Layouts** - Common page structures
 
 #### 3. Custom Hooks
+
 **Encapsulate logic for reusability**
 
 ```javascript
@@ -385,12 +401,13 @@ const useAuthStore = create((set) => ({
 const useAuth = () => {
   const { user, token, login, logout } = useAuthStore();
   const isAuthenticated = !!token;
-  const isAdmin = user?.role === 'ADMIN';
+  const isAdmin = user?.role === "ADMIN";
   return { user, token, login, logout, isAuthenticated, isAdmin };
 };
 ```
 
 #### 4. API Client Pattern
+
 **Centralized API communication with interceptors**
 
 ```javascript
@@ -465,6 +482,7 @@ api.interceptors.request.use((config) => {
 ### Table Specifications
 
 #### Users Table
+
 ```sql
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
@@ -481,6 +499,7 @@ CREATE INDEX idx_users_role ON users(role);
 ```
 
 #### Artworks Table
+
 ```sql
 CREATE TABLE artworks (
     id SERIAL PRIMARY KEY,
@@ -505,6 +524,7 @@ CREATE INDEX idx_artworks_end_date ON artworks(end_date);
 ```
 
 #### Bids Table
+
 ```sql
 CREATE TABLE bids (
     id SERIAL PRIMARY KEY,
@@ -521,6 +541,7 @@ CREATE INDEX idx_bids_status ON bids(status);
 ```
 
 #### AuditLogs Table
+
 ```sql
 CREATE TABLE audit_logs (
     id SERIAL PRIMARY KEY,
@@ -548,12 +569,14 @@ CREATE INDEX idx_audit_logs_action ON audit_logs(action);
 ### Indexing Strategy
 
 **Indexed Fields:**
+
 - Primary keys (automatic)
 - Foreign keys (seller_id, buyer_id, artwork_id)
 - Frequently queried fields (auth0_sub, status, category, end_date)
 - Fields used in WHERE clauses and JOINs
 
 **Rationale:**
+
 - Improves query performance
 - Prevents N+1 query issues
 - Enables efficient pagination
@@ -633,6 +656,7 @@ async def get_current_user(
 ### Authorization (RBAC)
 
 **Role Hierarchy:**
+
 1. **ADMIN** - Full system access
 2. **SELLER** - Create/manage artworks
 3. **BUYER** - Place bids, view artworks
@@ -736,20 +760,20 @@ await socket_app.emit(
 
 ```javascript
 // WebSocket client in services/socket.js
-import io from 'socket.io-client';
+import io from "socket.io-client";
 
 const socket = io(API_URL, {
-  transports: ['websocket'],
+  transports: ["websocket"],
   auth: {
-    token: getAuthToken() // TODO: Send JWT token
-  }
+    token: getAuthToken(), // TODO: Send JWT token
+  },
 });
 
 // Join artwork room
-socket.emit('join_artwork', { artwork_id: artworkId });
+socket.emit("join_artwork", { artwork_id: artworkId });
 
 // Listen for bid updates
-socket.on('new_bid', (data) => {
+socket.on("new_bid", (data) => {
   // Update UI with new bid
   updateArtworkStore(data);
 });
@@ -757,14 +781,14 @@ socket.on('new_bid', (data) => {
 
 ### Event Types
 
-| Event | Direction | Purpose |
-|-------|-----------|---------|
-| `connect` | Client → Server | Establish WebSocket connection |
-| `disconnect` | Client → Server | Close WebSocket connection |
-| `join_artwork` | Client → Server | Subscribe to artwork updates |
-| `leave_artwork` | Client → Server | Unsubscribe from artwork |
-| `new_bid` | Server → Client | Broadcast new bid to all clients |
-| `auction_ended` | Server → Client | Notify auction expiration |
+| Event           | Direction       | Purpose                          |
+| --------------- | --------------- | -------------------------------- |
+| `connect`       | Client → Server | Establish WebSocket connection   |
+| `disconnect`    | Client → Server | Close WebSocket connection       |
+| `join_artwork`  | Client → Server | Subscribe to artwork updates     |
+| `leave_artwork` | Client → Server | Unsubscribe from artwork         |
+| `new_bid`       | Server → Client | Broadcast new bid to all clients |
+| `auction_ended` | Server → Client | Notify auction expiration        |
 
 ---
 
@@ -783,6 +807,7 @@ The API follows REST architectural constraints:
 ### API Endpoints
 
 #### Authentication
+
 ```
 POST   /api/auth/register          - Register new user
 GET    /api/auth/me                - Get current user
@@ -790,6 +815,7 @@ PUT    /api/auth/me                - Update current user profile
 ```
 
 #### Artworks
+
 ```
 GET    /api/artworks               - List artworks (paginated)
 POST   /api/artworks               - Create artwork (seller only)
@@ -800,6 +826,7 @@ POST   /api/artworks/{id}/image    - Upload artwork image
 ```
 
 #### Bids
+
 ```
 GET    /api/bids                   - List bids (paginated)
 POST   /api/bids                   - Place bid
@@ -808,6 +835,7 @@ GET    /api/bids/user/{id}         - Get bids by user
 ```
 
 #### Admin
+
 ```
 GET    /api/admin/users            - List all users (admin only)
 PUT    /api/admin/users/{id}/role  - Update user role (admin only)
@@ -819,6 +847,7 @@ GET    /api/admin/system/health    - System health (admin only)
 ```
 
 #### Statistics
+
 ```
 GET    /api/stats/platform         - Platform-wide statistics
 GET    /api/stats/seller/{id}      - Seller statistics
@@ -826,6 +855,7 @@ GET    /api/stats/user/{id}        - User statistics
 ```
 
 #### Health
+
 ```
 GET/HEAD    /health                - Application health
 GET/HEAD    /health/db             - Database connectivity
@@ -838,6 +868,7 @@ Note: Health endpoints support both GET and HEAD methods for compatibility with 
 #### Example: Create Artwork
 
 **Request:**
+
 ```http
 POST /api/artworks
 Authorization: Bearer <jwt_token>
@@ -854,6 +885,7 @@ Content-Type: application/json
 ```
 
 **Response (201 Created):**
+
 ```json
 {
   "id": 123,
@@ -862,7 +894,7 @@ Content-Type: application/json
   "artist_name": "Jane Doe",
   "seller_id": 456,
   "image_url": null,
-  "secret_threshold": 500.00,
+  "secret_threshold": 500.0,
   "current_highest_bid": 0,
   "status": "ACTIVE",
   "category": "Landscape",
@@ -881,6 +913,7 @@ GET /api/artworks?skip=0&limit=10
 ```
 
 **Response includes pagination metadata:**
+
 ```json
 {
   "items": [...],
@@ -917,24 +950,28 @@ Multiple layers of security controls:
 ### Security Features
 
 #### 1. Authentication & Authorization
+
 - JWT-based authentication with Auth0
 - Role-based access control (RBAC)
 - Token validation on every request
 - Secure token storage
 
 #### 2. Input Validation
+
 - Pydantic schemas on backend
 - Zod schemas on frontend
 - SQL injection prevention via ORM
 - XSS prevention (React auto-escaping)
 
 #### 3. Rate Limiting
+
 - Sliding window algorithm
 - Per-endpoint rate limits
 - IP-based tracking
 - 429 Too Many Requests response
 
 #### 4. Security Headers
+
 ```python
 # Applied via middleware
 headers = {
@@ -947,12 +984,14 @@ headers = {
 ```
 
 #### 5. Audit Logging
+
 - All user actions logged
 - Admin actions tracked
 - Security events recorded
 - IP address and user agent captured
 
 #### 6. Secret Management
+
 - All secrets in environment variables
 - No hardcoded credentials
 - `.env` files gitignored
@@ -1058,7 +1097,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install dependencies
         run: |
@@ -1108,18 +1147,21 @@ jobs:
 ### Performance Optimizations
 
 #### 1. Database Optimizations
+
 - **Indexes** on foreign keys and frequently queried fields
 - **Eager Loading** to prevent N+1 queries
 - **Connection Pooling** for efficient database connections
 - **Query Optimization** with SQLAlchemy best practices
 
 #### 2. API Optimizations
+
 - **Pagination** to limit response sizes
 - **Rate Limiting** to prevent abuse
 - **Caching** (planned) for frequently accessed data
 - **Compression** for response bodies
 
 #### 3. Frontend Optimizations
+
 - **Code Splitting** via Vite
 - **Lazy Loading** for routes and components
 - **Memoization** with React.memo and useMemo
@@ -1128,15 +1170,18 @@ jobs:
 ### Scalability Considerations
 
 #### Horizontal Scaling
+
 - **Stateless API** enables multiple backend instances
 - **Load Balancer** distributes traffic across instances
 - **Database Connection Pooling** manages concurrent connections
 
 #### Vertical Scaling
+
 - **Containerization** allows resource allocation adjustments
 - **Database Scaling** through managed service upgrades
 
 #### Bottlenecks
+
 - **Database** - Primary bottleneck for high-traffic scenarios
   - Solution: Read replicas, caching layer
 - **WebSocket Connections** - Limited by single server
@@ -1149,18 +1194,21 @@ jobs:
 ### Health Checks
 
 #### Application Health
+
 ```
 GET /health
 Response: {"status": "healthy"}
 ```
 
 #### Database Health
+
 ```
 GET /health/db
 Response: {"status": "healthy", "database": "connected"}
 ```
 
 #### System Health (Admin)
+
 ```
 GET /api/admin/system/health
 Response: {
@@ -1175,6 +1223,7 @@ Response: {
 ### Error Tracking
 
 **Sentry Integration** - Automatic error capture and reporting:
+
 - Backend exceptions
 - Frontend errors
 - Performance monitoring
@@ -1183,6 +1232,7 @@ Response: {
 ### Uptime Monitoring
 
 **UptimeRobot** - External monitoring:
+
 - Backend API health checks
 - Frontend availability checks
 - Database connectivity checks
@@ -1191,6 +1241,7 @@ Response: {
 ### Custom Health Dashboard
 
 **Local Monitoring** - Real-time service status:
+
 - Visual status indicators
 - Response time tracking
 - Service availability metrics
@@ -1199,11 +1250,13 @@ Response: {
 ### Logging
 
 #### Application Logs
+
 - Request/response logging
 - Error logging with stack traces
 - Performance logging (slow queries)
 
 #### Audit Logs
+
 - User actions (login, register, profile updates)
 - Resource changes (artwork creation, bid placement)
 - Admin actions (user management, artwork deletion)
@@ -1214,8 +1267,10 @@ Response: {
 ## Design Decisions & Trade-offs
 
 ### 1. FastAPI vs Flask/Django
+
 **Decision**: FastAPI
 **Rationale**:
+
 - Modern async/await support
 - Automatic OpenAPI documentation
 - Built-in data validation (Pydantic)
@@ -1224,8 +1279,10 @@ Response: {
 **Trade-off**: Smaller ecosystem than Django
 
 ### 2. React 19 vs Other Frameworks
+
 **Decision**: React 19
 **Rationale**:
+
 - Large ecosystem and community
 - Component-based architecture
 - Excellent tooling and dev experience
@@ -1234,8 +1291,10 @@ Response: {
 **Trade-off**: Not as opinionated as frameworks like Next.js
 
 ### 3. Zustand vs Redux
+
 **Decision**: Zustand
 **Rationale**:
+
 - Simpler API, less boilerplate
 - Better TypeScript support
 - Smaller bundle size
@@ -1244,8 +1303,10 @@ Response: {
 **Trade-off**: Less mature DevTools than Redux
 
 ### 4. PostgreSQL vs NoSQL
+
 **Decision**: PostgreSQL
 **Rationale**:
+
 - ACID compliance for financial transactions (bids)
 - Strong relational data model (users, artworks, bids)
 - Mature tooling and ecosystem
@@ -1254,8 +1315,10 @@ Response: {
 **Trade-off**: Less flexible schema than NoSQL
 
 ### 5. Auth0 vs Custom Authentication
+
 **Decision**: Auth0
 **Rationale**:
+
 - Production-ready security
 - OAuth/OIDC compliance
 - Reduced development time
@@ -1264,8 +1327,10 @@ Response: {
 **Trade-off**: Vendor lock-in, monthly cost
 
 ### 6. Socket.IO vs WebSockets
+
 **Decision**: Socket.IO
 **Rationale**:
+
 - Automatic reconnection
 - Room/namespace support
 - Fallback transports
@@ -1274,8 +1339,10 @@ Response: {
 **Trade-off**: Larger client bundle than raw WebSockets
 
 ### 7. Monorepo vs Separate Repos
+
 **Decision**: Monorepo
 **Rationale**:
+
 - Easier coordination between frontend/backend
 - Shared documentation and CI/CD
 - Simplified development workflow
@@ -1283,8 +1350,10 @@ Response: {
 **Trade-off**: Longer CI/CD times for monolithic pipeline
 
 ### 8. Docker Compose vs Kubernetes
+
 **Decision**: Docker Compose (local), Azure App Services (production)
 **Rationale**:
+
 - Simpler local development
 - Educational project scope
 - Cost-effective for course project
@@ -1296,18 +1365,21 @@ Response: {
 ## Future Improvements
 
 ### Short-term
+
 - Implement Stripe payment integration
 - Add database seeding system
 - Enhance error handling and user feedback
 - Implement caching layer (Redis)
 
 ### Medium-term
+
 - Email notifications for bid updates
 - Advanced search and filtering
 - User profile enhancements
 - Performance monitoring dashboard
 
 ### Long-term
+
 - Horizontal scaling with load balancer
 - Read replicas for database
 - CDN for static assets

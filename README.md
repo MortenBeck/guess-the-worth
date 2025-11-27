@@ -53,6 +53,7 @@ See `.env.example` files for all required variables.
 Populate the database with demo data for testing and demonstration:
 
 **Local/Docker:**
+
 ```bash
 # Local
 cd backend
@@ -63,6 +64,7 @@ docker exec guess_the_worth_backend python seeds/seed_manager.py
 ```
 
 **Azure Production:**
+
 1. Go to [Azure Portal](https://portal.azure.com)
 2. Navigate to your Backend App Service
 3. In the left menu, go to **Development Tools** → **SSH** or **Console**
@@ -75,19 +77,20 @@ docker exec guess_the_worth_backend python seeds/seed_manager.py
 
 **Demo Accounts** (for Auth0 testing - create these users in your Auth0 tenant):
 
-| Role | Email | Name | auth0_sub |
-|------|-------|------|-----------|
-| Admin | admin@guesstheworth.demo | Demo Admin | auth0\|demo-admin-001 |
+| Role   | Email                      | Name                        | auth0_sub              |
+| ------ | -------------------------- | --------------------------- | ---------------------- |
+| Admin  | admin@guesstheworth.demo   | Demo Admin                  | auth0\|demo-admin-001  |
 | Seller | seller1@guesstheworth.demo | Alice Johnson (Demo Seller) | auth0\|demo-seller-001 |
-| Seller | seller2@guesstheworth.demo | Bob Martinez (Demo Seller) | auth0\|demo-seller-002 |
-| Seller | seller3@guesstheworth.demo | Carol Chen (Demo Seller) | auth0\|demo-seller-003 |
-| Buyer | buyer1@guesstheworth.demo | David Smith (Demo Buyer) | auth0\|demo-buyer-001 |
-| Buyer | buyer2@guesstheworth.demo | Emma Wilson (Demo Buyer) | auth0\|demo-buyer-002 |
-| Buyer | buyer3@guesstheworth.demo | Frank Brown (Demo Buyer) | auth0\|demo-buyer-003 |
-| Buyer | buyer4@guesstheworth.demo | Grace Lee (Demo Buyer) | auth0\|demo-buyer-004 |
-| Buyer | buyer5@guesstheworth.demo | Henry Taylor (Demo Buyer) | auth0\|demo-buyer-005 |
+| Seller | seller2@guesstheworth.demo | Bob Martinez (Demo Seller)  | auth0\|demo-seller-002 |
+| Seller | seller3@guesstheworth.demo | Carol Chen (Demo Seller)    | auth0\|demo-seller-003 |
+| Buyer  | buyer1@guesstheworth.demo  | David Smith (Demo Buyer)    | auth0\|demo-buyer-001  |
+| Buyer  | buyer2@guesstheworth.demo  | Emma Wilson (Demo Buyer)    | auth0\|demo-buyer-002  |
+| Buyer  | buyer3@guesstheworth.demo  | Frank Brown (Demo Buyer)    | auth0\|demo-buyer-003  |
+| Buyer  | buyer4@guesstheworth.demo  | Grace Lee (Demo Buyer)      | auth0\|demo-buyer-004  |
+| Buyer  | buyer5@guesstheworth.demo  | Henry Taylor (Demo Buyer)   | auth0\|demo-buyer-005  |
 
 **Seeded Content:**
+
 - 15 artworks across various categories (Landscape, Abstract, Portrait, etc.)
 - Multiple bid histories showing realistic auction activity
 - Mix of ACTIVE, SOLD, and ARCHIVED artwork statuses
@@ -167,6 +170,7 @@ For detailed architecture documentation, see [ARCHITECTURE.md](ARCHITECTURE.md).
 **Database**: PostgreSQL (Azure or managed service)
 
 **Health Monitoring**:
+
 - `/health` - Application health
 - `/health/db` - Database connectivity
 - `/api/admin/system/health` - System status (admin only)
@@ -199,6 +203,7 @@ See [SECURITY.md](SECURITY.md) for security policy.
 **Contributing**: See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development guidelines.
 
 **Running Locally**:
+
 ```bash
 # Backend
 cd backend
@@ -237,7 +242,9 @@ npm run dev
 2. **Fix SENTRY Frontend**
 
 3. **Fix Possible issue with db in production**
-  - "Failed to fetch (gtw-hgdyfdfdd2bjducu.swedencentral-01.azurewebsites.net)" on artworks page
+
+- "Failed to fetch (gtw-hgdyfdfdd2bjducu.swedencentral-01.azurewebsites.net)" on artworks page
+
 ---
 
 ## 📚 Documentation

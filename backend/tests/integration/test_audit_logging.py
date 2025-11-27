@@ -104,7 +104,10 @@ def test_audit_log_contains_request_metadata(
             "artwork_id": artwork.id,
             "amount": 300,
         },
-        headers={"User-Agent": "TestClient/1.0", "Authorization": f"Bearer {buyer_token}"},
+        headers={
+            "User-Agent": "TestClient/1.0",
+            "Authorization": f"Bearer {buyer_token}",
+        },
     )
     assert response.status_code == 200
 

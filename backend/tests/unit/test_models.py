@@ -227,7 +227,9 @@ class TestArtworkModel:
     def test_artwork_foreign_key_constraint(self, db_session):
         """Test artwork requires valid seller_id."""
         artwork = Artwork(
-            seller_id=99999, title="Invalid Seller", secret_threshold=100.0  # Non-existent user
+            seller_id=99999,
+            title="Invalid Seller",
+            secret_threshold=100.0,  # Non-existent user
         )
         db_session.add(artwork)
         with pytest.raises(IntegrityError):
@@ -255,7 +257,12 @@ class TestBidModel:
 
     def test_create_bid(self, db_session, artwork, buyer_user):
         """Test creating a basic bid."""
-        bid = Bid(artwork_id=artwork.id, bidder_id=buyer_user.id, amount=150.0, is_winning=False)
+        bid = Bid(
+            artwork_id=artwork.id,
+            bidder_id=buyer_user.id,
+            amount=150.0,
+            is_winning=False,
+        )
         db_session.add(bid)
         db_session.commit()
         db_session.refresh(bid)

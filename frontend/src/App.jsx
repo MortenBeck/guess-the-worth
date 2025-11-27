@@ -1,7 +1,7 @@
 import { useEffect, lazy, Suspense } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Box, Spinner, Center, Toaster } from "@chakra-ui/react";
+import { Box, Spinner, Center } from "@chakra-ui/react";
 import useAuthStore from "./store/authStore";
 import socketService from "./services/socket";
 import { userService } from "./services/api";
@@ -9,7 +9,7 @@ import Header from "./components/Header";
 import NotificationSystem from "./components/NotificationSystem";
 import SocketStatus from "./components/SocketStatus";
 import AdminRoute from "./components/AdminRoute";
-import { toaster } from "./components/ui/toaster";
+import { Toaster } from "./components/ui/toaster";
 
 // Eager load critical pages for better initial performance
 import HomePage from "./pages/HomePage";
@@ -43,7 +43,9 @@ function App() {
           const { data: backendUser } = await userService.getCurrentUser();
 
           setAuth(backendUser, token);
-          socketService.connect();
+
+          // Enable and connect socket with fresh token
+          socketService.enable();
         } catch (error) {
           console.error("Error getting token or user:", error);
           clearAuth();
@@ -75,7 +77,7 @@ function App() {
       <Box minH="100vh">
         <Header />
         <NotificationSystem />
-        <Toaster toaster={toaster} />
+        <Toaster />
         <Suspense
           fallback={
             <Center h="100vh">

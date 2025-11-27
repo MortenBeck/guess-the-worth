@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { Box, Button, Image, Text, Progress, VStack } from "@chakra-ui/react";
 import { artworkService } from "../services/api";
-import { toaster } from "./ui/toaster";
+import { toaster } from "./ui/toaster-instance";
 
 export default function ImageUpload({ artworkId, currentImageUrl, onUploadSuccess }) {
   const [uploading, setUploading] = useState(false);
@@ -51,9 +51,10 @@ export default function ImageUpload({ artworkId, currentImageUrl, onUploadSucces
       });
       if (onUploadSuccess) onUploadSuccess(result.data?.image_url);
     } catch (error) {
+      const errorMessage = error?.data?.detail || error?.message || "Failed to upload image";
       toaster.create({
         title: "Upload failed",
-        description: error.data?.detail || error.message || "Failed to upload image",
+        description: String(errorMessage),
         type: "error",
         duration: 5000,
       });

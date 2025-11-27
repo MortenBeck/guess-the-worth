@@ -50,7 +50,12 @@ class TestStripeServiceCreatePaymentIntent:
 
     @patch("stripe.PaymentIntent.create")
     def test_create_payment_intent_success(
-        self, mock_stripe_create, db_session, winning_bid, buyer_user, mock_stripe_payment_intent
+        self,
+        mock_stripe_create,
+        db_session,
+        winning_bid,
+        buyer_user,
+        mock_stripe_payment_intent,
     ):
         """Test successful payment intent creation."""
         mock_stripe_create.return_value = mock_stripe_payment_intent
@@ -106,7 +111,12 @@ class TestStripeServiceCreatePaymentIntent:
 
     @patch("stripe.PaymentIntent.create")
     def test_create_payment_intent_includes_metadata(
-        self, mock_stripe_create, db_session, winning_bid, buyer_user, mock_stripe_payment_intent
+        self,
+        mock_stripe_create,
+        db_session,
+        winning_bid,
+        buyer_user,
+        mock_stripe_payment_intent,
     ):
         """Test that payment intent includes correct metadata."""
         mock_stripe_create.return_value = mock_stripe_payment_intent
@@ -139,7 +149,12 @@ class TestStripeServiceCreatePaymentIntent:
 
     @patch("stripe.PaymentIntent.create")
     def test_create_payment_intent_includes_receipt_email(
-        self, mock_stripe_create, db_session, winning_bid, buyer_user, mock_stripe_payment_intent
+        self,
+        mock_stripe_create,
+        db_session,
+        winning_bid,
+        buyer_user,
+        mock_stripe_payment_intent,
     ):
         """Test that payment intent includes receipt email."""
         mock_stripe_create.return_value = mock_stripe_payment_intent
@@ -151,7 +166,12 @@ class TestStripeServiceCreatePaymentIntent:
 
     @patch("stripe.PaymentIntent.create")
     def test_create_payment_intent_amount_conversion(
-        self, mock_stripe_create, db_session, winning_bid, buyer_user, mock_stripe_payment_intent
+        self,
+        mock_stripe_create,
+        db_session,
+        winning_bid,
+        buyer_user,
+        mock_stripe_payment_intent,
     ):
         """Test correct conversion of amount to cents."""
         winning_bid.amount = 123.45

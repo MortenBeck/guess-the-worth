@@ -19,7 +19,7 @@ import useAuthStore from "../store/authStore";
 import useFavoritesStore from "../store/favoritesStore";
 import { useRealtimeBids } from "../hooks/useRealtimeBids";
 import placeholderImg from "../assets/placeholder.jpg";
-import { toaster } from "../components/ui/toaster";
+import { toaster } from "../components/ui/toaster-instance";
 import PaymentModal from "../components/PaymentModal";
 import socket from "../services/socket";
 
@@ -56,21 +56,37 @@ const ArtworkPage = () => {
     const handlePaymentRequired = (data) => {
       console.log("Payment required event received:", data);
 
+      // Validate data exists and has required fields
+      if (!data || typeof data.artwork_id === "undefined") {
+        console.error("Invalid payment_required data:", data);
+        return;
+      }
+
       // Only show payment modal if it's for this artwork
       if (data.artwork_id === parseInt(id)) {
+        const winningBid = data.winning_bid ?? 0;
+        const artworkTitle = artwork?.title || "Unknown Artwork";
+
         setPaymentData({
           bidId: data.bid_id,
-          amount: data.winning_bid,
-          artworkTitle: artwork?.title || "Unknown",
+          amount: winningBid,
+          artworkTitle: artworkTitle,
         });
         setShowPaymentModal(true);
 
-        toaster.create({
-          title: "Payment Required",
-          description: `Congratulations! Please complete payment of $${data.winning_bid} to secure your artwork.`,
-          type: "info",
-          duration: 10000,
-        });
+        // Small delay to prevent collision with bid success toast
+        setTimeout(() => {
+          try {
+            toaster.create({
+              title: "Payment Required",
+              description: `Congratulations! Please complete payment of $${winningBid} to secure your artwork.`,
+              type: "info",
+              duration: 10000,
+            });
+          } catch (error) {
+            console.error("Failed to create payment toast:", error);
+          }
+        }, 150);
       }
     };
 
@@ -99,29 +115,72 @@ const ArtworkPage = () => {
         amount: parseFloat(amount),
       }),
     onSuccess: (response) => {
-      const { data: bid } = response;
-      toaster.create({
-        title: bid.is_winning ? "Congratulations! You won!" : "Bid placed successfully",
-        description: bid.is_winning
-          ? `Your bid of $${bid.amount} met the threshold!`
-          : `Your bid of $${bid.amount} has been recorded.`,
-        type: bid.is_winning ? "success" : "info",
-        duration: 5000,
-      });
+      try {
+        const bid = response?.data;
+        if (!bid || typeof bid.amount === "undefined") {
+          console.error("Invalid bid data in response:", response);
+          toaster.create({
+            title: "Bid placed",
+            description: "Your bid was placed but we couldn't retrieve the details.",
+            type: "info",
+            duration: 3000,
+          });
+          return;
+        }
 
-      // Refresh artwork and bids
-      queryClient.invalidateQueries(["artwork", id]);
-      queryClient.invalidateQueries(["bids", id]);
+        const bidAmount = bid.amount ?? 0;
+        const isWinning = bid.is_winning ?? false;
+        const title = isWinning ? "Congratulations! You won!" : "Bid placed successfully";
+        const description = isWinning
+          ? `Your bid of $${bidAmount} met the threshold!`
+          : `Your bid of $${bidAmount} has been recorded.`;
 
-      setBidAmount("");
+        toaster.create({
+          title: title,
+          description: description,
+          type: isWinning ? "success" : "info",
+          duration: 5000,
+        });
+
+        // Refresh artwork and bids
+        queryClient.invalidateQueries(["artwork", id]);
+        queryClient.invalidateQueries(["bids", id]);
+
+        setBidAmount("");
+      } catch (error) {
+        console.error("Error in bid success handler:", error);
+        // Still show a success message even if toast fails
+        setBidAmount("");
+        queryClient.invalidateQueries(["artwork", id]);
+        queryClient.invalidateQueries(["bids", id]);
+      }
     },
     onError: (error) => {
-      toaster.create({
-        title: "Bid failed",
-        description: error.data?.detail || error.message || "Failed to place bid",
-        type: "error",
-        duration: 5000,
-      });
+      try {
+        // Safely extract error message, handling various error structures
+        let errorMessage = "Failed to place bid";
+
+        if (error?.data?.detail) {
+          errorMessage =
+            typeof error.data.detail === "string"
+              ? error.data.detail
+              : JSON.stringify(error.data.detail);
+        } else if (error?.message) {
+          errorMessage = typeof error.message === "string" ? error.message : String(error.message);
+        } else if (typeof error === "string") {
+          errorMessage = error;
+        }
+
+        toaster.create({
+          title: "Bid failed",
+          description: errorMessage,
+          type: "error",
+          duration: 5000,
+        });
+      } catch (toastError) {
+        console.error("Failed to show error toast:", toastError);
+        console.error("Original error:", error);
+      }
     },
   });
 

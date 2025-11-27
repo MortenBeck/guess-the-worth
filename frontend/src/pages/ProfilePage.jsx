@@ -15,7 +15,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { userService, statsService } from "../services/api";
 import useAuthStore from "../store/authStore";
 import placeholderImg from "../assets/placeholder.jpg";
-import { toaster } from "../components/ui/toaster";
+import { toaster } from "../components/ui/toaster-instance";
 
 const EditIcon = () => <span>✏️</span>;
 const CheckIcon = () => <span>✓</span>;
@@ -78,9 +78,10 @@ const ProfilePage = () => {
       setIsEditing(false);
     },
     onError: (error) => {
+      const errorMessage = error?.message || "Failed to update profile";
       toaster.create({
         title: "Update failed",
-        description: error.message || "Failed to update profile",
+        description: String(errorMessage),
         type: "error",
         duration: 5000,
       });

@@ -9,7 +9,19 @@ class SocketService {
 
   connect() {
     // Skip connection if no backend is available or websockets are disabled
-    if (!this.isEnabled || this.socket) {
+    if (!this.isEnabled) {
+      return this.socket;
+    }
+
+    // If socket exists and is connected, return it
+    if (this.socket && this.isConnected) {
+      return this.socket;
+    }
+
+    // If socket exists but disconnected, try to reconnect
+    if (this.socket && !this.isConnected) {
+      console.log("Reconnecting existing socket...");
+      this.socket.connect();
       return this.socket;
     }
 
@@ -22,8 +34,11 @@ class SocketService {
 
       this.socket = io(socketUrl, {
         transports: ["websocket"],
-        timeout: 5000,
-        forceNew: false,
+        timeout: 10000,
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        reconnectionAttempts: 5,
         // Pass token in query params (backend expects it there)
         query: {
           token: token,
@@ -35,15 +50,38 @@ class SocketService {
         console.log("Socket connected");
       });
 
-      this.socket.on("disconnect", () => {
+      this.socket.on("disconnect", (reason) => {
         this.isConnected = false;
-        console.log("Socket disconnected");
+        console.log("Socket disconnected:", reason);
+
+        // If disconnect was due to server-side issue, socket.io will auto-reconnect
+        // If it was intentional (io server disconnect or client disconnect), it won't
+        if (reason === "io server disconnect") {
+          // Server forcibly disconnected, likely due to auth - try to reconnect with fresh token
+          console.log("Server disconnected socket, attempting to reconnect...");
+
+          // Update the token before reconnecting
+          const freshToken = localStorage.getItem("access_token");
+          if (this.socket.io.opts.query) {
+            this.socket.io.opts.query.token = freshToken;
+          }
+
+          this.socket.connect();
+        }
       });
 
       this.socket.on("connect_error", (error) => {
-        console.warn("Socket connection failed:", error.message);
+        console.warn("Socket connection error:", error.message);
         this.isConnected = false;
-        this.socket = null;
+        // Don't set socket to null - let socket.io handle reconnection
+      });
+
+      this.socket.on("reconnect_attempt", (attempt) => {
+        console.log(`Socket reconnection attempt ${attempt}`);
+      });
+
+      this.socket.on("reconnect_failed", () => {
+        console.error("Socket reconnection failed after all attempts");
       });
     } catch (error) {
       console.warn("Socket service initialization failed:", error.message);

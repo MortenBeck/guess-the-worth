@@ -10,12 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
 - Auth0 integration for centralized authentication and authorization
 - Auth0 Action for adding user roles to JWT tokens
 - Comprehensive Auth0 migration guide (AUTH0_MIGRATION_GUIDE.md)
 - Idempotent database migration to remove user fields managed by Auth0
 
 ### Changed
+
 - **BREAKING**: User authentication now managed by Auth0 instead of database
 - User model simplified to minimal fields (id, auth0_sub, created_at)
 - User data (email, name, role) now attached at runtime from Auth0 JWT tokens
@@ -25,12 +27,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - All test files updated to use new Auth0-centric user creation pattern
 
 ### Removed
+
 - UserRole enum class (replaced with Literal type alias)
 - Database storage of user email, name, role, and password_hash fields
 - Email/password login and registration endpoints
 - Password hashing utilities
 
 ### Security
+
 - Enhanced security through Auth0's OAuth2/OpenID Connect implementation
 - Centralized user management and role assignment through Auth0 Dashboard
 - JWT token validation with Auth0 userinfo endpoint
@@ -41,11 +45,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.9.0] - 2025-11-23
 
 ### Major Achievement: Test Infrastructure Complete
+
 This release represents a major milestone with comprehensive test coverage and CI/CD pipeline fully operational. **380 tests passing** across backend and frontend.
 
 ### Added
 
 #### Testing & Quality Assurance
+
 - **Test Infrastructure** - Complete testing suite with 380 passing tests
   - Backend: 50/51 tests passing (unit, integration, e2e)
   - Frontend: 92/92 tests passing
@@ -55,6 +61,7 @@ This release represents a major milestone with comprehensive test coverage and C
 - **Migration Tests** - Automated rollback tests for database migrations
 
 #### CI/CD Pipeline
+
 - **GitHub Actions Workflows** - Comprehensive automation
   - Backend tests, linting (Black, isort, Bandit)
   - Frontend tests, linting (ESLint, Prettier)
@@ -68,6 +75,7 @@ This release represents a major milestone with comprehensive test coverage and C
   - Separate groups for production and development dependencies
 
 #### Security & Monitoring
+
 - **Health Monitoring** - Multiple health check endpoints
   - `/health` - Basic application health
   - `/health/db` - Database connectivity
@@ -80,6 +88,7 @@ This release represents a major milestone with comprehensive test coverage and C
 - **Rate Limiting** - Protection on authentication and critical endpoints
 
 #### Backend Features
+
 - **Admin Dashboard** - User management, artwork oversight, system statistics
 - **Statistics API** - Platform-wide, seller, and user-specific stats
 - **Image Upload** - File validation, size limits, format checking
@@ -91,6 +100,7 @@ This release represents a major milestone with comprehensive test coverage and C
 - **Database Migrations** - Alembic migrations with idempotent initial migration
 
 #### Frontend Features
+
 - **Real-time Updates** - WebSocket bidding updates via Socket.IO
 - **Admin Panel** - User management interface
 - **Statistics Dashboard** - User, seller, and platform stats
@@ -98,6 +108,7 @@ This release represents a major milestone with comprehensive test coverage and C
 - **Error Boundaries** - Graceful error handling
 
 ### Fixed
+
 - **Test Infrastructure Issues** - Resolved authentication header issues in tests
 - **Migration Idempotency** - Made initial migration idempotent for enum types
 - **Frontend Build** - Fixed ESLint and Prettier issues
@@ -105,12 +116,14 @@ This release represents a major milestone with comprehensive test coverage and C
 - **Coverage Reporting** - Fixed Codecov integration
 
 ### Changed
+
 - **Branch Strategy** - Implemented `main` (production) and `dev` (development) workflow
 - **Code Quality Standards** - Enforced Black, isort, ESLint, Prettier
 - **Test Organization** - Structured tests into unit, integration, and e2e categories
 - **Environment Configuration** - All secrets moved to environment variables
 
 ### Security
+
 - **Environment Variables** - All secrets removed from code and moved to `.env` files
 - **Secret Scanning** - TruffleHog integrated in CI/CD pipeline
 - **Vulnerability Scanning** - Trivy for containers, npm audit, pip-audit for dependencies
@@ -121,6 +134,7 @@ This release represents a major milestone with comprehensive test coverage and C
 ## [0.8.0] - 2025-11-21
 
 ### Added - Stage 10: Real-time Bidding
+
 - **WebSocket Integration** - Socket.IO for real-time bid updates
 - **Event Broadcasting** - Real-time notifications to all connected clients
 - **Connection Management** - Graceful WebSocket connection handling
@@ -131,6 +145,7 @@ This release represents a major milestone with comprehensive test coverage and C
 ## [0.7.0] - 2025-11-20
 
 ### Added - Stage 9: Performance Optimization
+
 - **Eager Loading** - Prevent N+1 query issues with `joinedload`
 - **Database Indexes** - Indexes on foreign keys and frequently queried fields
 - **Query Optimization** - Optimized SQLAlchemy queries
@@ -141,6 +156,7 @@ This release represents a major milestone with comprehensive test coverage and C
 ## [0.6.0] - 2025-11-19
 
 ### Added - Stage 8: Pagination & Rate Limiting
+
 - **Pagination** - Configurable pagination for all list endpoints
   - Default limit: 10 items
   - Maximum limit: 100 items
@@ -156,6 +172,7 @@ This release represents a major milestone with comprehensive test coverage and C
 ## [0.5.0] - 2025-11-18
 
 ### Added - Stage 7: Admin Features
+
 - **Admin Router** - Complete admin API endpoints
   - User management (list, update role, delete)
   - Artwork oversight (list, approve, delete)
@@ -169,6 +186,7 @@ This release represents a major milestone with comprehensive test coverage and C
 ## [0.4.0] - 2025-11-17
 
 ### Added - Stage 6: Image Upload
+
 - **Image Upload Endpoint** - File upload for artwork images
 - **File Validation** - Type, size, and format validation
   - Allowed formats: JPG, PNG, WebP
@@ -181,6 +199,7 @@ This release represents a major milestone with comprehensive test coverage and C
 ## [0.3.0] - 2025-11-16
 
 ### Added - Stage 5: Statistics & Monitoring
+
 - **Statistics API** - Comprehensive stats endpoints
   - Platform-wide statistics
   - Seller-specific statistics
@@ -194,6 +213,7 @@ This release represents a major milestone with comprehensive test coverage and C
 ## [0.2.0] - 2025-11-15
 
 ### Added - Stage 4: Auction Logic
+
 - **Auction Expiration** - Time-based auction closure
   - `end_date` field on artworks
   - Automatic status updates when auctions expire
@@ -203,6 +223,7 @@ This release represents a major milestone with comprehensive test coverage and C
 - **Auction Tests** - Unit and integration tests for auction logic
 
 ### Added - Stage 3: Audit Logging
+
 - **Audit Log Model** - SQLAlchemy model for audit trail
 - **Logging Middleware** - Automatic logging of security events
   - User actions (login, register, profile updates)
@@ -216,12 +237,14 @@ This release represents a major milestone with comprehensive test coverage and C
 ## [0.1.0] - 2025-11-14
 
 ### Added - Stage 2: Database Security
+
 - **Database Indexes** - Indexes on `seller_id`, `artwork_id`, `bidder_id`, `auth0_sub`
 - **Migration System** - Alembic migrations with rollback capability
 - **Migration Tests** - Automated tests for migrations (upgrade/downgrade)
 - **Database Constraints** - Foreign key constraints and unique constraints
 
 ### Added - Stage 1: Authentication & Authorization Fixes
+
 - **JWT Token Validation** - Proper token verification in all endpoints
 - **User Context Injection** - `get_current_user` dependency for protected routes
 - **Authorization Guards** - Role-based access control (ADMIN, SELLER, BUYER)
@@ -230,6 +253,7 @@ This release represents a major milestone with comprehensive test coverage and C
 - **Auth Tests** - Comprehensive integration tests for auth fixes
 
 ### Fixed
+
 - **Critical Security Issues** - Fixed ID-based authorization bypass
   - Artworks: `seller_id` now extracted from JWT token
   - Bids: `bidder_id` now extracted from JWT token
@@ -241,6 +265,7 @@ This release represents a major milestone with comprehensive test coverage and C
 ## [0.0.1] - 2025-11-13
 
 ### Added - Stage 0: Initial Security Fixes
+
 - **Environment Variables** - Moved all secrets to `.env` files
   - Auth0 credentials
   - JWT secret key
@@ -251,6 +276,7 @@ This release represents a major milestone with comprehensive test coverage and C
 - **Security Documentation** - Initial SECURITY.md with known vulnerabilities
 
 ### Initial Project Setup
+
 - **Backend** - FastAPI application structure
   - User, Artwork, Bid models
   - Basic CRUD endpoints
@@ -286,6 +312,7 @@ This release represents a major milestone with comprehensive test coverage and C
 ## Pending Features
 
 ### High Priority
+
 - **Stripe Payment Integration** - Payment flow implementation
   - Payment models and endpoints
   - Checkout component
@@ -293,12 +320,14 @@ This release represents a major milestone with comprehensive test coverage and C
   - Payment tests
 
 ### Medium Priority
+
 - **Database Seeding System** - Development and demo data
   - Seed scripts for users, artworks, bids
   - Test data generation utilities
   - Production-safe seeding
 
 ### Low Priority
+
 - **Email Notifications** - Bid updates, auction results
 - **Advanced Search** - Filter and sort artworks
 - **User Profiles** - Enhanced user pages with history
@@ -311,6 +340,7 @@ This release represents a major milestone with comprehensive test coverage and C
 See [SECURITY.md](SECURITY.md) for comprehensive list of security vulnerabilities.
 
 ### Critical Security Issues
+
 - 3 Critical severity vulnerabilities
 - 3 High severity vulnerabilities
 - 4 Medium severity vulnerabilities
@@ -322,12 +352,14 @@ See [SECURITY.md](SECURITY.md) for comprehensive list of security vulnerabilitie
 ## Breaking Changes
 
 ### 0.1.0
+
 - **API Authorization Changes** - All endpoints now require JWT tokens
   - Remove `seller_id` and `bidder_id` from request bodies
   - User identity is now extracted from Bearer token
   - Update API clients to use Bearer authentication
 
 ### 0.0.1
+
 - **Environment Configuration Required** - Application will not start without `.env` files
   - Copy `.env.example` to `.env` in both backend and frontend
   - Configure all required variables
@@ -339,6 +371,7 @@ See [SECURITY.md](SECURITY.md) for comprehensive list of security vulnerabilitie
 ### From Development to 0.9.0
 
 1. **Update Dependencies**
+
    ```bash
    # Backend
    cd backend
@@ -350,6 +383,7 @@ See [SECURITY.md](SECURITY.md) for comprehensive list of security vulnerabilitie
    ```
 
 2. **Run Migrations**
+
    ```bash
    cd backend
    alembic upgrade head
@@ -360,6 +394,7 @@ See [SECURITY.md](SECURITY.md) for comprehensive list of security vulnerabilitie
    - Add any missing variables to your `.env`
 
 4. **Run Tests**
+
    ```bash
    # Backend
    cd backend
@@ -377,9 +412,11 @@ See [SECURITY.md](SECURITY.md) for comprehensive list of security vulnerabilitie
 This project is developed as part of a DevOps course at DTU (Technical University of Denmark).
 
 ### Core Team
+
 - Development team members (see git history for detailed contributions)
 
 ### Special Thanks
+
 - DTU course instructors and advisors
 - All contributors who helped improve the project
 
