@@ -59,6 +59,13 @@ class SocketService {
         if (reason === "io server disconnect") {
           // Server forcibly disconnected, likely due to auth - try to reconnect with fresh token
           console.log("Server disconnected socket, attempting to reconnect...");
+
+          // Update the token before reconnecting
+          const freshToken = localStorage.getItem("access_token");
+          if (this.socket.io.opts.query) {
+            this.socket.io.opts.query.token = freshToken;
+          }
+
           this.socket.connect();
         }
       });

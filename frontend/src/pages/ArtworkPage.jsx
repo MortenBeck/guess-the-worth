@@ -157,7 +157,21 @@ const ArtworkPage = () => {
     },
     onError: (error) => {
       try {
-        const errorMessage = error?.data?.detail || error?.message || "Failed to place bid";
+        // Safely extract error message, handling various error structures
+        let errorMessage = "Failed to place bid";
+
+        if (error?.data?.detail) {
+          errorMessage = typeof error.data.detail === 'string'
+            ? error.data.detail
+            : JSON.stringify(error.data.detail);
+        } else if (error?.message) {
+          errorMessage = typeof error.message === 'string'
+            ? error.message
+            : String(error.message);
+        } else if (typeof error === 'string') {
+          errorMessage = error;
+        }
+
         toaster.create({
           title: "Bid failed",
           description: errorMessage,
