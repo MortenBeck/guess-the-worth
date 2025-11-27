@@ -78,9 +78,10 @@ const ProfilePage = () => {
       setIsEditing(false);
     },
     onError: (error) => {
+      const errorMessage = error?.message || "Failed to update profile";
       toaster.create({
         title: "Update failed",
-        description: error.message || "Failed to update profile",
+        description: String(errorMessage),
         type: "error",
         duration: 5000,
       });
