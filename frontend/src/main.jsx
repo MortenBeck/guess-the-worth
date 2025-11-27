@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Auth0Provider } from "@auth0/auth0-react";
 import * as Sentry from "@sentry/react";
 import { config } from "./config/env";
-import socketService from "./services/socket";
 import "./index.css";
 import App from "./App.jsx";
 
