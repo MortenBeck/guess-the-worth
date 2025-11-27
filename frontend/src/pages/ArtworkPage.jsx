@@ -65,9 +65,10 @@ const ArtworkPage = () => {
         });
         setShowPaymentModal(true);
 
+        const winningBid = data.winning_bid ?? 0;
         toaster.create({
           title: "Payment Required",
-          description: `Congratulations! Please complete payment of $${data.winning_bid} to secure your artwork.`,
+          description: String(`Congratulations! Please complete payment of $${winningBid} to secure your artwork.`),
           type: "info",
           duration: 10000,
         });
@@ -99,12 +100,21 @@ const ArtworkPage = () => {
         amount: parseFloat(amount),
       }),
     onSuccess: (response) => {
-      const { data: bid } = response;
+      const bid = response?.data;
+      if (!bid) {
+        console.error("No bid data in response:", response);
+        return;
+      }
+
+      const bidAmount = bid.amount ?? 0;
+      const title = bid.is_winning ? "Congratulations! You won!" : "Bid placed successfully";
+      const description = bid.is_winning
+        ? `Your bid of $${bidAmount} met the threshold!`
+        : `Your bid of $${bidAmount} has been recorded.`;
+
       toaster.create({
-        title: bid.is_winning ? "Congratulations! You won!" : "Bid placed successfully",
-        description: bid.is_winning
-          ? `Your bid of $${bid.amount} met the threshold!`
-          : `Your bid of $${bid.amount} has been recorded.`,
+        title: String(title),
+        description: String(description),
         type: bid.is_winning ? "success" : "info",
         duration: 5000,
       });
