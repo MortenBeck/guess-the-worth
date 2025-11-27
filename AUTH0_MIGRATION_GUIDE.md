@@ -1,10 +1,10 @@
-
 # Auth0 as Primary User Store - Migration Guide
 
 **Status**: ✅ COMPLETED - Migration Deployed to Production
 **Completion Date**: November 26, 2025
 
 ## Overview
+
 This guide outlines the steps to refactor the application to use Auth0 as the primary user store, moving user roles and profile data from the PostgreSQL database to Auth0, while keeping only minimal user references in the database.
 
 **This migration has been successfully completed and is now live in production.**
@@ -12,16 +12,19 @@ This guide outlines the steps to refactor the application to use Auth0 as the pr
 ## Current State
 
 **Database (PostgreSQL):**
+
 - `users` table stores: `id`, `auth0_sub`, `email`, `name`, `role`, `password_hash`, `created_at`
 - `role` is stored as enum: `ADMIN`, `SELLER`, `BUYER`
 - User authentication uses both Auth0 OAuth2 and email/password
 
 **Auth0:**
+
 - Handles OAuth2 authentication
 - Stores user identity
 - Not currently used for roles or user metadata
 
 **Problems:**
+
 - Duplicate user data between Auth0 and database
 - Need to manually sync Auth0 users with database users
 - Complex authentication logic (Auth0 + email/password)
@@ -30,17 +33,20 @@ This guide outlines the steps to refactor the application to use Auth0 as the pr
 ## Target State
 
 **Database (PostgreSQL):**
+
 - `users` table stores ONLY: `id`, `auth0_sub`, `created_at`
 - No role, email, name, or password_hash columns
 - Users table is a lightweight reference for foreign keys
 
 **Auth0:**
+
 - Stores ALL user data: email, name, profile info
 - Stores roles using Auth0 Authorization (Roles & Permissions)
 - Single source of truth for user identity
 - No hardcoded credentials needed
 
 **Benefits:**
+
 - Single source of truth for user data
 - Leverage Auth0's built-in features (password reset, MFA, etc.)
 - Simplified database schema
@@ -65,6 +71,7 @@ Before starting this migration, ensure:
 ### Why Database Clearing is Required
 
 The existing database has foreign key relationships (artworks, bids, etc.) that reference user IDs. After the migration:
+
 - User IDs will change (new users created with Auth0 references)
 - Old user data (email, name, role, password) will be removed
 - Foreign key relationships will be broken
@@ -72,12 +79,14 @@ The existing database has foreign key relationships (artworks, bids, etc.) that 
 ### Options
 
 **Option 1: Fresh Start (Recommended for Demo/Development)**
+
 - Clear all data from production database
 - Start with clean slate
 - All users create new Auth0 accounts
 - No data migration needed
 
 **Option 2: Data Migration (Complex - Not covered in this guide)**
+
 - Export existing data
 - Create Auth0 users matching existing users
 - Migrate data with new user ID mappings
@@ -97,6 +106,7 @@ TRUNCATE TABLE users CASCADE;
 ```
 
 **OR** use the admin API endpoint (if available):
+
 ```bash
 # Clear all data via API
 curl -X POST "https://your-backend.azurewebsites.net/api/admin/clear-database" \
@@ -110,6 +120,7 @@ This step is documented in **Stage 9** but mentioned here for awareness.
 ## Stage 1: Configure Auth0 Roles
 
 ### Objective
+
 Set up roles in Auth0 Dashboard so they can be included in JWT tokens.
 
 ### Steps
@@ -136,11 +147,14 @@ Set up roles in Auth0 Dashboard so they can be included in JWT tokens.
 
 ```javascript
 exports.onExecutePostLogin = async (event, api) => {
-  const namespace = 'https://guesstheworth.demo';
+  const namespace = "https://guesstheworth.demo";
 
   if (event.authorization) {
     // Add roles to access token
-    api.accessToken.setCustomClaim(`${namespace}/roles`, event.authorization.roles);
+    api.accessToken.setCustomClaim(
+      `${namespace}/roles`,
+      event.authorization.roles,
+    );
 
     // Optionally add roles to ID token as well
     api.idToken.setCustomClaim(`${namespace}/roles`, event.authorization.roles);
@@ -167,6 +181,7 @@ exports.onExecutePostLogin = async (event, api) => {
 ## Stage 2: Update Backend Models
 
 ### Objective
+
 Simplify the User model to store only minimal data, removing fields now managed by Auth0.
 
 ### Files to Modify
@@ -176,12 +191,14 @@ Simplify the User model to store only minimal data, removing fields now managed 
 **Current state**: User model has `email`, `name`, `role`, `password_hash` columns
 
 **Changes needed**:
+
 1. Remove `UserRole` enum (roles come from Auth0)
 2. Remove columns: `email`, `name`, `role`, `password_hash`
 3. Keep only: `id`, `auth0_sub`, `created_at`
 4. Update `__repr__` to show only `id` and `auth0_sub`
 
 **Updated model should look like**:
+
 ```python
 from datetime import UTC, datetime
 from sqlalchemy import Column, DateTime, Integer, String
@@ -206,6 +223,7 @@ class User(Base):
 ## Stage 3: Update Authentication Logic
 
 ### Objective
+
 Update authentication to read user data (email, name, role) from Auth0 JWT tokens instead of database.
 
 ### Files to Modify
@@ -213,6 +231,7 @@ Update authentication to read user data (email, name, role) from Auth0 JWT token
 #### 3.1 Update `backend/utils/auth.py`
 
 **Current state**:
+
 - `get_current_user()` reads user from database
 - Has hardcoded admin credentials
 - Has password hashing functions
@@ -385,6 +404,7 @@ async def seed_database(
 ## Stage 4: Create Database Migration
 
 ### Objective
+
 Create Alembic migration to remove unnecessary columns from users table.
 
 ### Steps
@@ -392,6 +412,7 @@ Create Alembic migration to remove unnecessary columns from users table.
 #### 4.1 Create New Migration
 
 Run from backend directory:
+
 ```bash
 alembic revision -m "remove_user_fields_use_auth0"
 ```
@@ -445,6 +466,7 @@ def downgrade() -> None:
 ## Stage 5: Update Seed Scripts
 
 ### Objective
+
 Update demo data seeding to work with new Auth0-centric model.
 
 ### Files to Modify
@@ -545,6 +567,7 @@ if __name__ == "__main__":
 **File**: `backend/seeds/AZURE_SEEDING.md`
 
 Update the seeding instructions to mention:
+
 1. Users must be created in Auth0 first
 2. Roles must be assigned in Auth0
 3. The seeding script only creates database references
@@ -554,6 +577,7 @@ Update the seeding instructions to mention:
 ## Stage 6: Update Admin Endpoints
 
 ### Objective
+
 Update admin endpoints to work with Auth0 user data.
 
 ### Files to Modify
@@ -644,6 +668,7 @@ async def get_user_details(
 ## Stage 7: Update Tests
 
 ### Objective
+
 Update all tests to work with new Auth0-centric authentication.
 
 ### Files to Modify
@@ -688,11 +713,13 @@ def create_test_token(user: User) -> str:
 #### 7.2 Update Integration Tests
 
 Search for all test files that reference:
+
 - `user.email`
 - `user.name`
 - `user.role`
 
 Make sure they're either:
+
 1. Setting these attributes on the user object (they're not in DB anymore)
 2. Or mocking Auth0 responses
 
@@ -701,6 +728,7 @@ Make sure they're either:
 ## Stage 8: Frontend Updates (Optional)
 
 ### Objective
+
 Update frontend to display user info from Auth0 tokens instead of API responses.
 
 ### Files to Modify
@@ -714,7 +742,7 @@ If the frontend stores user data, update it to read from the Auth0 token instead
 Any component showing user email/name should read from the Auth0 user object:
 
 ```javascript
-import { useAuth0 } from '@auth0/auth0-react';
+import { useAuth0 } from "@auth0/auth0-react";
 
 function UserProfile() {
   const { user } = useAuth0();
@@ -723,7 +751,7 @@ function UserProfile() {
     <div>
       <p>Email: {user.email}</p>
       <p>Name: {user.name}</p>
-      <p>Role: {user['https://guesstheworth.demo/roles'][0]}</p>
+      <p>Role: {user["https://guesstheworth.demo/roles"][0]}</p>
     </div>
   );
 }
@@ -734,6 +762,7 @@ function UserProfile() {
 ## Stage 9: Deployment & Migration
 
 ### Objective
+
 Deploy changes and migrate production database.
 
 ### Steps
@@ -749,6 +778,7 @@ Deploy changes and migrate production database.
 **BEFORE deploying code changes**, you must clear all existing data due to incompatible user ID references.
 
 **Option A: Direct Database Access**
+
 ```bash
 # Connect to your Azure PostgreSQL database
 psql "postgresql://username@server:password@server.postgres.database.azure.com:5432/dbname?sslmode=require"
@@ -760,6 +790,7 @@ TRUNCATE TABLE users CASCADE;
 ```
 
 **Option B: Via Admin API (if endpoint exists)**
+
 ```bash
 # Get admin token first (using old authentication)
 curl -X POST "https://your-backend.azurewebsites.net/api/admin/clear-database" \
@@ -767,6 +798,7 @@ curl -X POST "https://your-backend.azurewebsites.net/api/admin/clear-database" \
 ```
 
 **Verification**: After clearing, verify tables are empty but schema remains:
+
 ```sql
 SELECT COUNT(*) FROM users;    -- Should return 0
 SELECT COUNT(*) FROM artworks; -- Should return 0
@@ -796,6 +828,7 @@ curl -X POST "https://your-backend.azurewebsites.net/api/admin/run-migrations" \
 #### 9.5 Verify Migration
 
 Check that:
+
 1. Users table only has `id`, `auth0_sub`, `created_at`
 2. Admin can login via Auth0
 3. Role-based access control works
@@ -805,6 +838,7 @@ Check that:
 ## Stage 10: Cleanup
 
 ### Objective
+
 Remove deprecated code and temporary workarounds.
 
 ### Files to Delete
@@ -822,6 +856,7 @@ Remove deprecated code and temporary workarounds.
 ### Environment Variables to Remove
 
 From `.env` and Azure environment:
+
 - Any variables related to JWT secrets for local auth (if using only Auth0)
 
 ---
@@ -878,6 +913,7 @@ When implementing this guide:
 ## Test Migration Progress
 
 ### Completed Test Files (9/13)
+
 - ✅ `backend/tests/conftest.py` - All fixtures updated
 - ✅ `backend/tests/unit/test_models.py` - Model tests updated
 - ✅ `backend/tests/unit/test_schemas.py` - Schema tests updated
@@ -891,10 +927,13 @@ When implementing this guide:
 ### Remaining Test Files (4 files)
 
 #### `backend/tests/integration/test_bids_api.py`
+
 **Remaining UserRole references (5 occurrences):**
+
 - Line 400, 410, 442, 449, 672: User creation with `UserRole.BUYER` and token generation
 
 **Required changes:**
+
 ```python
 # Replace patterns like:
 buyer = User(auth0_sub="auth0|buyer", email="buyer@test.com", name="Buyer", role=UserRole.BUYER)
@@ -915,21 +954,29 @@ data={"sub": buyer.auth0_sub, "role": "BUYER"}
 ```
 
 #### `backend/tests/integration/test_image_upload.py`
+
 **Remaining UserRole references (2 occurrences):**
+
 - Lines 101, 107: User creation and token generation
 
 #### `backend/tests/integration/test_migrations.py`
+
 **Remaining UserRole references (2 occurrences):**
+
 - Lines 310, 325: User creation in test cases
 - **Also needs:** Update import from `from models.user import User, UserRole` to `from models.user import User`
 
 #### `backend/tests/integration/test_stats.py`
+
 **Remaining UserRole references (2 occurrences):**
+
 - Lines 129, 270: User creation in test cases
 - **Also needs:** Update import statement
 
 #### `backend/tests/integration/test_users_api.py`
+
 **Remaining UserRole references (6 occurrences):**
+
 - Lines 54, 76, 98, 120, 351, 372: User creation in multiple test methods
 - **Also needs:** Remove `from models.user import UserRole` import
 
@@ -938,6 +985,7 @@ data={"sub": buyer.auth0_sub, "role": "BUYER"}
 **Step-by-step for each file:**
 
 1. **Remove UserRole import:**
+
    ```python
    # OLD:
    from models.user import User, UserRole
@@ -947,6 +995,7 @@ data={"sub": buyer.auth0_sub, "role": "BUYER"}
    ```
 
 2. **Update user creation pattern** everywhere:
+
    ```python
    # OLD:
    user = User(
@@ -968,6 +1017,7 @@ data={"sub": buyer.auth0_sub, "role": "BUYER"}
    ```
 
 3. **Update JWT token generation:**
+
    ```python
    # OLD:
    token = JWTService.create_access_token(
@@ -981,6 +1031,7 @@ data={"sub": buyer.auth0_sub, "role": "BUYER"}
    ```
 
 4. **Update role assertions:**
+
    ```python
    # OLD:
    assert user.role == UserRole.BUYER
@@ -992,6 +1043,7 @@ data={"sub": buyer.auth0_sub, "role": "BUYER"}
 ### Verification Commands
 
 After completing updates, run:
+
 ```bash
 cd backend
 
@@ -1014,6 +1066,7 @@ grep -r "UserRole\." tests/ --include="*.py"
 ## Success Criteria
 
 Migration is complete when:
+
 1. ✅ Auth0 is the single source of truth for user data
 2. ✅ Database only stores user references (id, auth0_sub)
 3. ✅ Roles are managed in Auth0, not database

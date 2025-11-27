@@ -41,12 +41,14 @@ This is an educational project developed for a DevOps course at DTU. We expect a
 ### Initial Setup
 
 1. **Fork and Clone**
+
    ```bash
    git clone https://github.com/YOUR_USERNAME/guess-the-worth.git
    cd guess-the-worth
    ```
 
 2. **Environment Configuration**
+
    ```bash
    # Backend
    cp backend/.env.example backend/.env
@@ -58,11 +60,13 @@ This is an educational project developed for a DevOps course at DTU. We expect a
    ```
 
 3. **Start with Docker** (Recommended)
+
    ```bash
    docker-compose up
    ```
 
 4. **Or Run Locally**
+
    ```bash
    # Backend
    cd backend
@@ -122,6 +126,7 @@ git checkout -b feature/your-feature-name
 ### Backend (Python/FastAPI)
 
 **Linting & Formatting:**
+
 - **Black** for code formatting
 - **isort** for import sorting
 - **Bandit** for security checks
@@ -134,12 +139,14 @@ bandit -r . -c pyproject.toml
 ```
 
 **Code Quality:**
+
 - Follow PEP 8 style guide
 - Use type hints for function signatures
 - Maximum line length: 88 characters (Black default)
 - Write docstrings for public functions and classes
 
 **Example:**
+
 ```python
 from typing import Optional
 from pydantic import BaseModel
@@ -160,6 +167,7 @@ def get_artwork_by_id(artwork_id: int) -> Optional[Artwork]:
 ### Frontend (React/JavaScript)
 
 **Linting & Formatting:**
+
 - **ESLint** for code quality
 - **Prettier** for formatting
 
@@ -170,15 +178,17 @@ npm run format
 ```
 
 **Code Quality:**
+
 - Use functional components with hooks
 - Follow React best practices
 - Use TypeScript types where beneficial
 - Keep components focused and reusable
 
 **Example:**
+
 ```jsx
-import { useState, useEffect } from 'react';
-import { useAuth } from '../hooks/useAuth';
+import { useState, useEffect } from "react";
+import { useAuth } from "../hooks/useAuth";
 
 export const ArtworkCard = ({ artwork }) => {
   const { user } = useAuth();
@@ -186,11 +196,7 @@ export const ArtworkCard = ({ artwork }) => {
 
   // Component logic...
 
-  return (
-    <Box>
-      {/* JSX content */}
-    </Box>
-  );
+  return <Box>{/* JSX content */}</Box>;
 };
 ```
 
@@ -211,6 +217,7 @@ All contributions must include appropriate tests. We maintain high test coverage
 ### Backend Testing
 
 **Test Suite:**
+
 - Unit tests for business logic
 - Integration tests for API endpoints
 - E2E tests for critical user flows
@@ -221,10 +228,12 @@ pytest --cov --cov-report=html
 ```
 
 **Coverage Requirements:**
+
 - Minimum 65% overall coverage (enforced by CI)
 - New code should have 80%+ coverage
 
 **Example Test:**
+
 ```python
 def test_create_bid_success(client, auth_headers, sample_artwork):
     """Test successful bid creation."""
@@ -240,6 +249,7 @@ def test_create_bid_success(client, auth_headers, sample_artwork):
 ### Frontend Testing
 
 **Test Suite:**
+
 - Unit tests for utility functions
 - Component tests with React Testing Library
 - Store tests for Zustand state management
@@ -250,18 +260,20 @@ npm test -- --coverage
 ```
 
 **Coverage Requirements:**
+
 - 100% coverage for stores (enforced by CI)
 - High coverage for critical components
 
 **Example Test:**
-```javascript
-import { render, screen } from '@testing-library/react';
-import { ArtworkCard } from './ArtworkCard';
 
-test('renders artwork card with title', () => {
-  const artwork = { id: 1, title: 'Test Art' };
+```javascript
+import { render, screen } from "@testing-library/react";
+import { ArtworkCard } from "./ArtworkCard";
+
+test("renders artwork card with title", () => {
+  const artwork = { id: 1, title: "Test Art" };
   render(<ArtworkCard artwork={artwork} />);
-  expect(screen.getByText('Test Art')).toBeInTheDocument();
+  expect(screen.getByText("Test Art")).toBeInTheDocument();
 });
 ```
 
@@ -344,6 +356,7 @@ Increases coverage to 72%.
 ### Before Submitting
 
 1. **Update your branch**
+
    ```bash
    git checkout dev
    git pull origin dev
@@ -352,6 +365,7 @@ Increases coverage to 72%.
    ```
 
 2. **Run all checks locally**
+
    ```bash
    # Backend
    cd backend
@@ -377,30 +391,37 @@ Increases coverage to 72%.
 When creating a PR, include:
 
 **Title:** Follow conventional commit format
+
 ```
 feat(artworks): add category filtering
 ```
 
 **Description:**
+
 ```markdown
 ## Summary
+
 Brief description of changes
 
 ## Changes Made
+
 - Added category filter dropdown
 - Updated API endpoint to support category parameter
 - Added tests for category filtering
 
 ## Testing
+
 - [ ] Backend tests pass
 - [ ] Frontend tests pass
 - [ ] Manual testing completed
 - [ ] No new console errors
 
 ## Screenshots (if UI changes)
+
 [Attach screenshots]
 
 ## Related Issues
+
 Closes #123
 ```
 
@@ -474,6 +495,7 @@ def create_bid(amount: float, current_user: User = Depends(get_current_user)):
 ### Reporting Security Issues
 
 If you discover a security vulnerability:
+
 - **DO NOT** open a public issue
 - Report via GitHub Security Advisories
 - See [SECURITY.md](SECURITY.md) for details
@@ -559,11 +581,13 @@ frontend/
 ### Key Files to Know
 
 **Backend:**
+
 - [main.py](backend/main.py) - FastAPI app initialization, Socket.IO setup
 - [database.py](backend/database.py) - Database connection and session management
 - [config/settings.py](backend/config/settings.py) - Environment configuration
 
 **Frontend:**
+
 - [App.jsx](frontend/src/App.jsx) - Main app component with routing
 - [main.jsx](frontend/src/main.jsx) - React entry point
 - [services/api.js](frontend/src/services/api.js) - API client setup
@@ -575,6 +599,7 @@ frontend/
 ### Database Migrations
 
 **Creating a migration:**
+
 ```bash
 cd backend
 alembic revision --autogenerate -m "Add artwork category field"
@@ -582,6 +607,7 @@ alembic upgrade head
 ```
 
 **Rolling back:**
+
 ```bash
 alembic downgrade -1
 ```
@@ -589,14 +615,16 @@ alembic downgrade -1
 ### Debugging
 
 **Backend:**
+
 ```python
 import pdb; pdb.set_trace()  # Python debugger
 ```
 
 **Frontend:**
+
 ```javascript
-console.log('Debug:', variable);  // Browser console
-debugger;  // Browser debugger
+console.log("Debug:", variable); // Browser console
+debugger; // Browser debugger
 ```
 
 ### Environment Variables
@@ -604,6 +632,7 @@ debugger;  // Browser debugger
 Both backend and frontend use `.env` files. Never commit these files.
 
 **Backend** (`.env`):
+
 ```
 DATABASE_URL=postgresql://user:pass@localhost:5432/dbname
 AUTH0_DOMAIN=your-domain.auth0.com
@@ -614,6 +643,7 @@ SENTRY_DSN=your-sentry-dsn
 ```
 
 **Frontend** (`.env`):
+
 ```
 VITE_AUTH0_DOMAIN=your-domain.auth0.com
 VITE_AUTH0_CLIENT_ID=your-client-id
@@ -623,16 +653,19 @@ VITE_API_URL=http://localhost:8000
 ### Common Issues
 
 **Database connection errors:**
+
 - Verify PostgreSQL is running
 - Check DATABASE_URL in `.env`
 - Run migrations: `alembic upgrade head`
 
 **Auth0 errors:**
+
 - Verify credentials in `.env`
 - Check Auth0 dashboard configuration
 - Ensure callback URLs are configured
 
 **Port conflicts:**
+
 - Frontend default: 5173 (configurable in `vite.config.js`)
 - Backend default: 8000 (pass `--port` to uvicorn)
 
