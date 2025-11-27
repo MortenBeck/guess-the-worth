@@ -43,7 +43,9 @@ function App() {
           const { data: backendUser } = await userService.getCurrentUser();
 
           setAuth(backendUser, token);
-          socketService.connect();
+
+          // Enable and connect socket with fresh token
+          socketService.enable();
         } catch (error) {
           console.error("Error getting token or user:", error);
           clearAuth();

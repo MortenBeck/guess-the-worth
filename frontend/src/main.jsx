@@ -49,8 +49,8 @@ const queryClient = new QueryClient({
   },
 });
 
-// Enable WebSocket connection for real-time bidding updates
-socketService.enable();
+// Don't enable socket here - it will be enabled after login in App.jsx
+// socketService.enable();
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
