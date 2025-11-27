@@ -13,6 +13,7 @@ Revises: 4abe05ed05b4
 Create Date: 2025-11-26 07:35:26.949920
 
 """
+
 from typing import Sequence, Union
 
 import sqlalchemy as sa
@@ -82,6 +83,8 @@ def downgrade() -> None:
     )
     op.add_column(
         "users",
-        sa.Column("email", sa.String(), nullable=False, server_default="unknown@example.com"),
+        sa.Column(
+            "email", sa.String(), nullable=False, server_default="unknown@example.com"
+        ),
     )
     op.add_column("users", sa.Column("password_hash", sa.String(), nullable=True))

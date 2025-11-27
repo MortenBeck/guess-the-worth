@@ -225,8 +225,18 @@ class TestAuctionServiceCheckExpiredAuctions:
         db_session.refresh(artwork)
 
         # Add non-winning bids
-        bid1 = Bid(artwork_id=artwork.id, bidder_id=buyer_user.id, amount=100.0, is_winning=False)
-        bid2 = Bid(artwork_id=artwork.id, bidder_id=buyer_user.id, amount=150.0, is_winning=False)
+        bid1 = Bid(
+            artwork_id=artwork.id,
+            bidder_id=buyer_user.id,
+            amount=100.0,
+            is_winning=False,
+        )
+        bid2 = Bid(
+            artwork_id=artwork.id,
+            bidder_id=buyer_user.id,
+            amount=150.0,
+            is_winning=False,
+        )
         db_session.add(bid1)
         db_session.add(bid2)
         db_session.commit()

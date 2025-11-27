@@ -54,7 +54,12 @@ class TestUserStats:
         assert data["total_spent"] == 0.0
 
     def test_user_stats_with_active_bids(
-        self, client: TestClient, buyer_token: str, buyer_user: User, artwork, db_session
+        self,
+        client: TestClient,
+        buyer_token: str,
+        buyer_user: User,
+        artwork,
+        db_session,
     ):
         """Test stats reflecting active bids."""
         # Place some bids (below threshold, not winning)
@@ -77,7 +82,12 @@ class TestUserStats:
         assert data["active_bids"] >= 1  # At least tracking artwork with bids
 
     def test_user_stats_with_won_auction(
-        self, client: TestClient, buyer_token: str, buyer_user: User, seller_user, db_session
+        self,
+        client: TestClient,
+        buyer_token: str,
+        buyer_user: User,
+        seller_user,
+        db_session,
     ):
         """Test stats reflecting won auctions."""
         # Create artwork and winning bid
@@ -221,7 +231,12 @@ class TestSellerStats:
         assert data["active_auctions"] >= 3
 
     def test_seller_stats_with_sold_artworks(
-        self, client: TestClient, seller_token: str, seller_user: User, buyer_user, db_session
+        self,
+        client: TestClient,
+        seller_token: str,
+        seller_user: User,
+        buyer_user,
+        db_session,
     ):
         """Test stats reflecting sold artworks and earnings."""
         # Create sold artworks
@@ -373,7 +388,12 @@ class TestStatsPerformance:
     """Test that stats endpoints perform well with large datasets."""
 
     def test_user_stats_with_many_bids(
-        self, client: TestClient, buyer_token: str, buyer_user: User, seller_user, db_session
+        self,
+        client: TestClient,
+        buyer_token: str,
+        buyer_user: User,
+        seller_user,
+        db_session,
     ):
         """Test user stats performance with many bids."""
         # Create multiple artworks and bids

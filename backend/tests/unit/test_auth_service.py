@@ -216,7 +216,11 @@ class TestJWTService:
 
     def test_create_access_token_additional_claims(self):
         """Test creating JWT token with additional claims."""
-        data = {"sub": "auth0|test123", "role": "seller", "custom_claim": "custom_value"}
+        data = {
+            "sub": "auth0|test123",
+            "role": "seller",
+            "custom_claim": "custom_value",
+        }
         token = JWTService.create_access_token(data)
 
         settings = Settings()

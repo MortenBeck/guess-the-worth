@@ -32,7 +32,11 @@ class TestAuthenticationRequirements:
         """Test that creating artwork requires authentication."""
         response = client.post(
             "/api/artworks/",
-            json={"title": "Test Art", "secret_threshold": 100.0, "description": "Test"},
+            json={
+                "title": "Test Art",
+                "secret_threshold": 100.0,
+                "description": "Test",
+            },
         )
         assert response.status_code == 401
         assert "detail" in response.json()
@@ -126,7 +130,12 @@ class TestBidderIDExtraction:
     """Test that bidder_id is extracted from JWT token, not query params."""
 
     def test_bidder_id_extracted_from_token(
-        self, client: TestClient, buyer_token: str, buyer_user: User, artwork, db_session
+        self,
+        client: TestClient,
+        buyer_token: str,
+        buyer_user: User,
+        artwork,
+        db_session,
     ):
         """Test that bidder_id comes from token, not query param."""
         response = client.post(
@@ -142,7 +151,12 @@ class TestBidderIDExtraction:
         assert data["bidder_id"] == buyer_user.id
 
     def test_cannot_forge_bidder_id(
-        self, client: TestClient, buyer_token: str, buyer_user: User, artwork, db_session
+        self,
+        client: TestClient,
+        buyer_token: str,
+        buyer_user: User,
+        artwork,
+        db_session,
     ):
         """Test that passing bidder_id as param doesn't override token."""
         response = client.post(

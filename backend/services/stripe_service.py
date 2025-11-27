@@ -133,7 +133,8 @@ class StripeService:
 
         if not payment:
             raise HTTPException(
-                status_code=404, detail=f"Payment not found for intent: {payment_intent.id}"
+                status_code=404,
+                detail=f"Payment not found for intent: {payment_intent.id}",
             )
 
         # Update payment status
@@ -177,7 +178,8 @@ class StripeService:
 
         if not payment:
             raise HTTPException(
-                status_code=404, detail=f"Payment not found for intent: {payment_intent.id}"
+                status_code=404,
+                detail=f"Payment not found for intent: {payment_intent.id}",
             )
 
         # Update payment status

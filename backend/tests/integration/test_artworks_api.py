@@ -46,7 +46,11 @@ class TestListArtworks:
         from models.artwork import Artwork
 
         artworks = [
-            Artwork(seller_id=seller_user.id, title=f"Artwork {i}", secret_threshold=100.0 * i)
+            Artwork(
+                seller_id=seller_user.id,
+                title=f"Artwork {i}",
+                secret_threshold=100.0 * i,
+            )
             for i in range(1, 6)
         ]
         db_session.add_all(artworks)
@@ -510,7 +514,11 @@ class TestArtworkValidation:
     def test_create_artwork_description_too_long(self, client, seller_token):
         """Test that description longer than 2000 characters is rejected."""
         headers = {"Authorization": f"Bearer {seller_token}"}
-        payload = {"title": "Valid Title", "description": "a" * 2001, "secret_threshold": 100.0}
+        payload = {
+            "title": "Valid Title",
+            "description": "a" * 2001,
+            "secret_threshold": 100.0,
+        }
 
         response = client.post("/api/artworks/", json=payload, headers=headers)
         assert response.status_code == 400
@@ -522,7 +530,11 @@ class TestArtworkValidation:
 
         headers = {"Authorization": f"Bearer {seller_token}"}
         past_date = (datetime.now(UTC) - timedelta(days=1)).isoformat()
-        payload = {"title": "Valid Title", "secret_threshold": 100.0, "end_date": past_date}
+        payload = {
+            "title": "Valid Title",
+            "secret_threshold": 100.0,
+            "end_date": past_date,
+        }
 
         response = client.post("/api/artworks/", json=payload, headers=headers)
         assert response.status_code == 400

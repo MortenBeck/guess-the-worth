@@ -744,7 +744,8 @@ class TestGetArtworkPayment:
         db_session.commit()
 
         response = client.get(
-            f"/api/payments/artwork/{artwork.id}", headers=create_auth_header(seller_token)
+            f"/api/payments/artwork/{artwork.id}",
+            headers=create_auth_header(seller_token),
         )
 
         assert response.status_code == 200
@@ -766,7 +767,8 @@ class TestGetArtworkPayment:
         db_session.commit()
 
         response = client.get(
-            f"/api/payments/artwork/{artwork.id}", headers=create_auth_header(admin_token)
+            f"/api/payments/artwork/{artwork.id}",
+            headers=create_auth_header(admin_token),
         )
 
         assert response.status_code == 200
@@ -774,7 +776,8 @@ class TestGetArtworkPayment:
     def test_get_artwork_payment_unauthorized(self, client: TestClient, artwork, buyer_token):
         """Test buyer cannot view artwork payment."""
         response = client.get(
-            f"/api/payments/artwork/{artwork.id}", headers=create_auth_header(buyer_token)
+            f"/api/payments/artwork/{artwork.id}",
+            headers=create_auth_header(buyer_token),
         )
 
         assert response.status_code == 403
@@ -791,7 +794,8 @@ class TestGetArtworkPayment:
     def test_get_artwork_payment_no_payment(self, client: TestClient, artwork, seller_token):
         """Test retrieving payment when artwork has no completed payment."""
         response = client.get(
-            f"/api/payments/artwork/{artwork.id}", headers=create_auth_header(seller_token)
+            f"/api/payments/artwork/{artwork.id}",
+            headers=create_auth_header(seller_token),
         )
 
         assert response.status_code == 404

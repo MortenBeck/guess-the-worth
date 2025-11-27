@@ -26,7 +26,8 @@ def test_list_users_as_admin(client: TestClient, admin_token: str, db_session: S
 def test_get_user_details(client: TestClient, admin_token: str, buyer_user: User):
     """Admin can get user details."""
     response = client.get(
-        f"/api/admin/users/{buyer_user.id}", headers={"Authorization": f"Bearer {admin_token}"}
+        f"/api/admin/users/{buyer_user.id}",
+        headers={"Authorization": f"Bearer {admin_token}"},
     )
     assert response.status_code == 200
     data = response.json()
@@ -103,7 +104,8 @@ def test_get_audit_logs(client: TestClient, admin_token: str):
 def test_list_users_with_role_filter(client: TestClient, admin_token: str, buyer_user: User):
     """Admin can filter users by role."""
     response = client.get(
-        "/api/admin/users?role=BUYER", headers={"Authorization": f"Bearer {admin_token}"}
+        "/api/admin/users?role=BUYER",
+        headers={"Authorization": f"Bearer {admin_token}"},
     )
     assert response.status_code == 200
     data = response.json()
@@ -142,7 +144,8 @@ def test_ban_user_not_found(client: TestClient, admin_token: str):
 def test_get_flagged_auctions(client: TestClient, admin_token: str):
     """Admin can view flagged auctions."""
     response = client.get(
-        "/api/admin/flagged-auctions", headers={"Authorization": f"Bearer {admin_token}"}
+        "/api/admin/flagged-auctions",
+        headers={"Authorization": f"Bearer {admin_token}"},
     )
     assert response.status_code == 200
     data = response.json()

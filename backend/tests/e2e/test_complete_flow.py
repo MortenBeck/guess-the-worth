@@ -41,7 +41,8 @@ class TestCompleteUserFlow:
 
         # Create buyer token
         buyer_token = JWTService.create_access_token(
-            data={"sub": "auth0|e2e_buyer", "role": "BUYER"}, expires_delta=timedelta(hours=1)
+            data={"sub": "auth0|e2e_buyer", "role": "BUYER"},
+            expires_delta=timedelta(hours=1),
         )
 
         # Step 2: Create seller in database
@@ -52,7 +53,8 @@ class TestCompleteUserFlow:
 
         # Create seller token
         seller_token = JWTService.create_access_token(
-            data={"sub": "auth0|e2e_seller", "role": "SELLER"}, expires_delta=timedelta(hours=1)
+            data={"sub": "auth0|e2e_seller", "role": "SELLER"},
+            expires_delta=timedelta(hours=1),
         )
 
         # Step 3: Seller creates artwork
@@ -73,7 +75,10 @@ class TestCompleteUserFlow:
         assert artwork_data["current_highest_bid"] == 0.0
 
         # Step 4: Buyer places losing bid
-        losing_bid_payload = {"artwork_id": artwork_id, "amount": 300.0}  # Below threshold
+        losing_bid_payload = {
+            "artwork_id": artwork_id,
+            "amount": 300.0,
+        }  # Below threshold
         losing_bid_response = client.post(
             "/api/bids/",
             json=losing_bid_payload,
@@ -89,7 +94,10 @@ class TestCompleteUserFlow:
         assert artwork_check.json()["status"] == "ACTIVE"
 
         # Step 5: Buyer places winning bid
-        winning_bid_payload = {"artwork_id": artwork_id, "amount": 500.0}  # At threshold
+        winning_bid_payload = {
+            "artwork_id": artwork_id,
+            "amount": 500.0,
+        }  # At threshold
         winning_bid_response = client.post(
             "/api/bids/",
             json=winning_bid_payload,
@@ -595,7 +603,14 @@ class TestAdminOversightFlow:
     """Test admin monitoring and oversight of platform activity."""
 
     def test_complete_auction_with_admin_oversight(
-        self, client, seller_user, buyer_user, admin_user, seller_token, buyer_token, admin_token
+        self,
+        client,
+        seller_user,
+        buyer_user,
+        admin_user,
+        seller_token,
+        buyer_token,
+        admin_token,
     ):
         """
         Complete flow with admin oversight:
