@@ -161,14 +161,13 @@ const ArtworkPage = () => {
         let errorMessage = "Failed to place bid";
 
         if (error?.data?.detail) {
-          errorMessage = typeof error.data.detail === 'string'
-            ? error.data.detail
-            : JSON.stringify(error.data.detail);
+          errorMessage =
+            typeof error.data.detail === "string"
+              ? error.data.detail
+              : JSON.stringify(error.data.detail);
         } else if (error?.message) {
-          errorMessage = typeof error.message === 'string'
-            ? error.message
-            : String(error.message);
-        } else if (typeof error === 'string') {
+          errorMessage = typeof error.message === "string" ? error.message : String(error.message);
+        } else if (typeof error === "string") {
           errorMessage = error;
         }
 
