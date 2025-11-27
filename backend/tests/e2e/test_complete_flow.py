@@ -41,7 +41,8 @@ class TestCompleteUserFlow:
 
         # Create buyer token
         buyer_token = JWTService.create_access_token(
-            data={"sub": "auth0|e2e_buyer", "role": "BUYER"}, expires_delta=timedelta(hours=1)
+            data={"sub": "auth0|e2e_buyer", "role": "BUYER"},
+            expires_delta=timedelta(hours=1),
         )
 
         # Step 2: Create seller in database
@@ -52,7 +53,8 @@ class TestCompleteUserFlow:
 
         # Create seller token
         seller_token = JWTService.create_access_token(
-            data={"sub": "auth0|e2e_seller", "role": "SELLER"}, expires_delta=timedelta(hours=1)
+            data={"sub": "auth0|e2e_seller", "role": "SELLER"},
+            expires_delta=timedelta(hours=1),
         )
 
         # Step 3: Seller creates artwork
@@ -73,7 +75,10 @@ class TestCompleteUserFlow:
         assert artwork_data["current_highest_bid"] == 0.0
 
         # Step 4: Buyer places losing bid
-        losing_bid_payload = {"artwork_id": artwork_id, "amount": 300.0}  # Below threshold
+        losing_bid_payload = {
+            "artwork_id": artwork_id,
+            "amount": 300.0,
+        }  # Below threshold
         losing_bid_response = client.post(
             "/api/bids/",
             json=losing_bid_payload,
@@ -89,7 +94,10 @@ class TestCompleteUserFlow:
         assert artwork_check.json()["status"] == "ACTIVE"
 
         # Step 5: Buyer places winning bid
-        winning_bid_payload = {"artwork_id": artwork_id, "amount": 500.0}  # At threshold
+        winning_bid_payload = {
+            "artwork_id": artwork_id,
+            "amount": 500.0,
+        }  # At threshold
         winning_bid_response = client.post(
             "/api/bids/",
             json=winning_bid_payload,
@@ -212,7 +220,9 @@ class TestMultipleUsersCompetingFlow:
 class TestSellerMultipleArtworksFlow:
     """Test seller creating and managing multiple artworks."""
 
-    def test_seller_creates_multiple_artworks_different_outcomes(self, client, db_session):
+    def test_seller_creates_multiple_artworks_different_outcomes(
+        self, client, db_session
+    ):
         """
         Flow:
         1. Seller creates multiple artworks
@@ -474,7 +484,9 @@ class TestCompleteMarketplaceFlow:
         assert len(artwork_list) == 4
 
         # Count pending payment vs active
-        pending_payment_count = sum(1 for a in artwork_list if a["status"] == "PENDING_PAYMENT")
+        pending_payment_count = sum(
+            1 for a in artwork_list if a["status"] == "PENDING_PAYMENT"
+        )
         active_count = sum(1 for a in artwork_list if a["status"] == "ACTIVE")
 
         assert pending_payment_count >= 1  # At least artwork 1 is pending payment
@@ -595,7 +607,14 @@ class TestAdminOversightFlow:
     """Test admin monitoring and oversight of platform activity."""
 
     def test_complete_auction_with_admin_oversight(
-        self, client, seller_user, buyer_user, admin_user, seller_token, buyer_token, admin_token
+        self,
+        client,
+        seller_user,
+        buyer_user,
+        admin_user,
+        seller_token,
+        buyer_token,
+        admin_token,
     ):
         """
         Complete flow with admin oversight:
@@ -651,7 +670,9 @@ class TestAdminOversightFlow:
         transactions = response_data["transactions"]
         assert len(transactions) > 0
         # Verify our transaction is in the list (check artwork_title field)
-        assert any(t.get("artwork_title") == "Admin Oversight Test" for t in transactions)
+        assert any(
+            t.get("artwork_title") == "Admin Oversight Test" for t in transactions
+        )
 
         # Step 5: Admin views audit logs
         audit_logs_response = client.get(
@@ -679,7 +700,9 @@ class TestAdminOversightFlow:
         assert stats["auctions"]["total"] >= 0
         assert "transactions" in stats
 
-    def test_admin_user_management(self, client, buyer_user, admin_user, buyer_token, admin_token):
+    def test_admin_user_management(
+        self, client, buyer_user, admin_user, buyer_token, admin_token
+    ):
         """Test admin user management capabilities."""
         # Step 1: Admin lists all users
         users_response = client.get(

@@ -17,9 +17,8 @@ This script creates only minimal database references - actual user data
 comes from Auth0.
 """
 
-from sqlalchemy.orm import Session
-
 from models.user import User
+from sqlalchemy.orm import Session
 
 
 def seed_users(db: Session) -> int:
@@ -59,7 +58,9 @@ def seed_users(db: Session) -> int:
 
     for user_data in demo_users:
         # Check if user already exists (idempotency)
-        existing_user = db.query(User).filter(User.auth0_sub == user_data["auth0_sub"]).first()
+        existing_user = (
+            db.query(User).filter(User.auth0_sub == user_data["auth0_sub"]).first()
+        )
 
         if not existing_user:
             # Create new user reference

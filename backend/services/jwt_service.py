@@ -2,7 +2,6 @@ from datetime import UTC, datetime, timedelta
 from typing import Any, Dict, Optional
 
 import jwt
-
 from config.settings import settings
 
 
@@ -13,7 +12,9 @@ class JWTService:
         if expires_delta:
             expire = datetime.now(UTC) + expires_delta
         else:
-            expire = datetime.now(UTC) + timedelta(minutes=settings.jwt_expiration_minutes)
+            expire = datetime.now(UTC) + timedelta(
+                minutes=settings.jwt_expiration_minutes
+            )
 
         to_encode.update({"exp": expire, "iat": datetime.now(UTC)})
 
@@ -28,7 +29,9 @@ class JWTService:
 
         Raises DecodeError or ExpiredSignatureError on failure.
         """
-        payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
+        payload = jwt.decode(
+            token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm]
+        )
         return payload
 
     @staticmethod

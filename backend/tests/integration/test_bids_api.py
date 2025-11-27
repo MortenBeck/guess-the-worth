@@ -9,13 +9,17 @@ from models.artwork import ArtworkStatus
 class TestCreateBid:
     """Test POST /api/bids endpoint with threshold logic."""
 
-    def test_create_bid_below_threshold(self, client, db_session, artwork, buyer_user, buyer_token):
+    def test_create_bid_below_threshold(
+        self, client, db_session, artwork, buyer_user, buyer_token
+    ):
         """Test creating bid below secret_threshold (not winning)."""
         # Artwork has secret_threshold = 100.0
         payload = {"artwork_id": artwork.id, "amount": 75.0}
 
         response = client.post(
-            "/api/bids/", json=payload, headers={"Authorization": f"Bearer {buyer_token}"}
+            "/api/bids/",
+            json=payload,
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
 
         assert response.status_code == 200
@@ -30,12 +34,16 @@ class TestCreateBid:
         assert artwork.status == ArtworkStatus.ACTIVE
         assert artwork.current_highest_bid == 75.0
 
-    def test_create_bid_at_threshold(self, client, db_session, artwork, buyer_user, buyer_token):
+    def test_create_bid_at_threshold(
+        self, client, db_session, artwork, buyer_user, buyer_token
+    ):
         """Test creating bid exactly at secret_threshold (winning)."""
         payload = {"artwork_id": artwork.id, "amount": 100.0}  # Exactly at threshold
 
         response = client.post(
-            "/api/bids/", json=payload, headers={"Authorization": f"Bearer {buyer_token}"}
+            "/api/bids/",
+            json=payload,
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
 
         assert response.status_code == 200
@@ -48,12 +56,16 @@ class TestCreateBid:
         assert artwork.status == ArtworkStatus.PENDING_PAYMENT
         assert artwork.current_highest_bid == 100.0
 
-    def test_create_bid_above_threshold(self, client, db_session, artwork, buyer_user, buyer_token):
+    def test_create_bid_above_threshold(
+        self, client, db_session, artwork, buyer_user, buyer_token
+    ):
         """Test creating bid above secret_threshold (winning)."""
         payload = {"artwork_id": artwork.id, "amount": 150.0}  # Above threshold
 
         response = client.post(
-            "/api/bids/", json=payload, headers={"Authorization": f"Bearer {buyer_token}"}
+            "/api/bids/",
+            json=payload,
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
 
         assert response.status_code == 200
@@ -66,12 +78,16 @@ class TestCreateBid:
         assert artwork.status == ArtworkStatus.PENDING_PAYMENT
         assert artwork.current_highest_bid == 150.0
 
-    def test_bid_on_sold_artwork_fails(self, client, sold_artwork, buyer_user, buyer_token):
+    def test_bid_on_sold_artwork_fails(
+        self, client, sold_artwork, buyer_user, buyer_token
+    ):
         """Test bidding on already sold artwork returns error."""
         payload = {"artwork_id": sold_artwork.id, "amount": 200.0}
 
         response = client.post(
-            "/api/bids/", json=payload, headers={"Authorization": f"Bearer {buyer_token}"}
+            "/api/bids/",
+            json=payload,
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
 
         assert response.status_code == 400
@@ -85,7 +101,9 @@ class TestCreateBid:
         payload = {"artwork_id": 99999, "amount": 100.0}
 
         response = client.post(
-            "/api/bids/", json=payload, headers={"Authorization": f"Bearer {buyer_token}"}
+            "/api/bids/",
+            json=payload,
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
 
         assert response.status_code == 404
@@ -116,7 +134,9 @@ class TestCreateBid:
         db_session.refresh(artwork)
         assert artwork.current_highest_bid == 75.0
 
-    def test_create_multiple_bids_same_user(self, client, artwork, buyer_user, buyer_token):
+    def test_create_multiple_bids_same_user(
+        self, client, artwork, buyer_user, buyer_token
+    ):
         """Test same user can place multiple bids on same artwork."""
         bids = [
             {"artwork_id": artwork.id, "amount": 20.0},
@@ -126,7 +146,9 @@ class TestCreateBid:
 
         for bid_data in bids:
             response = client.post(
-                "/api/bids/", json=bid_data, headers={"Authorization": f"Bearer {buyer_token}"}
+                "/api/bids/",
+                json=bid_data,
+                headers={"Authorization": f"Bearer {buyer_token}"},
             )
             assert response.status_code == 200
 
@@ -135,7 +157,9 @@ class TestCreateBid:
         payload = {"artwork_id": artwork.id}
 
         response = client.post(
-            "/api/bids/", json=payload, headers={"Authorization": f"Bearer {buyer_token}"}
+            "/api/bids/",
+            json=payload,
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
 
         assert response.status_code == 422
@@ -145,7 +169,9 @@ class TestCreateBid:
         payload = {"amount": 100.0}
 
         response = client.post(
-            "/api/bids/", json=payload, headers={"Authorization": f"Bearer {buyer_token}"}
+            "/api/bids/",
+            json=payload,
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
 
         assert response.status_code == 422
@@ -155,7 +181,9 @@ class TestCreateBid:
         payload = {"artwork_id": artwork.id, "amount": -50.0}
 
         response = client.post(
-            "/api/bids/", json=payload, headers={"Authorization": f"Bearer {buyer_token}"}
+            "/api/bids/",
+            json=payload,
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
 
         # Should be rejected by business logic
@@ -166,7 +194,9 @@ class TestCreateBid:
         payload = {"artwork_id": artwork.id, "amount": 0.0}
 
         response = client.post(
-            "/api/bids/", json=payload, headers={"Authorization": f"Bearer {buyer_token}"}
+            "/api/bids/",
+            json=payload,
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
 
         # Business logic should determine if this is valid
@@ -185,7 +215,9 @@ class TestGetArtworkBids:
         assert isinstance(data, list)
         assert len(data) == 0
 
-    def test_get_bids_single(self, client, db_session, artwork, buyer_user, buyer_token):
+    def test_get_bids_single(
+        self, client, db_session, artwork, buyer_user, buyer_token
+    ):
         """Test getting bids with one bid."""
         # Create a bid
         client.post(
@@ -202,7 +234,9 @@ class TestGetArtworkBids:
         assert data[0]["amount"] == 50.0
         assert data[0]["artwork_id"] == artwork.id
 
-    def test_get_bids_multiple(self, client, artwork, buyer_user, buyer_token, db_session):
+    def test_get_bids_multiple(
+        self, client, artwork, buyer_user, buyer_token, db_session
+    ):
         """Test getting multiple bids for an artwork."""
         from datetime import timedelta
 
@@ -268,7 +302,9 @@ class TestGetArtworkBids:
         # May return empty list or 404 depending on implementation
         assert response.status_code in [200, 404]
 
-    def test_get_bids_includes_bidder_info(self, client, artwork, buyer_user, buyer_token):
+    def test_get_bids_includes_bidder_info(
+        self, client, artwork, buyer_user, buyer_token
+    ):
         """Test bid response includes bidder information."""
         client.post(
             "/api/bids/",
@@ -323,7 +359,9 @@ class TestGetArtworkBids:
 class TestBidThresholdLogic:
     """Test critical bid threshold and winning logic."""
 
-    def test_only_threshold_bids_win(self, client, db_session, artwork, buyer_user, buyer_token):
+    def test_only_threshold_bids_win(
+        self, client, db_session, artwork, buyer_user, buyer_token
+    ):
         """Test only bids >= threshold are marked as winning."""
         # Create bids below and at threshold
         below = client.post(
@@ -432,7 +470,9 @@ class TestBidThresholdLogic:
         db_session.refresh(artwork)
         assert artwork.current_highest_bid > 0
 
-    def test_winning_bid_locks_artwork(self, client, db_session, artwork, buyer_user, buyer_token):
+    def test_winning_bid_locks_artwork(
+        self, client, db_session, artwork, buyer_user, buyer_token
+    ):
         """Test artwork is locked (SOLD) after first winning bid."""
         from datetime import timedelta
 
@@ -476,33 +516,45 @@ class TestBidThresholdLogic:
 class TestBidValidation:
     """Test bid validation and business rules."""
 
-    def test_bid_with_extremely_large_amount(self, client, artwork, buyer_user, buyer_token):
+    def test_bid_with_extremely_large_amount(
+        self, client, artwork, buyer_user, buyer_token
+    ):
         """Test bid with very large amount."""
         payload = {"artwork_id": artwork.id, "amount": 999999999.99}
 
         response = client.post(
-            "/api/bids/", json=payload, headers={"Authorization": f"Bearer {buyer_token}"}
+            "/api/bids/",
+            json=payload,
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
 
         assert response.status_code == 200
 
-    def test_bid_with_many_decimal_places(self, client, artwork, buyer_user, buyer_token):
+    def test_bid_with_many_decimal_places(
+        self, client, artwork, buyer_user, buyer_token
+    ):
         """Test bid with many decimal places."""
         payload = {"artwork_id": artwork.id, "amount": 99.999999}
 
         response = client.post(
-            "/api/bids/", json=payload, headers={"Authorization": f"Bearer {buyer_token}"}
+            "/api/bids/",
+            json=payload,
+            headers={"Authorization": f"Bearer {buyer_token}"},
         )
 
         # Should round or accept
         assert response.status_code in [200, 422]
 
-    def test_seller_cannot_bid_on_own_artwork(self, client, artwork, seller_user, seller_token):
+    def test_seller_cannot_bid_on_own_artwork(
+        self, client, artwork, seller_user, seller_token
+    ):
         """Test seller cannot bid on their own artwork."""
         payload = {"artwork_id": artwork.id, "amount": 100.0}
 
         response = client.post(
-            "/api/bids/", json=payload, headers={"Authorization": f"Bearer {seller_token}"}
+            "/api/bids/",
+            json=payload,
+            headers={"Authorization": f"Bearer {seller_token}"},
         )
 
         # This validation may or may not be implemented

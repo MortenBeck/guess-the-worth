@@ -1,17 +1,17 @@
+from database import get_db
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlalchemy.orm import Session
-
-from database import get_db
 from models.user import User
 from services.auth_service import AuthService
 from services.jwt_service import JWTService
+from sqlalchemy.orm import Session
 
 security = HTTPBearer(auto_error=False)
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db),
 ) -> User:
     """Get current authenticated user from Auth0 token.
 
@@ -72,7 +72,9 @@ async def get_current_user(
     raise credentials_exception
 
 
-async def get_current_active_user(current_user: User = Depends(get_current_user)) -> User:
+async def get_current_active_user(
+    current_user: User = Depends(get_current_user),
+) -> User:
     """Get current active user"""
     return current_user
 

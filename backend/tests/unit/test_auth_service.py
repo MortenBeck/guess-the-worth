@@ -8,10 +8,8 @@ from unittest.mock import Mock, patch
 
 import jwt
 import pytest
-from jwt import DecodeError, ExpiredSignatureError
-
 from config.settings import Settings
-
+from jwt import DecodeError, ExpiredSignatureError
 # UserRole enum removed - now using string literals
 from schemas.auth import AuthUser
 from services.auth_service import AuthService
@@ -95,7 +93,10 @@ class TestAuth0Service:
     def test_map_auth0_role_to_user_role_admin(self):
         """Test mapping Auth0 admin role (highest priority)."""
         assert AuthService.map_auth0_role_to_user_role(["admin"]) == "ADMIN"
-        assert AuthService.map_auth0_role_to_user_role(["buyer", "seller", "admin"]) == "ADMIN"
+        assert (
+            AuthService.map_auth0_role_to_user_role(["buyer", "seller", "admin"])
+            == "ADMIN"
+        )
         assert AuthService.map_auth0_role_to_user_role(["admin", "seller"]) == "ADMIN"
 
     def test_map_auth0_role_to_user_role_case_insensitive(self):
@@ -107,7 +108,9 @@ class TestAuth0Service:
     def test_map_auth0_role_unknown(self):
         """Test mapping unknown role defaults to BUYER."""
         assert AuthService.map_auth0_role_to_user_role(["unknown"]) == "BUYER"
-        assert AuthService.map_auth0_role_to_user_role(["moderator", "viewer"]) == "BUYER"
+        assert (
+            AuthService.map_auth0_role_to_user_role(["moderator", "viewer"]) == "BUYER"
+        )
 
     def test_get_user_by_auth0_sub_exists(self, db_session, buyer_user):
         """Test retrieving existing user by auth0_sub."""
@@ -216,7 +219,11 @@ class TestJWTService:
 
     def test_create_access_token_additional_claims(self):
         """Test creating JWT token with additional claims."""
-        data = {"sub": "auth0|test123", "role": "seller", "custom_claim": "custom_value"}
+        data = {
+            "sub": "auth0|test123",
+            "role": "seller",
+            "custom_claim": "custom_value",
+        }
         token = JWTService.create_access_token(data)
 
         settings = Settings()
@@ -315,7 +322,9 @@ class TestAuthIntegration:
         assert db_user.role == "SELLER"
 
         # Verify user can be retrieved
-        retrieved_user = AuthService.get_user_by_auth0_sub(db_session, "auth0|integration123")
+        retrieved_user = AuthService.get_user_by_auth0_sub(
+            db_session, "auth0|integration123"
+        )
         assert retrieved_user.id == db_user.id
 
     def test_jwt_and_database_integration(self, db_session, seller_user):

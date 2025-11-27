@@ -13,7 +13,6 @@ from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
-
 from models.user import User
 
 
@@ -32,14 +31,20 @@ class TestAuthenticationRequirements:
         """Test that creating artwork requires authentication."""
         response = client.post(
             "/api/artworks/",
-            json={"title": "Test Art", "secret_threshold": 100.0, "description": "Test"},
+            json={
+                "title": "Test Art",
+                "secret_threshold": 100.0,
+                "description": "Test",
+            },
         )
         assert response.status_code == 401
         assert "detail" in response.json()
 
     def test_create_bid_requires_auth(self, client: TestClient, artwork):
         """Test that placing bid requires authentication."""
-        response = client.post("/api/bids/", json={"artwork_id": artwork.id, "amount": 150.0})
+        response = client.post(
+            "/api/bids/", json={"artwork_id": artwork.id, "amount": 150.0}
+        )
         assert response.status_code == 401
 
     def test_get_my_artworks_requires_auth(self, client: TestClient):
@@ -55,7 +60,9 @@ class TestAuthenticationRequirements:
 
     def test_update_artwork_requires_auth(self, client: TestClient, artwork):
         """Test that updating artwork requires authentication."""
-        response = client.put(f"/api/artworks/{artwork.id}", json={"title": "Updated Title"})
+        response = client.put(
+            f"/api/artworks/{artwork.id}", json={"title": "Updated Title"}
+        )
         assert response.status_code == 401
 
     def test_delete_artwork_requires_auth(self, client: TestClient, artwork):
@@ -126,7 +133,12 @@ class TestBidderIDExtraction:
     """Test that bidder_id is extracted from JWT token, not query params."""
 
     def test_bidder_id_extracted_from_token(
-        self, client: TestClient, buyer_token: str, buyer_user: User, artwork, db_session
+        self,
+        client: TestClient,
+        buyer_token: str,
+        buyer_user: User,
+        artwork,
+        db_session,
     ):
         """Test that bidder_id comes from token, not query param."""
         response = client.post(
@@ -142,7 +154,12 @@ class TestBidderIDExtraction:
         assert data["bidder_id"] == buyer_user.id
 
     def test_cannot_forge_bidder_id(
-        self, client: TestClient, buyer_token: str, buyer_user: User, artwork, db_session
+        self,
+        client: TestClient,
+        buyer_token: str,
+        buyer_user: User,
+        artwork,
+        db_session,
     ):
         """Test that passing bidder_id as param doesn't override token."""
         response = client.post(
@@ -326,7 +343,9 @@ class TestCurrentUserEndpoint:
         self, client: TestClient, buyer_token: str, buyer_user: User
     ):
         """Test that current user is retrieved from token, not query param."""
-        response = client.get("/api/auth/me", headers={"Authorization": f"Bearer {buyer_token}"})
+        response = client.get(
+            "/api/auth/me", headers={"Authorization": f"Bearer {buyer_token}"}
+        )
 
         assert response.status_code == 200
         data = response.json()

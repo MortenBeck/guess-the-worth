@@ -1,6 +1,7 @@
 import enum
 
-from sqlalchemy import Column, DateTime, Enum, Float, ForeignKey, Integer, String
+from sqlalchemy import (Column, DateTime, Enum, Float, ForeignKey, Integer,
+                        String)
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -26,7 +27,9 @@ class Artwork(Base):
     current_highest_bid = Column(Float, default=0.0)
     description = Column(String)
     image_url = Column(String)
-    status = Column(Enum(ArtworkStatus), default=ArtworkStatus.ACTIVE, nullable=False, index=True)
+    status = Column(
+        Enum(ArtworkStatus), default=ArtworkStatus.ACTIVE, nullable=False, index=True
+    )
     end_date = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
