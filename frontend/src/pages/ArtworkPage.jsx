@@ -116,9 +116,10 @@ const ArtworkPage = () => {
       setBidAmount("");
     },
     onError: (error) => {
+      const errorMessage = error?.data?.detail || error?.message || "Failed to place bid";
       toaster.create({
         title: "Bid failed",
-        description: error.data?.detail || error.message || "Failed to place bid",
+        description: String(errorMessage),
         type: "error",
         duration: 5000,
       });

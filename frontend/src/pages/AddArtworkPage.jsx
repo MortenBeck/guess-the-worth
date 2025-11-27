@@ -39,9 +39,10 @@ const AddArtworkPage = () => {
             duration: 5000,
           });
         } catch (error) {
+          const errorMessage = error?.message || "Image upload failed";
           toaster.create({
             title: "Artwork created but image upload failed",
-            description: error.message,
+            description: String(errorMessage),
             type: "warning",
             duration: 5000,
           });
@@ -60,9 +61,10 @@ const AddArtworkPage = () => {
       navigate(`/artwork/${artwork.id}`);
     },
     onError: (error) => {
+      const errorMessage = error?.data?.detail || error?.message || "Failed to create artwork";
       toaster.create({
         title: "Failed to create artwork",
-        description: error.data?.detail || error.message || "Failed to create artwork",
+        description: String(errorMessage),
         type: "error",
         duration: 5000,
       });
