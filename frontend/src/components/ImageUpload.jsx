@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { Box, Button, Image, Text, Progress, VStack } from "@chakra-ui/react";
 import { artworkService } from "../services/api";
-import { toaster } from "./ui/toaster";
+import { toaster } from "./ui/toaster-instance";
 
 export default function ImageUpload({ artworkId, currentImageUrl, onUploadSuccess }) {
   const [uploading, setUploading] = useState(false);

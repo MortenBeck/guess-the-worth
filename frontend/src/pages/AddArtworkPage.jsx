@@ -4,7 +4,7 @@ import { Box, Container, Heading, Text, Button, VStack, HStack } from "@chakra-u
 import { useNavigate } from "react-router-dom";
 import { artworkService } from "../services/api";
 import useAuthStore from "../store/authStore";
-import { toaster } from "../components/ui/toaster";
+import { toaster } from "../components/ui/toaster-instance";
 
 const AddArtworkPage = () => {
   const navigate = useNavigate();

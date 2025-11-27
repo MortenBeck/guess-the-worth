@@ -15,7 +15,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { userService, statsService } from "../services/api";
 import useAuthStore from "../store/authStore";
 import placeholderImg from "../assets/placeholder.jpg";
-import { toaster } from "../components/ui/toaster";
+import { toaster } from "../components/ui/toaster-instance";
 
 const EditIcon = () => <span>✏️</span>;
 const CheckIcon = () => <span>✓</span>;

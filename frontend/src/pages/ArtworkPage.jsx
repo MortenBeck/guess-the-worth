@@ -19,7 +19,7 @@ import useAuthStore from "../store/authStore";
 import useFavoritesStore from "../store/favoritesStore";
 import { useRealtimeBids } from "../hooks/useRealtimeBids";
 import placeholderImg from "../assets/placeholder.jpg";
-import { toaster } from "../components/ui/toaster";
+import { toaster } from "../components/ui/toaster-instance";
 import PaymentModal from "../components/PaymentModal";
 import socket from "../services/socket";
 
@@ -57,7 +57,7 @@ const ArtworkPage = () => {
       console.log("Payment required event received:", data);
 
       // Validate data exists and has required fields
-      if (!data || typeof data.artwork_id === 'undefined') {
+      if (!data || typeof data.artwork_id === "undefined") {
         console.error("Invalid payment_required data:", data);
         return;
       }
@@ -117,7 +117,7 @@ const ArtworkPage = () => {
     onSuccess: (response) => {
       try {
         const bid = response?.data;
-        if (!bid || typeof bid.amount === 'undefined') {
+        if (!bid || typeof bid.amount === "undefined") {
           console.error("Invalid bid data in response:", response);
           toaster.create({
             title: "Bid placed",

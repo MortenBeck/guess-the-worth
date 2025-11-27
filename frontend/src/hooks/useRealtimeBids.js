@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import socketService from "../services/socket";
 import useBiddingStore from "../store/biddingStore";
-import { toaster } from "../components/ui/toaster";
+import { toaster } from "../components/ui/toaster-instance";
 
 /**
  * Custom hook to enable real-time bid updates for a specific artwork.

@@ -76,7 +76,6 @@ class SocketService {
       this.socket.on("reconnect_failed", () => {
         console.error("Socket reconnection failed after all attempts");
       });
-
     } catch (error) {
       console.warn("Socket service initialization failed:", error.message);
       this.socket = null;
