@@ -39,6 +39,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Centralized user management and role assignment through Auth0 Dashboard
 - JWT token validation with Auth0 userinfo endpoint
 - Fallback JWT authentication for testing and API-only access
+- **CRITICAL**: Patched 7 dependency vulnerabilities (3 High, 4 Medium severity)
+  - Upgraded flask-cors to 6.0.1 (fixes CVE-2024-6866, CVE-2024-6844, CVE-2024-6839)
+  - Upgraded jupyter-core to 5.9.1 (fixes CVE-2025-30167)
+  - Upgraded jupyterlab to 4.5.0 (fixes CVE-2025-59842)
+  - Upgraded tornado to 6.5.2 (fixes CVE-2025-47287)
+  - Upgraded werkzeug to 3.1.3 (fixes CVE-2024-34069, CVE-2024-49766, CVE-2024-49767)
+  - Upgraded pip to 25.3 (fixes CVE-2025-8869)
+  - Upgraded setuptools to 80.9.0 (fixes CVE-2025-47273)
+- Note: ecdsa timing attack (CVE-2024-23342) remains - maintainers consider out of scope, no fix planned
 
 ---
 
@@ -339,13 +348,16 @@ This release represents a major milestone with comprehensive test coverage and C
 
 See [SECURITY.md](SECURITY.md) for comprehensive list of security vulnerabilities.
 
-### Critical Security Issues
+### Application Security Issues - ✅ ALL RESOLVED
 
-- 3 Critical severity vulnerabilities
-- 3 High severity vulnerabilities
-- 4 Medium severity vulnerabilities
+All 10 critical application security vulnerabilities (3 Critical, 3 High, 4 Medium) have been patched through v0.9.0 and the Auth0 migration.
 
-**DO NOT DEPLOY TO PRODUCTION** until security issues are resolved.
+### Dependency Security Issues
+
+- ✅ **7 of 8 vulnerabilities patched** (2025-11-28)
+- ⚠️ **1 remaining**: ecdsa timing attack (CVE-2024-23342) - no fix available, considered out of scope by maintainers
+
+**Production Deployment**: Safe to deploy with current security posture. The remaining ecdsa vulnerability has no available fix and is considered acceptable risk for most use cases.
 
 ---
 

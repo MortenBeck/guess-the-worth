@@ -18,8 +18,15 @@ requests
 slowapi>=0.1.9
 redis>=5.0.0
 
-# Security: Pin h11 to fix CVE (required by uvicorn/httpx)
+# Security: Pin versions to fix CVEs
 h11>=0.16.0
+flask-cors>=6.0.0
+jupyter-core>=5.8.1
+jupyterlab>=4.4.8
+tornado>=6.5
+werkzeug>=3.0.6
+pip>=25.3
+setuptools>=78.1.1
 
 # Testing
 pytest
