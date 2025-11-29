@@ -59,20 +59,25 @@ const QuickStats = () => {
   const platformStatsData = [
     {
       label: "Active Artworks",
-      value: platformStats?.totalArtworks || 0,
+      value: platformStats?.data?.active_auctions || 0,
       icon: "🎨",
       color: "#6366f1",
     },
     {
       label: "Total Bids",
-      value: `$${platformStats?.totalBids || 0}`,
+      value: platformStats?.data?.total_bids || 0,
       icon: "💎",
       color: "#10b981",
     },
-    { label: "Artists", value: platformStats?.totalArtists || 0, icon: "👨‍🎨", color: "#f59e0b" },
     {
-      label: "Live Bidding",
-      value: platformStats?.liveStatus || "24/7",
+      label: "Total Users",
+      value: platformStats?.data?.total_users || 0,
+      icon: "👨‍🎨",
+      color: "#f59e0b",
+    },
+    {
+      label: "Total Artworks",
+      value: platformStats?.data?.total_artworks || 0,
       icon: "⚡",
       color: "#ec4899",
     },

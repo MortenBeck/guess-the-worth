@@ -147,38 +147,7 @@ export const userService = {
 };
 
 export const statsService = {
-  getPlatformStats: async () => {
-    try {
-      // Fetch artworks and users data
-      const [artworksResponse, usersResponse] = await Promise.all([
-        api.get("/artworks/"),
-        api.get("/users/"),
-      ]);
-
-      const artworks = artworksResponse.data || [];
-      const users = usersResponse.data || [];
-
-      // Calculate stats from the data
-      const activeArtworks = artworks.filter((a) => a.status === "active");
-      const totalBids = artworks.reduce((sum, a) => sum + (a.current_highest_bid || 0), 0);
-      const artists = users.filter((u) => u.role === "SELLER" || u.role === "ADMIN");
-
-      return {
-        totalArtworks: activeArtworks.length,
-        totalBids: totalBids,
-        totalArtists: artists.length,
-        liveStatus: "24/7",
-      };
-    } catch {
-      // Return mock data if API fails
-      return {
-        totalArtworks: 1247,
-        totalBids: 89000,
-        totalArtists: 156,
-        liveStatus: "24/7",
-      };
-    }
-  },
+  getPlatformStats: () => api.get("/stats/platform"),
   getUserStats: () => api.get("/stats/user"),
   getSellerStats: () => api.get("/stats/seller"),
 };
