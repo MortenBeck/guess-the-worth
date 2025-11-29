@@ -30,7 +30,7 @@ globalThis.localStorage = localStorageMock;
 
 describe("API Services", () => {
   beforeEach(() => {
-    fetch.mockClear();
+    fetch.mockReset();
     localStorage.clear();
   });
 
@@ -333,51 +333,38 @@ describe("API Services", () => {
 
   describe("statsService", () => {
     describe("getPlatformStats", () => {
-      it("should calculate stats from artworks and users", async () => {
-        const mockArtworks = [
-          { id: 1, status: "active", current_highest_bid: 100 },
-          { id: 2, status: "active", current_highest_bid: 200 },
-          { id: 3, status: "sold", current_highest_bid: 300 },
-        ];
+      it("should fetch platform stats from backend", async () => {
+        const mockStats = {
+          total_artworks: 10,
+          total_users: 25,
+          total_bids: 150,
+          active_auctions: 5,
+        };
 
-        const mockUsers = [
-          { id: 1, role: "BUYER" },
-          { id: 2, role: "SELLER" },
-          { id: 3, role: "ADMIN" },
-        ];
-
-        fetch
-          .mockResolvedValueOnce({
-            ok: true,
-            status: 200,
-            json: async () => mockArtworks,
-          })
-          .mockResolvedValueOnce({
-            ok: true,
-            status: 200,
-            json: async () => mockUsers,
-          });
+        fetch.mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => mockStats,
+        });
 
         const result = await statsService.getPlatformStats();
 
-        expect(fetch).toHaveBeenCalledTimes(2);
-        expect(result.totalArtworks).toBe(2); // Only active
-        expect(result.totalBids).toBe(600); // Sum of all bids
-        expect(result.totalArtists).toBe(2); // Seller + admin
-        expect(result.liveStatus).toBe("24/7");
+        expect(fetch).toHaveBeenCalledTimes(1);
+        expect(fetch).toHaveBeenCalledWith(
+          expect.stringContaining("/stats/platform"),
+          expect.any(Object)
+        );
+        expect(result.data).toEqual(mockStats);
       });
 
-      it("should return mock data if API fails", async () => {
-        // Mock both calls to fail since getPlatformStats makes 2 parallel requests
-        fetch.mockRejectedValueOnce(new Error("API Error"));
-        fetch.mockRejectedValueOnce(new Error("API Error"));
+      it("should handle API errors", async () => {
+        fetch.mockResolvedValueOnce({
+          ok: false,
+          status: 500,
+          json: async () => ({ detail: "Server error" }),
+        });
 
-        const result = await statsService.getPlatformStats();
-
-        expect(result.totalArtworks).toBe(1247);
-        expect(result.totalBids).toBe(89000);
-        expect(result.totalArtists).toBe(156);
-        expect(result.liveStatus).toBe("24/7");
+        await expect(statsService.getPlatformStats()).rejects.toThrow();
       });
     });
   });

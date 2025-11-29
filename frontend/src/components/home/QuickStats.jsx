@@ -69,7 +69,12 @@ const QuickStats = () => {
       icon: "💎",
       color: "#10b981",
     },
-    { label: "Total Users", value: platformStats?.data?.total_users || 0, icon: "👨‍🎨", color: "#f59e0b" },
+    {
+      label: "Total Users",
+      value: platformStats?.data?.total_users || 0,
+      icon: "👨‍🎨",
+      color: "#f59e0b",
+    },
     {
       label: "Total Artworks",
       value: platformStats?.data?.total_artworks || 0,
