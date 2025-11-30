@@ -89,6 +89,13 @@ async def create_bid(
     # Check if bid meets threshold
     is_winning = bid.amount >= artwork.secret_threshold
 
+    # If this is a winning bid, unmark all previous winning bids for this artwork
+    if is_winning:
+        db.query(Bid).filter(
+            Bid.artwork_id == bid.artwork_id,
+            Bid.is_winning == True
+        ).update({"is_winning": False})
+
     # Create bid with authenticated user's ID
     db_bid = Bid(
         artwork_id=bid.artwork_id,

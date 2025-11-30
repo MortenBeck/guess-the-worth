@@ -15,10 +15,14 @@ class AuthService:
         try:
             userinfo_url = f"https://{settings.auth0_domain}/userinfo"
             headers = {"Authorization": f"Bearer {token}"}
+            print(f"[AUTH0 DEBUG] Calling {userinfo_url}")
+            print(f"[AUTH0 DEBUG] Token prefix: {token[:30]}...")
             response = requests.get(userinfo_url, headers=headers, timeout=10)
+            print(f"[AUTH0 DEBUG] Response status: {response.status_code}")
 
             if response.status_code == 200:
                 user_data = response.json()
+                print(f"[AUTH0 DEBUG] User data received: {user_data.get('email')}")
                 # Updated to use the correct namespace
                 auth0_roles = user_data.get("https://guesstheworth.demo/roles", [])
 
@@ -31,8 +35,10 @@ class AuthService:
                     roles=auth0_roles,
                 )
             else:
-                raise ValueError("Invalid Auth0 token")
+                print(f"[AUTH0 DEBUG] Error response: {response.text}")
+                raise ValueError(f"Invalid Auth0 token: {response.status_code} - {response.text}")
         except requests.RequestException as e:
+            print(f"[AUTH0 DEBUG] Request exception: {str(e)}")
             raise ValueError(f"Auth0 verification failed: {str(e)}")
 
     @staticmethod

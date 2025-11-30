@@ -13,24 +13,21 @@ import {
   Spinner,
   Center,
 } from "@chakra-ui/react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { artworkService, bidService } from "../services/api";
-import paymentService from "../services/paymentService";
 import useAuthStore from "../store/authStore";
 import useFavoritesStore from "../store/favoritesStore";
 import { useRealtimeBids } from "../hooks/useRealtimeBids";
 import placeholderImg from "../assets/placeholder.jpg";
 import { toaster } from "../components/ui/toaster-instance";
-import PaymentModal from "../components/PaymentModal";
 import socket from "../services/socket";
 
 const ArtworkPage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { isAuthenticated } = useAuthStore();
   const { toggleFavorite, isFavorite } = useFavoritesStore();
   const [bidAmount, setBidAmount] = useState("");
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [paymentData, setPaymentData] = useState(null);
   const queryClient = useQueryClient();
 
   // Enable real-time bid updates for this artwork
@@ -63,17 +60,15 @@ const ArtworkPage = () => {
         return;
       }
 
-      // Only show payment modal if it's for this artwork
+      // Only redirect to payment page if it's for this artwork
       if (data.artwork_id === parseInt(id)) {
         const winningBid = data.winning_bid ?? 0;
         const artworkTitle = artwork?.title || "Unknown Artwork";
 
-        setPaymentData({
-          bidId: data.bid_id,
-          amount: winningBid,
-          artworkTitle: artworkTitle,
-        });
-        setShowPaymentModal(true);
+        // Redirect to dedicated payment page
+        navigate(
+          `/payment?bidId=${data.bid_id}&amount=${winningBid}&artwork=${encodeURIComponent(artworkTitle)}`
+        );
 
         // Small delay to prevent collision with bid success toast
         setTimeout(() => {
@@ -99,10 +94,6 @@ const ArtworkPage = () => {
         // Invalidate queries to refetch fresh data
         queryClient.invalidateQueries(["artwork", id]);
         queryClient.invalidateQueries(["bids", id]);
-
-        // Close payment modal if open
-        setShowPaymentModal(false);
-        setPaymentData(null);
 
         // Show success toast
         toaster.create({
@@ -143,7 +134,7 @@ const ArtworkPage = () => {
       socket.off("payment_completed", handlePaymentCompleted);
       socket.off("payment_failed", handlePaymentFailed);
     };
-  }, [id, isAuthenticated, artwork, queryClient]);
+  }, [id, isAuthenticated, artwork, queryClient, navigate]);
 
   // Fetch recent bids
   const { data: recentBids = [], isLoading: bidsLoading } = useQuery({
@@ -154,67 +145,6 @@ const ArtworkPage = () => {
     },
     staleTime: 5000,
   });
-
-  // Check for pending payment on mount/artwork change
-  useEffect(() => {
-    if (!artwork || !isAuthenticated || !recentBids) return;
-
-    const checkPendingPayment = async () => {
-      // Only check if artwork is pending payment
-      if (artwork.status !== "PENDING_PAYMENT") return;
-
-      // Check if current user has the winning bid
-      const { user } = useAuthStore.getState();
-      const userBids = recentBids.filter((bid) => bid.bidder?.id === user?.id);
-      const winningBid = userBids.find((bid) => bid.is_winning);
-
-      if (!winningBid) return; // User is not the winner
-
-      // Check if payment modal is already open
-      if (showPaymentModal) return;
-
-      try {
-        // Try to get existing payment for this artwork
-        const payment = await paymentService.getArtworkPayment(artwork.id);
-
-        // If payment is still pending/failed, reopen modal
-        if (payment && (payment.status === "PENDING" || payment.status === "FAILED")) {
-          setPaymentData({
-            bidId: winningBid.id,
-            amount: winningBid.amount,
-            artworkTitle: artwork.title,
-          });
-          setShowPaymentModal(true);
-
-          toaster.create({
-            title: "Complete Your Payment",
-            description: "You have a pending payment for this artwork.",
-            type: "info",
-            duration: 5000,
-          });
-        }
-      } catch (error) {
-        // If payment doesn't exist yet (404), show modal to create one
-        if (error.response?.status === 404) {
-          setPaymentData({
-            bidId: winningBid.id,
-            amount: winningBid.amount,
-            artworkTitle: artwork.title,
-          });
-          setShowPaymentModal(true);
-
-          toaster.create({
-            title: "Payment Required",
-            description: "Please complete payment to secure your artwork.",
-            type: "warning",
-            duration: 5000,
-          });
-        }
-      }
-    };
-
-    checkPendingPayment();
-  }, [artwork, recentBids, isAuthenticated, showPaymentModal]);
 
   // Place bid mutation
   const placeBidMutation = useMutation({
@@ -592,7 +522,9 @@ const ArtworkPage = () => {
                             Bid #{bid.id}
                           </Text>
                           <Text fontSize="xs" color="#94a3b8">
-                            {new Date(bid.bid_time).toLocaleString()}
+                            {bid.created_at
+                              ? new Date(bid.created_at).toLocaleString()
+                              : "Just now"}
                           </Text>
                         </VStack>
                         <VStack align="end" spacing={0}>
@@ -618,20 +550,6 @@ const ArtworkPage = () => {
           </VStack>
         </Box>
       </Container>
-
-      {/* Payment Modal */}
-      {paymentData && (
-        <PaymentModal
-          isOpen={showPaymentModal}
-          onClose={() => {
-            setShowPaymentModal(false);
-            setPaymentData(null);
-          }}
-          bidId={paymentData.bidId}
-          amount={paymentData.amount}
-          artworkTitle={paymentData.artworkTitle}
-        />
-      )}
     </Box>
   );
 };

@@ -35,19 +35,26 @@ async def get_current_user(
 
     # Try Auth0 token verification first
     try:
+        print(f"[AUTH DEBUG] Attempting Auth0 token verification...")
         auth_user = AuthService.verify_auth0_token(token)
         if auth_user:
+            print(f"[AUTH DEBUG] Auth0 verification successful for user: {auth_user.email}")
             user = AuthService.get_or_create_user(db, auth_user)
             return user
-    except (ValueError, Exception):
+        else:
+            print(f"[AUTH DEBUG] Auth0 verification returned None")
+    except (ValueError, Exception) as e:
         # Auth0 verification failed, try JWT token
+        print(f"[AUTH DEBUG] Auth0 verification failed: {type(e).__name__}: {str(e)}")
         pass
 
     # Fallback to JWT token (for API-only access or testing)
     try:
+        print(f"[AUTH DEBUG] Attempting JWT token verification...")
         payload = JWTService.verify_token(token)
         if payload:
             user_sub = payload.get("sub")
+            print(f"[AUTH DEBUG] JWT verification successful, sub: {user_sub}")
 
             # Get user from database
             user = None
@@ -55,21 +62,30 @@ async def get_current_user(
                 # Try as integer ID first (backward compatibility)
                 user_id = int(user_sub)
                 user = db.query(User).filter(User.id == user_id).first()
+                print(f"[AUTH DEBUG] Looked up user by ID {user_id}: {'found' if user else 'not found'}")
             except (ValueError, TypeError):
                 # Try as auth0_sub
                 user = db.query(User).filter(User.auth0_sub == user_sub).first()
+                print(f"[AUTH DEBUG] Looked up user by auth0_sub {user_sub}: {'found' if user else 'not found'}")
 
             if user:
                 # Attach data from JWT payload (not in DB)
                 user.email = payload.get("email", "")
                 user.name = payload.get("name", "")
                 user.role = payload.get("role", "BUYER")
+                print(f"[AUTH DEBUG] JWT auth successful for user ID {user.id}")
                 return user
+            else:
+                print(f"[AUTH DEBUG] JWT verified but user not found in database")
+        else:
+            print(f"[AUTH DEBUG] JWT verification returned None")
 
-    except Exception:
+    except Exception as e:
         # JWT verification failed
+        print(f"[AUTH DEBUG] JWT verification failed: {type(e).__name__}: {str(e)}")
         pass
 
+    print(f"[AUTH DEBUG] All authentication methods failed, returning 401")
     raise credentials_exception
 
 
