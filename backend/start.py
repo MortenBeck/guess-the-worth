@@ -35,5 +35,5 @@ if __name__ == "__main__":
     # Binding to 0.0.0.0 is required for Docker containers
     # to accept external connections
     uvicorn.run(
-        "main:socket_app", host="0.0.0.0", port=port, log_level="info"
-    )  # nosec B104
+        "main:socket_app", host="0.0.0.0", port=port, log_level="info"  # nosec B104
+    )
