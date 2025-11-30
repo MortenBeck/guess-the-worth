@@ -11,7 +11,7 @@ const paymentService = {
    */
   async createPaymentIntent(bidId) {
     try {
-      const response = await api.post("/api/payments/create-intent", {
+      const response = await api.post("/payments/create-intent", {
         bid_id: bidId,
         amount: 0, // Amount is fetched from the bid on the backend
       });
@@ -28,7 +28,7 @@ const paymentService = {
    */
   async getMyPayments() {
     try {
-      const response = await api.get("/api/payments/my-payments");
+      const response = await api.get("/payments/my-payments");
       return response.data;
     } catch (error) {
       console.error("Error fetching payments:", error);
@@ -43,7 +43,7 @@ const paymentService = {
    */
   async getPayment(paymentId) {
     try {
-      const response = await api.get(`/api/payments/${paymentId}`);
+      const response = await api.get(`/payments/${paymentId}`);
       return response.data;
     } catch (error) {
       console.error("Error fetching payment:", error);
@@ -58,7 +58,7 @@ const paymentService = {
    */
   async getArtworkPayment(artworkId) {
     try {
-      const response = await api.get(`/api/payments/artwork/${artworkId}`);
+      const response = await api.get(`/payments/artwork/${artworkId}`);
       return response.data;
     } catch (error) {
       console.error("Error fetching artwork payment:", error);
