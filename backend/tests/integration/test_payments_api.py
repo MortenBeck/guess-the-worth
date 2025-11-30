@@ -730,10 +730,84 @@ class TestGetPaymentById:
 class TestGetArtworkPayment:
     """Tests for GET /payments/artwork/{artwork_id} endpoint."""
 
-    def test_get_artwork_payment_as_seller(
+    def test_get_artwork_payment_as_buyer_succeeded(
+        self, client: TestClient, db_session, artwork, winning_bid, buyer_token
+    ):
+        """Test buyer retrieving their own completed payment."""
+        payment = Payment(
+            bid_id=winning_bid.id,
+            stripe_payment_intent_id="pi_test123",
+            amount=100.0,
+            currency="usd",
+            status=PaymentStatus.SUCCEEDED,
+        )
+        db_session.add(payment)
+        db_session.commit()
+
+        response = client.get(
+            f"/api/payments/artwork/{artwork.id}",
+            headers=create_auth_header(buyer_token),
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["amount"] == "100.00"
+        assert data["status"] == "SUCCEEDED"
+
+    def test_get_artwork_payment_as_buyer_pending(
+        self, client: TestClient, db_session, artwork, winning_bid, buyer_token
+    ):
+        """Test buyer retrieving their own pending payment."""
+        payment = Payment(
+            bid_id=winning_bid.id,
+            stripe_payment_intent_id="pi_test123",
+            amount=100.0,
+            currency="usd",
+            status=PaymentStatus.PENDING,
+        )
+        db_session.add(payment)
+        db_session.commit()
+
+        response = client.get(
+            f"/api/payments/artwork/{artwork.id}",
+            headers=create_auth_header(buyer_token),
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["amount"] == "100.00"
+        assert data["status"] == "PENDING"
+
+    def test_get_artwork_payment_as_buyer_failed(
+        self, client: TestClient, db_session, artwork, winning_bid, buyer_token
+    ):
+        """Test buyer retrieving their own failed payment."""
+        payment = Payment(
+            bid_id=winning_bid.id,
+            stripe_payment_intent_id="pi_test123",
+            amount=100.0,
+            currency="usd",
+            status=PaymentStatus.FAILED,
+            failure_reason="card_declined",
+        )
+        db_session.add(payment)
+        db_session.commit()
+
+        response = client.get(
+            f"/api/payments/artwork/{artwork.id}",
+            headers=create_auth_header(buyer_token),
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["amount"] == "100.00"
+        assert data["status"] == "FAILED"
+        assert data["failure_reason"] == "card_declined"
+
+    def test_get_artwork_payment_as_seller_succeeded(
         self, client: TestClient, db_session, artwork, winning_bid, seller_token
     ):
-        """Test seller retrieving payment for their artwork."""
+        """Test seller retrieving completed payment for their artwork."""
         payment = Payment(
             bid_id=winning_bid.id,
             stripe_payment_intent_id="pi_test123",
@@ -753,10 +827,32 @@ class TestGetArtworkPayment:
         data = response.json()
         assert data["amount"] == "100.00"
 
+    def test_get_artwork_payment_as_seller_pending(
+        self, client: TestClient, db_session, artwork, winning_bid, seller_token
+    ):
+        """Test seller cannot view pending payment for their artwork."""
+        payment = Payment(
+            bid_id=winning_bid.id,
+            stripe_payment_intent_id="pi_test123",
+            amount=100.0,
+            currency="usd",
+            status=PaymentStatus.PENDING,
+        )
+        db_session.add(payment)
+        db_session.commit()
+
+        response = client.get(
+            f"/api/payments/artwork/{artwork.id}",
+            headers=create_auth_header(seller_token),
+        )
+
+        assert response.status_code == 404
+        assert "No completed payment" in response.json()["detail"]
+
     def test_get_artwork_payment_as_admin(
         self, client: TestClient, db_session, artwork, winning_bid, admin_token
     ):
-        """Test admin retrieving artwork payment."""
+        """Test admin retrieving completed artwork payment."""
         payment = Payment(
             bid_id=winning_bid.id,
             stripe_payment_intent_id="pi_test123",
@@ -774,14 +870,50 @@ class TestGetArtworkPayment:
 
         assert response.status_code == 200
 
-    def test_get_artwork_payment_unauthorized(self, client: TestClient, artwork, buyer_token):
-        """Test buyer cannot view artwork payment."""
+    def test_get_artwork_payment_unauthorized_user(
+        self, client: TestClient, db_session, artwork, winning_bid
+    ):
+        """Test unauthorized user cannot view artwork payment."""
+        from datetime import timedelta
+
+        from models.user import User
+        from services.jwt_service import JWTService
+
+        # Create another user who is not the buyer or seller
+        other_user = User(auth0_sub="auth0|other123")
+        other_user.email = "other@test.com"
+        other_user.name = "Other User"
+        other_user.role = "BUYER"
+        db_session.add(other_user)
+
+        payment = Payment(
+            bid_id=winning_bid.id,
+            stripe_payment_intent_id="pi_test123",
+            amount=100.0,
+            currency="usd",
+            status=PaymentStatus.SUCCEEDED,
+        )
+        db_session.add(payment)
+        db_session.commit()
+
+        # Generate token for other user
+        other_token = JWTService.create_access_token(
+            data={
+                "sub": other_user.auth0_sub,
+                "email": other_user.email,
+                "name": other_user.name,
+                "role": "BUYER",
+            },
+            expires_delta=timedelta(hours=1),
+        )
+
         response = client.get(
             f"/api/payments/artwork/{artwork.id}",
-            headers=create_auth_header(buyer_token),
+            headers=create_auth_header(other_token),
         )
 
         assert response.status_code == 403
+        assert "permission" in response.json()["detail"]
 
     def test_get_artwork_payment_not_found(self, client: TestClient, seller_token):
         """Test retrieving payment for non-existent artwork."""
@@ -793,11 +925,11 @@ class TestGetArtworkPayment:
         assert "Artwork not found" in response.json()["detail"]
 
     def test_get_artwork_payment_no_payment(self, client: TestClient, artwork, seller_token):
-        """Test retrieving payment when artwork has no completed payment."""
+        """Test retrieving payment when artwork has no payment."""
         response = client.get(
             f"/api/payments/artwork/{artwork.id}",
             headers=create_auth_header(seller_token),
         )
 
         assert response.status_code == 404
-        assert "No completed payment" in response.json()["detail"]
+        assert "No payment found" in response.json()["detail"]

@@ -15,6 +15,7 @@ import {
 } from "@chakra-ui/react";
 import { useParams } from "react-router-dom";
 import { artworkService, bidService } from "../services/api";
+import paymentService from "../services/paymentService";
 import useAuthStore from "../store/authStore";
 import useFavoritesStore from "../store/favoritesStore";
 import { useRealtimeBids } from "../hooks/useRealtimeBids";
@@ -90,12 +91,59 @@ const ArtworkPage = () => {
       }
     };
 
+    const handlePaymentCompleted = (data) => {
+      console.log("Payment completed event received:", data);
+
+      // Only handle if for this artwork
+      if (data.artwork_id === parseInt(id)) {
+        // Invalidate queries to refetch fresh data
+        queryClient.invalidateQueries(["artwork", id]);
+        queryClient.invalidateQueries(["bids", id]);
+
+        // Close payment modal if open
+        setShowPaymentModal(false);
+        setPaymentData(null);
+
+        // Show success toast
+        toaster.create({
+          title: "Payment Successful!",
+          description: "Congratulations! The artwork is now yours.",
+          type: "success",
+          duration: 8000,
+        });
+      }
+    };
+
+    const handlePaymentFailed = (data) => {
+      console.log("Payment failed event received:", data);
+
+      // Only handle if for this artwork
+      if (data.artwork_id === parseInt(id)) {
+        // Invalidate queries to refetch artwork (status should be back to ACTIVE)
+        queryClient.invalidateQueries(["artwork", id]);
+        queryClient.invalidateQueries(["bids", id]);
+
+        // Keep modal open so user can retry
+        // Show error toast
+        toaster.create({
+          title: "Payment Failed",
+          description: data.reason || "Your payment could not be processed. Please try again.",
+          type: "error",
+          duration: 10000,
+        });
+      }
+    };
+
     socket.on("payment_required", handlePaymentRequired);
+    socket.on("payment_completed", handlePaymentCompleted);
+    socket.on("payment_failed", handlePaymentFailed);
 
     return () => {
       socket.off("payment_required", handlePaymentRequired);
+      socket.off("payment_completed", handlePaymentCompleted);
+      socket.off("payment_failed", handlePaymentFailed);
     };
-  }, [id, isAuthenticated, artwork]);
+  }, [id, isAuthenticated, artwork, queryClient]);
 
   // Fetch recent bids
   const { data: recentBids = [], isLoading: bidsLoading } = useQuery({
@@ -106,6 +154,67 @@ const ArtworkPage = () => {
     },
     staleTime: 5000,
   });
+
+  // Check for pending payment on mount/artwork change
+  useEffect(() => {
+    if (!artwork || !isAuthenticated || !recentBids) return;
+
+    const checkPendingPayment = async () => {
+      // Only check if artwork is pending payment
+      if (artwork.status !== "PENDING_PAYMENT") return;
+
+      // Check if current user has the winning bid
+      const { user } = useAuthStore.getState();
+      const userBids = recentBids.filter(bid => bid.bidder?.id === user?.id);
+      const winningBid = userBids.find(bid => bid.is_winning);
+
+      if (!winningBid) return; // User is not the winner
+
+      // Check if payment modal is already open
+      if (showPaymentModal) return;
+
+      try {
+        // Try to get existing payment for this artwork
+        const payment = await paymentService.getArtworkPayment(artwork.id);
+
+        // If payment is still pending/failed, reopen modal
+        if (payment && (payment.status === "PENDING" || payment.status === "FAILED")) {
+          setPaymentData({
+            bidId: winningBid.id,
+            amount: winningBid.amount,
+            artworkTitle: artwork.title,
+          });
+          setShowPaymentModal(true);
+
+          toaster.create({
+            title: "Complete Your Payment",
+            description: "You have a pending payment for this artwork.",
+            type: "info",
+            duration: 5000,
+          });
+        }
+      } catch (error) {
+        // If payment doesn't exist yet (404), show modal to create one
+        if (error.response?.status === 404) {
+          setPaymentData({
+            bidId: winningBid.id,
+            amount: winningBid.amount,
+            artworkTitle: artwork.title,
+          });
+          setShowPaymentModal(true);
+
+          toaster.create({
+            title: "Payment Required",
+            description: "Please complete payment to secure your artwork.",
+            type: "warning",
+            duration: 5000,
+          });
+        }
+      }
+    };
+
+    checkPendingPayment();
+  }, [artwork, recentBids, isAuthenticated, showPaymentModal]);
 
   // Place bid mutation
   const placeBidMutation = useMutation({

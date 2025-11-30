@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import paymentService from "../services/paymentService";
+import { toaster } from "./ui/toaster-instance";
 
 // Initialize Stripe with publishable key
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
@@ -115,7 +116,16 @@ function PaymentModal({ isOpen, onClose, bidId, amount, artworkTitle }) {
 
   const handleSuccess = (paymentIntent) => {
     console.log("Payment successful!", paymentIntent);
-    alert("Payment successful! The artwork is now yours.");
+
+    // Show toast instead of alert
+    toaster.create({
+      title: "Payment Processing",
+      description: "Your payment is being confirmed. The page will update shortly.",
+      type: "info",
+      duration: 5000,
+    });
+
+    // Close modal - socket event will handle the rest
     onClose();
   };
 
