@@ -271,7 +271,9 @@ def seed_bids(db: Session) -> int:
 
     for bid_data in demo_bids:
         # Find artwork by title
-        artwork = db.query(Artwork).filter(Artwork.title == bid_data["artwork_title"]).first()
+        artwork = (
+            db.query(Artwork).filter(Artwork.title == bid_data["artwork_title"]).first()
+        )
 
         if not artwork:
             print(f"   ⚠️  Artwork not found: {bid_data['artwork_title']}")

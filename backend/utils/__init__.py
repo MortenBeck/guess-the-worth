@@ -1,5 +1,11 @@
-from .auth import (get_current_active_user, get_current_user, require_admin,
-                   require_buyer, require_role, require_seller)
+from .auth import (
+    get_current_active_user,
+    get_current_user,
+    require_admin,
+    require_buyer,
+    require_role,
+    require_seller,
+)
 
 __all__ = [
     "get_current_user",

@@ -8,9 +8,14 @@ from datetime import datetime
 import pytest
 from models.artwork import ArtworkStatus
 from pydantic import ValidationError
+
 # UserRole enum removed - now using string literals
-from schemas.artwork import (ArtworkCreate, ArtworkResponse, ArtworkUpdate,
-                             ArtworkWithSecretResponse)
+from schemas.artwork import (
+    ArtworkCreate,
+    ArtworkResponse,
+    ArtworkUpdate,
+    ArtworkWithSecretResponse,
+)
 from schemas.auth import AuthUser, TokenResponse
 from schemas.bid import BidCreate, BidResponse
 from schemas.user import UserCreate, UserResponse, UserUpdate
@@ -303,5 +308,7 @@ class TestSchemaEdgeCases:
     def test_special_characters_in_description(self):
         """Test artwork description with special characters."""
         description = "Art with <script>alert('xss')</script> & special chars"
-        artwork = ArtworkCreate(title="Test", description=description, secret_threshold=50.0)
+        artwork = ArtworkCreate(
+            title="Test", description=description, secret_threshold=50.0
+        )
         assert artwork.description == description

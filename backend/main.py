@@ -51,7 +51,9 @@ setup_rate_limiting(app)
 # Add security headers middleware
 app.add_middleware(SecurityHeadersMiddleware)
 
-sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins=settings.allowed_origins)
+sio = socketio.AsyncServer(
+    async_mode="asgi", cors_allowed_origins=settings.allowed_origins
+)
 
 socket_app = socketio.ASGIApp(sio, app)
 

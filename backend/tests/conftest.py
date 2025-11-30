@@ -188,7 +188,9 @@ def sold_artwork(db_session, seller_user) -> Artwork:
 @pytest.fixture
 def bid(db_session, artwork, buyer_user) -> Bid:
     """Create a test bid."""
-    bid = Bid(artwork_id=artwork.id, bidder_id=buyer_user.id, amount=50.0, is_winning=False)
+    bid = Bid(
+        artwork_id=artwork.id, bidder_id=buyer_user.id, amount=50.0, is_winning=False
+    )
     db_session.add(bid)
     db_session.commit()
     db_session.refresh(bid)

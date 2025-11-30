@@ -37,7 +37,9 @@ class TestUserStats:
         self, client: TestClient, buyer_token: str, buyer_user: User, db_session
     ):
         """Test stats for user with no bids or wins."""
-        response = client.get("/api/stats/user", headers={"Authorization": f"Bearer {buyer_token}"})
+        response = client.get(
+            "/api/stats/user", headers={"Authorization": f"Bearer {buyer_token}"}
+        )
 
         assert response.status_code == 200
         data = response.json()
@@ -72,7 +74,9 @@ class TestUserStats:
             db_session.add(bid)
         db_session.commit()
 
-        response = client.get("/api/stats/user", headers={"Authorization": f"Bearer {buyer_token}"})
+        response = client.get(
+            "/api/stats/user", headers={"Authorization": f"Bearer {buyer_token}"}
+        )
 
         assert response.status_code == 200
         data = response.json()
@@ -109,7 +113,9 @@ class TestUserStats:
         db_session.add(winning_bid)
         db_session.commit()
 
-        response = client.get("/api/stats/user", headers={"Authorization": f"Bearer {buyer_token}"})
+        response = client.get(
+            "/api/stats/user", headers={"Authorization": f"Bearer {buyer_token}"}
+        )
 
         assert response.status_code == 200
         data = response.json()
@@ -155,7 +161,9 @@ class TestUserStats:
         db_session.commit()
 
         # Current user should see zero bids (not other user's bids)
-        response = client.get("/api/stats/user", headers={"Authorization": f"Bearer {buyer_token}"})
+        response = client.get(
+            "/api/stats/user", headers={"Authorization": f"Bearer {buyer_token}"}
+        )
 
         assert response.status_code == 200
         data = response.json()
@@ -172,7 +180,9 @@ class TestSellerStats:
         response = client.get("/api/stats/seller")
         assert response.status_code == 401
 
-    def test_seller_stats_requires_seller_role(self, client: TestClient, buyer_token: str):
+    def test_seller_stats_requires_seller_role(
+        self, client: TestClient, buyer_token: str
+    ):
         """Test that seller stats requires seller role."""
         response = client.get(
             "/api/stats/seller", headers={"Authorization": f"Bearer {buyer_token}"}
@@ -357,7 +367,9 @@ class TestPlatformStats:
         # Note: total_users includes seller_user and buyer_user from fixtures
         assert data["total_users"] >= 2
 
-    def test_platform_stats_real_time(self, client: TestClient, seller_user: User, db_session):
+    def test_platform_stats_real_time(
+        self, client: TestClient, seller_user: User, db_session
+    ):
         """Test that platform stats update in real-time."""
         # Get initial stats
         response1 = client.get("/api/stats/platform")
@@ -419,7 +431,9 @@ class TestStatsPerformance:
         db_session.commit()
 
         # Should still respond quickly
-        response = client.get("/api/stats/user", headers={"Authorization": f"Bearer {buyer_token}"})
+        response = client.get(
+            "/api/stats/user", headers={"Authorization": f"Bearer {buyer_token}"}
+        )
 
         assert response.status_code == 200
         # Verify data is aggregated correctly

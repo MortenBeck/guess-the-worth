@@ -189,7 +189,9 @@ class TestAuctionServiceCheckExpiredAuctions:
         count = AuctionService.check_expired_auctions(db_session)
         assert count == 0
 
-    def test_does_not_affect_already_sold_artwork(self, db_session: Session, sold_artwork: Artwork):
+    def test_does_not_affect_already_sold_artwork(
+        self, db_session: Session, sold_artwork: Artwork
+    ):
         """Test that already sold artworks are not affected."""
         # Make the sold artwork expired
         sold_artwork.end_date = datetime.utcnow() - timedelta(hours=1)
@@ -248,7 +250,9 @@ class TestAuctionServiceCheckExpiredAuctions:
         db_session.refresh(artwork)
         assert artwork.status == ArtworkStatus.ARCHIVED
 
-    def test_expired_auction_exactly_at_end_date(self, db_session: Session, seller_user: User):
+    def test_expired_auction_exactly_at_end_date(
+        self, db_session: Session, seller_user: User
+    ):
         """Test that auction expiring right now is considered expired."""
         # Create artwork expiring in the past (even by 1 second)
         artwork = Artwork(

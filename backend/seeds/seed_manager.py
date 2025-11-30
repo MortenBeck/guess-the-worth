@@ -28,6 +28,7 @@ from database import SessionLocal  # noqa: E402
 from seeds.demo_artworks import seed_artworks  # noqa: E402
 from seeds.demo_bids import seed_bids  # noqa: E402
 from seeds.demo_users import seed_users  # noqa: E402
+
 # Import after path modification (noqa: E402)
 from sqlalchemy.orm import Session  # noqa: E402
 
@@ -57,7 +58,9 @@ class SeedManager:
                 f"❌ Error: Target environment '{self.target_env}' does not match "
                 f"current environment '{self.current_env}'"
             )
-            print(f"   Update your .env file ENVIRONMENT variable to '{self.target_env}'")
+            print(
+                f"   Update your .env file ENVIRONMENT variable to '{self.target_env}'"
+            )
             return False
 
         # Warn if seeding production
