@@ -40,8 +40,11 @@ class StripeService:
         if bid.amount > STRIPE_MAX_AMOUNT:
             raise HTTPException(
                 status_code=400,
-                detail=f"Payment amount ${bid.amount:,.2f} exceeds Stripe's maximum limit of ${STRIPE_MAX_AMOUNT:,.2f}. "
-                       "Please contact support for alternative payment arrangements."
+                detail=(
+                    f"Payment amount ${bid.amount:,.2f} exceeds Stripe's "
+                    f"maximum limit of ${STRIPE_MAX_AMOUNT:,.2f}. "
+                    "Please contact support for alternative payment arrangements."
+                ),
             )
 
         # Convert amount to cents (Stripe uses smallest currency unit)

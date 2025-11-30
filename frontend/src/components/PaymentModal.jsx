@@ -145,7 +145,7 @@ function PaymentModal({ isOpen, onClose, bidId, amount, artworkTitle }) {
           },
         },
         // Enable Apple Pay, Google Pay, and other payment methods
-        paymentMethodOrder: ['apple_pay', 'google_pay', 'card'],
+        paymentMethodOrder: ["apple_pay", "google_pay", "card"],
       }
     : null;
 

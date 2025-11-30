@@ -165,8 +165,8 @@ const ArtworkPage = () => {
 
       // Check if current user has the winning bid
       const { user } = useAuthStore.getState();
-      const userBids = recentBids.filter(bid => bid.bidder?.id === user?.id);
-      const winningBid = userBids.find(bid => bid.is_winning);
+      const userBids = recentBids.filter((bid) => bid.bidder?.id === user?.id);
+      const winningBid = userBids.find((bid) => bid.is_winning);
 
       if (!winningBid) return; // User is not the winner
 
