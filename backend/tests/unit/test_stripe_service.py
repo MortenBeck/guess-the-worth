@@ -7,19 +7,17 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi import HTTPException
+from stripe._error import CardError, InvalidRequestError, SignatureVerificationError
+
 from models import Bid, Payment
 from models.payment import PaymentStatus
 from services.stripe_service import StripeService
-from stripe._error import (CardError, InvalidRequestError,
-                           SignatureVerificationError)
 
 
 @pytest.fixture
 def winning_bid(db_session, artwork, buyer_user) -> Bid:
     """Create a winning bid for payment testing."""
-    bid = Bid(
-        artwork_id=artwork.id, bidder_id=buyer_user.id, amount=100.0, is_winning=True
-    )
+    bid = Bid(artwork_id=artwork.id, bidder_id=buyer_user.id, amount=100.0, is_winning=True)
     db_session.add(bid)
     db_session.commit()
     db_session.refresh(bid)
@@ -102,9 +100,7 @@ class TestStripeServiceCreatePaymentIntent:
         )
 
         with pytest.raises(HTTPException) as exc_info:
-            StripeService.create_payment_intent(
-                bid=winning_bid, buyer=buyer_user, db=db_session
-            )
+            StripeService.create_payment_intent(bid=winning_bid, buyer=buyer_user, db=db_session)
 
         assert exc_info.value.status_code == 400
         assert "Stripe error" in exc_info.value.detail
@@ -125,9 +121,7 @@ class TestStripeServiceCreatePaymentIntent:
         """Test that payment intent includes correct metadata."""
         mock_stripe_create.return_value = mock_stripe_payment_intent
 
-        StripeService.create_payment_intent(
-            bid=winning_bid, buyer=buyer_user, db=db_session
-        )
+        StripeService.create_payment_intent(bid=winning_bid, buyer=buyer_user, db=db_session)
 
         call_args = mock_stripe_create.call_args
         metadata = call_args.kwargs["metadata"]
@@ -148,9 +142,7 @@ class TestStripeServiceCreatePaymentIntent:
         )
 
         with pytest.raises(HTTPException) as exc_info:
-            StripeService.create_payment_intent(
-                bid=winning_bid, buyer=buyer_user, db=db_session
-            )
+            StripeService.create_payment_intent(bid=winning_bid, buyer=buyer_user, db=db_session)
 
         assert exc_info.value.status_code == 400
         assert "Stripe error" in exc_info.value.detail
@@ -167,9 +159,7 @@ class TestStripeServiceCreatePaymentIntent:
         """Test that payment intent includes receipt email."""
         mock_stripe_create.return_value = mock_stripe_payment_intent
 
-        StripeService.create_payment_intent(
-            bid=winning_bid, buyer=buyer_user, db=db_session
-        )
+        StripeService.create_payment_intent(bid=winning_bid, buyer=buyer_user, db=db_session)
 
         call_args = mock_stripe_create.call_args
         assert call_args.kwargs["receipt_email"] == buyer_user.email
@@ -189,9 +179,7 @@ class TestStripeServiceCreatePaymentIntent:
 
         mock_stripe_create.return_value = mock_stripe_payment_intent
 
-        StripeService.create_payment_intent(
-            bid=winning_bid, buyer=buyer_user, db=db_session
-        )
+        StripeService.create_payment_intent(bid=winning_bid, buyer=buyer_user, db=db_session)
 
         call_args = mock_stripe_create.call_args
         assert call_args.kwargs["amount"] == 12345  # 123.45 * 100
@@ -201,9 +189,7 @@ class TestStripeServiceGetPaymentIntent:
     """Tests for StripeService.get_payment_intent."""
 
     @patch("stripe.PaymentIntent.retrieve")
-    def test_get_payment_intent_success(
-        self, mock_stripe_retrieve, mock_stripe_payment_intent
-    ):
+    def test_get_payment_intent_success(self, mock_stripe_retrieve, mock_stripe_payment_intent):
         """Test successful payment intent retrieval."""
         mock_stripe_retrieve.return_value = mock_stripe_payment_intent
 
@@ -249,9 +235,7 @@ class TestStripeServiceHandlePaymentSucceeded:
         mock_stripe_payment_intent.charges.data = [mock_stripe_charge]
 
         # Handle webhook
-        result = StripeService.handle_payment_succeeded(
-            mock_stripe_payment_intent, db_session
-        )
+        result = StripeService.handle_payment_succeeded(mock_stripe_payment_intent, db_session)
 
         # Verify payment updated
         assert result.status == PaymentStatus.SUCCEEDED
@@ -268,9 +252,7 @@ class TestStripeServiceHandlePaymentSucceeded:
         mock_stripe_payment_intent.id = "pi_nonexistent"
 
         with pytest.raises(HTTPException) as exc_info:
-            StripeService.handle_payment_succeeded(
-                mock_stripe_payment_intent, db_session
-            )
+            StripeService.handle_payment_succeeded(mock_stripe_payment_intent, db_session)
 
         assert exc_info.value.status_code == 404
         assert "Payment not found" in exc_info.value.detail
@@ -292,9 +274,7 @@ class TestStripeServiceHandlePaymentSucceeded:
         mock_stripe_payment_intent.id = "pi_test123"
         mock_stripe_payment_intent.charges.data = []
 
-        result = StripeService.handle_payment_succeeded(
-            mock_stripe_payment_intent, db_session
-        )
+        result = StripeService.handle_payment_succeeded(mock_stripe_payment_intent, db_session)
 
         assert result.status == PaymentStatus.SUCCEEDED
         assert result.stripe_charge_id is None
@@ -317,12 +297,8 @@ class TestStripeServiceHandlePaymentSucceeded:
         mock_stripe_payment_intent.charges.data = [mock_stripe_charge]
 
         # Process webhook twice
-        result1 = StripeService.handle_payment_succeeded(
-            mock_stripe_payment_intent, db_session
-        )
-        result2 = StripeService.handle_payment_succeeded(
-            mock_stripe_payment_intent, db_session
-        )
+        result1 = StripeService.handle_payment_succeeded(mock_stripe_payment_intent, db_session)
+        result2 = StripeService.handle_payment_succeeded(mock_stripe_payment_intent, db_session)
 
         # Should handle gracefully
         assert result1.status == PaymentStatus.SUCCEEDED
@@ -333,9 +309,7 @@ class TestStripeServiceHandlePaymentSucceeded:
 class TestStripeServiceHandlePaymentFailed:
     """Tests for StripeService.handle_payment_failed."""
 
-    def test_handle_payment_failed(
-        self, db_session, winning_bid, mock_stripe_payment_intent
-    ):
+    def test_handle_payment_failed(self, db_session, winning_bid, mock_stripe_payment_intent):
         """Test failed payment webhook handling."""
         # Create payment record
         payment = Payment(
@@ -358,9 +332,7 @@ class TestStripeServiceHandlePaymentFailed:
         mock_stripe_payment_intent.last_payment_error = mock_error
 
         # Handle webhook
-        result = StripeService.handle_payment_failed(
-            mock_stripe_payment_intent, db_session
-        )
+        result = StripeService.handle_payment_failed(mock_stripe_payment_intent, db_session)
 
         # Verify payment updated
         assert result.status == PaymentStatus.FAILED
@@ -391,16 +363,12 @@ class TestStripeServiceHandlePaymentFailed:
         mock_stripe_payment_intent.id = "pi_test123"
         mock_stripe_payment_intent.last_payment_error = None
 
-        result = StripeService.handle_payment_failed(
-            mock_stripe_payment_intent, db_session
-        )
+        result = StripeService.handle_payment_failed(mock_stripe_payment_intent, db_session)
 
         assert result.status == PaymentStatus.FAILED
         assert result.failure_reason == "Unknown error"
 
-    def test_handle_payment_failed_payment_not_found(
-        self, db_session, mock_stripe_payment_intent
-    ):
+    def test_handle_payment_failed_payment_not_found(self, db_session, mock_stripe_payment_intent):
         """Test webhook for non-existent payment."""
         mock_stripe_payment_intent.id = "pi_nonexistent"
 
@@ -431,12 +399,8 @@ class TestStripeServiceHandlePaymentFailed:
         mock_stripe_payment_intent.last_payment_error = mock_error
 
         # Process webhook twice
-        result1 = StripeService.handle_payment_failed(
-            mock_stripe_payment_intent, db_session
-        )
-        result2 = StripeService.handle_payment_failed(
-            mock_stripe_payment_intent, db_session
-        )
+        result1 = StripeService.handle_payment_failed(mock_stripe_payment_intent, db_session)
+        result2 = StripeService.handle_payment_failed(mock_stripe_payment_intent, db_session)
 
         # Should handle gracefully
         assert result1.status == PaymentStatus.FAILED
@@ -482,9 +446,7 @@ class TestStripeServiceVerifyWebhookSignature:
         )
 
         with pytest.raises(HTTPException) as exc_info:
-            StripeService.verify_webhook_signature(
-                b"payload", "invalid_signature", "secret"
-            )
+            StripeService.verify_webhook_signature(b"payload", "invalid_signature", "secret")
 
         assert exc_info.value.status_code == 400
         assert exc_info.value.detail == "Invalid signature"

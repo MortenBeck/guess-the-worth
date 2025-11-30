@@ -6,9 +6,10 @@ import logging
 from typing import Any, Dict, Optional
 
 from fastapi import Request
+from sqlalchemy.orm import Session
+
 from models.audit_log import AuditLog
 from models.user import User
-from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 

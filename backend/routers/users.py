@@ -1,11 +1,12 @@
 from typing import List, Optional
 
-from database import get_db
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy.orm import Session
+
+from database import get_db
 from models import User
 from schemas import UserResponse, UserUpdate
-from sqlalchemy.orm import Session
 from utils.auth import get_current_user
 
 router = APIRouter()
@@ -32,14 +33,10 @@ async def get_users(
     """
     # Validate pagination parameters
     if skip < 0:
-        raise HTTPException(
-            status_code=400, detail="Skip parameter must be non-negative"
-        )
+        raise HTTPException(status_code=400, detail="Skip parameter must be non-negative")
 
     if limit < 1:
-        raise HTTPException(
-            status_code=400, detail="Limit parameter must be at least 1"
-        )
+        raise HTTPException(status_code=400, detail="Limit parameter must be at least 1")
 
     # Enforce maximum limit to prevent resource exhaustion
     if limit > 100:

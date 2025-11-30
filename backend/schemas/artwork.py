@@ -1,8 +1,9 @@
 from datetime import datetime
 from typing import Optional
 
-from models.artwork import ArtworkStatus
 from pydantic import BaseModel, ConfigDict
+
+from models.artwork import ArtworkStatus
 
 
 class ArtworkBase(BaseModel):
