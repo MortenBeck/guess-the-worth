@@ -34,6 +34,19 @@ class StripeService:
         Raises:
             HTTPException: If Stripe API call fails
         """
+        # Stripe's maximum amount is $999,999.99 (99,999,999 cents)
+        STRIPE_MAX_AMOUNT = 999999.99
+
+        if bid.amount > STRIPE_MAX_AMOUNT:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"Payment amount ${bid.amount:,.2f} exceeds Stripe's "
+                    f"maximum limit of ${STRIPE_MAX_AMOUNT:,.2f}. "
+                    "Please contact support for alternative payment arrangements."
+                ),
+            )
+
         # Convert amount to cents (Stripe uses smallest currency unit)
         amount_cents = int(bid.amount * 100)
 
@@ -42,10 +55,11 @@ class StripeService:
 
         try:
             # Create Payment Intent via Stripe API
+            # Enable multiple payment methods including Apple Pay and Google Pay
             payment_intent = stripe.PaymentIntent.create(
                 amount=amount_cents,
                 currency="usd",
-                payment_method_types=["card"],
+                automatic_payment_methods={"enabled": True},
                 metadata={
                     "bid_id": str(bid.id),
                     "artwork_id": str(artwork.id),

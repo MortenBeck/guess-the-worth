@@ -258,31 +258,49 @@ async def get_artwork_payment(
     db: Session = Depends(get_db),
 ):
     """
-    Get payment for an artwork (Seller/Admin only).
+    Get payment for an artwork.
+
+    Authorized users:
+    - Buyer (user with winning bid) - can view their own payment (any status)
+    - Seller - can view completed payments only
+    - Admin - can view all payments
     """
     artwork = db.query(Artwork).filter(Artwork.id == artwork_id).first()
 
     if not artwork:
         raise HTTPException(status_code=404, detail="Artwork not found")
 
-    # Security check
-    is_authorized = current_user.id == artwork.seller_id or current_user.role == "ADMIN"
-
-    if not is_authorized:
-        raise HTTPException(
-            status_code=403,
-            detail="Only the seller or admin can view artwork payments",
-        )
-
-    # Find payment through bid
+    # Find payment through bid (eagerly load bid to check bidder)
     payment = (
         db.query(Payment)
+        .options(joinedload(Payment.bid))
         .join(Bid)
-        .filter(Bid.artwork_id == artwork_id, Payment.status == PaymentStatus.SUCCEEDED)
+        .filter(Bid.artwork_id == artwork_id)
         .first()
     )
 
     if not payment:
+        raise HTTPException(status_code=404, detail="No payment found for this artwork")
+
+    # Security check - determine if user is authorized
+    is_buyer = current_user.id == payment.bid.bidder_id
+    is_seller = current_user.id == artwork.seller_id
+    is_admin = current_user.role == "ADMIN"
+
+    # Buyers can see their own payment in any status
+    if is_buyer:
+        return payment
+
+    # Sellers and admins can only see completed payments
+    if (is_seller or is_admin) and payment.status == PaymentStatus.SUCCEEDED:
+        return payment
+
+    # If user is seller/admin but payment is not succeeded yet, deny access
+    if is_seller or is_admin:
         raise HTTPException(status_code=404, detail="No completed payment found for this artwork")
 
-    return payment
+    # User is not authorized at all
+    raise HTTPException(
+        status_code=403,
+        detail="You don't have permission to view this payment",
+    )

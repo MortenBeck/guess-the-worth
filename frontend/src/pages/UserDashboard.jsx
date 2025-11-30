@@ -57,8 +57,10 @@ const UserDashboard = () => {
   };
 
   // Separate active bids and won auctions
-  const activeBids = myBids.filter((bid) => bid.artwork?.status === "ACTIVE");
-  const wonAuctions = myBids.filter((bid) => bid.is_winning && bid.artwork?.status === "SOLD");
+  // Active bids = bids on active artworks where user is not currently winning
+  const activeBids = myBids.filter((bid) => bid.artwork?.status === "ACTIVE" && !bid.is_winning);
+  // Won auctions = any winning bid, regardless of payment status
+  const wonAuctions = myBids.filter((bid) => bid.is_winning);
 
   return (
     <Box bg="#0f172a" color="white" minH="100vh" pt={6}>
@@ -268,9 +270,15 @@ const UserDashboard = () => {
                     />
                     <Box p={4}>
                       <VStack align="start" spacing={2}>
-                        <Badge colorScheme="green" variant="subtle">
-                          Won
-                        </Badge>
+                        {bid.artwork?.status === "PENDING_PAYMENT" ? (
+                          <Badge colorScheme="yellow" variant="subtle">
+                            Payment Pending
+                          </Badge>
+                        ) : (
+                          <Badge colorScheme="green" variant="subtle">
+                            Paid
+                          </Badge>
+                        )}
                         <Text fontWeight="semibold" color="white">
                           {bid.artwork?.title}
                         </Text>
@@ -280,9 +288,23 @@ const UserDashboard = () => {
                         <Text fontSize="sm" color="green.400" fontWeight="bold">
                           Won for ${bid.amount}
                         </Text>
-                        <Text fontSize="xs" color="#94a3b8">
-                          Purchased: {new Date(bid.created_at).toLocaleDateString()}
-                        </Text>
+                        {bid.artwork?.status === "PENDING_PAYMENT" ? (
+                          <Button
+                            size="sm"
+                            colorScheme="yellow"
+                            width="full"
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent card click navigation
+                              navigate(`/artwork/${bid.artwork?.id}`);
+                            }}
+                          >
+                            Complete Payment
+                          </Button>
+                        ) : (
+                          <Text fontSize="xs" color="#94a3b8">
+                            Purchased: {new Date(bid.created_at).toLocaleDateString()}
+                          </Text>
+                        )}
                       </VStack>
                     </Box>
                   </Box>

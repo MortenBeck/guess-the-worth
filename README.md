@@ -243,6 +243,14 @@ npm run dev
 
 3. **Fix Possible issue with db in production**
 
+4. **Frontend Issues:**
+   - After payment: artwork page doesnt update
+   - If payment fails/doesnt complete and leaves page: no way to complete payment 
+   - Edit artwork not possible 
+   - Dashboard has no functions (implemet payment for already won artworks?)
+   - Update "Platform Activity" to use read data (?)
+   - Uploading artworks doesnt work
+
 - "Failed to fetch (gtw-hgdyfdfdd2bjducu.swedencentral-01.azurewebsites.net)" on artworks page
 
 ---
