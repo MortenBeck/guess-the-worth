@@ -1,0 +1,17 @@
+[flake8]
+max-line-length = 88
+extend-ignore = E203, W503
+exclude =
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    env,
+    node_modules,
+    frontend/node_modules,
+    .eggs,
+    *.egg,
+    build,
+    dist,
+    .tox,
+    backend/alembic/versions
