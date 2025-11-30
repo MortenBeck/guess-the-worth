@@ -4,9 +4,10 @@ Audit log model for tracking security-critical actions.
 
 from datetime import datetime
 
-from models.base import Base
 from sqlalchemy import JSON, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
+
+from models.base import Base
 
 
 class AuditLog(Base):

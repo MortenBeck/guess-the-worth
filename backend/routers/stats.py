@@ -1,8 +1,9 @@
-from database import get_db
 from fastapi import APIRouter, Depends
-from models import Artwork, Bid, User
 from sqlalchemy import func
 from sqlalchemy.orm import Session
+
+from database import get_db
+from models import Artwork, Bid, User
 from utils.auth import get_current_user, require_seller
 
 router = APIRouter()
@@ -70,9 +71,7 @@ async def get_seller_stats(
     Requires SELLER or ADMIN role.
     """
     # Count total artworks
-    total_artworks = (
-        db.query(Artwork).filter(Artwork.seller_id == current_user.id).count()
-    )
+    total_artworks = db.query(Artwork).filter(Artwork.seller_id == current_user.id).count()
 
     # Count active auctions
     active_auctions = (

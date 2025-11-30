@@ -1,13 +1,14 @@
 from typing import List
 
-from database import get_db
 from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy.orm import Session, joinedload
+
+from database import get_db
 from middleware.rate_limit import limiter
 from models import Artwork, Bid
 from models.user import User
 from schemas import BidCreate, BidResponse
 from services.audit_service import AuditService
-from sqlalchemy.orm import Session, joinedload
 from utils.auth import get_current_user
 
 router = APIRouter()
@@ -55,16 +56,12 @@ async def create_bid(
     """
     # Validate bid amount is positive
     if bid.amount <= 0:
-        raise HTTPException(
-            status_code=400, detail="Bid amount must be greater than zero"
-        )
+        raise HTTPException(status_code=400, detail="Bid amount must be greater than zero")
 
     # Validate bid amount is reasonable (prevent overflow/ridiculous values)
     MAX_BID_AMOUNT = 1_000_000_000  # 1 billion
     if bid.amount > MAX_BID_AMOUNT:
-        raise HTTPException(
-            status_code=400, detail=f"Bid amount cannot exceed ${MAX_BID_AMOUNT:,}"
-        )
+        raise HTTPException(status_code=400, detail=f"Bid amount cannot exceed ${MAX_BID_AMOUNT:,}")
 
     # Get artwork to check threshold and ownership
     artwork = db.query(Artwork).filter(Artwork.id == bid.artwork_id).first()
@@ -78,9 +75,7 @@ async def create_bid(
 
     # SECURITY: Prevent seller from bidding on their own artwork
     if artwork.seller_id == current_user.id:
-        raise HTTPException(
-            status_code=403, detail="You cannot bid on your own artwork"
-        )
+        raise HTTPException(status_code=403, detail="You cannot bid on your own artwork")
 
     # Validate bid is higher than current highest bid (if any)
     # Use 0.0 as default if current_highest_bid is None

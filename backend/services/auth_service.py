@@ -1,10 +1,11 @@
 from typing import Optional
 
 import requests
+from sqlalchemy.orm import Session
+
 from config.settings import settings
 from models.user import User
 from schemas.auth import AuthUser
-from sqlalchemy.orm import Session
 
 
 class AuthService:

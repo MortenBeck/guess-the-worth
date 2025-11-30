@@ -6,15 +6,16 @@ Proof-of-concept implementation.
 from datetime import UTC, datetime, timedelta
 from typing import Optional
 
-from database import get_db
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import desc, func
+from sqlalchemy.orm import Session, joinedload
+
+from database import get_db
 from models.artwork import Artwork, ArtworkStatus
 from models.audit_log import AuditLog
 from models.bid import Bid
 from models.user import User
 from services.audit_service import AuditService
-from sqlalchemy import desc, func
-from sqlalchemy.orm import Session, joinedload
 from utils.auth import get_current_user
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
@@ -198,23 +199,17 @@ async def get_platform_overview(
     # User stats
     total_users = db.query(User).count()
     users_last_30_days = (
-        db.query(User)
-        .filter(User.created_at >= datetime.now(UTC) - timedelta(days=30))
-        .count()
+        db.query(User).filter(User.created_at >= datetime.now(UTC) - timedelta(days=30)).count()
     )
 
     # Artwork stats
     total_artworks = db.query(Artwork).count()
-    active_auctions = (
-        db.query(Artwork).filter(Artwork.status == ArtworkStatus.ACTIVE).count()
-    )
+    active_auctions = db.query(Artwork).filter(Artwork.status == ArtworkStatus.ACTIVE).count()
 
     # Transaction stats
     total_transactions = db.query(Bid).filter(Bid.is_winning.is_(True)).count()
 
-    total_revenue = (
-        db.query(func.sum(Bid.amount)).filter(Bid.is_winning.is_(True)).scalar() or 0
-    )
+    total_revenue = db.query(func.sum(Bid.amount)).filter(Bid.is_winning.is_(True)).scalar() or 0
 
     # Platform fees (10% commission)
     platform_fees = float(total_revenue) * 0.10
@@ -282,9 +277,7 @@ async def get_system_health(
 
     # Get recent activity
     recent_bids = (
-        db.query(Bid)
-        .filter(Bid.created_at >= datetime.now(UTC) - timedelta(hours=1))
-        .count()
+        db.query(Bid).filter(Bid.created_at >= datetime.now(UTC) - timedelta(hours=1)).count()
     )
 
     recent_artworks = (
@@ -358,9 +351,7 @@ async def get_audit_logs(
 
 @router.post("/stamp-migrations")
 async def stamp_migrations(
-    revision: str = Query(
-        ..., description="Migration revision to stamp (e.g., 'b2d54a525fd0')"
-    ),
+    revision: str = Query(..., description="Migration revision to stamp (e.g., 'b2d54a525fd0')"),
     current_user: User = Depends(require_admin),
 ):
     """

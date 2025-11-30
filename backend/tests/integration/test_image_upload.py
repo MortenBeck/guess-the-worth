@@ -29,9 +29,7 @@ def mock_auth0():
 class TestImageUploadPermissions:
     """Test that only authorized users can upload images."""
 
-    def test_upload_requires_authentication(
-        self, client: TestClient, artwork, db_session
-    ):
+    def test_upload_requires_authentication(self, client: TestClient, artwork, db_session):
         """Test that uploading images requires authentication."""
         # Create test image
         img = PILImage.new("RGB", (100, 100), color="red")
@@ -145,9 +143,7 @@ class TestImageUploadPermissions:
 class TestImageFileValidation:
     """Test file type and format validation."""
 
-    def test_upload_jpeg_image(
-        self, client: TestClient, seller_token: str, artwork, db_session
-    ):
+    def test_upload_jpeg_image(self, client: TestClient, seller_token: str, artwork, db_session):
         """Test uploading JPEG image."""
         img = PILImage.new("RGB", (100, 100), color="red")
         img_bytes = BytesIO()
@@ -162,9 +158,7 @@ class TestImageFileValidation:
 
         assert response.status_code == 200
 
-    def test_upload_png_image(
-        self, client: TestClient, seller_token: str, artwork, db_session
-    ):
+    def test_upload_png_image(self, client: TestClient, seller_token: str, artwork, db_session):
         """Test uploading PNG image."""
         img = PILImage.new("RGB", (100, 100), color="blue")
         img_bytes = BytesIO()
@@ -179,9 +173,7 @@ class TestImageFileValidation:
 
         assert response.status_code == 200
 
-    def test_upload_webp_image(
-        self, client: TestClient, seller_token: str, artwork, db_session
-    ):
+    def test_upload_webp_image(self, client: TestClient, seller_token: str, artwork, db_session):
         """Test uploading WebP image."""
         img = PILImage.new("RGB", (100, 100), color="green")
         img_bytes = BytesIO()
@@ -196,9 +188,7 @@ class TestImageFileValidation:
 
         assert response.status_code == 200
 
-    def test_reject_text_file(
-        self, client: TestClient, seller_token: str, artwork, db_session
-    ):
+    def test_reject_text_file(self, client: TestClient, seller_token: str, artwork, db_session):
         """Test that text files are rejected."""
         response = client.post(
             f"/api/artworks/{artwork.id}/upload-image",
@@ -209,9 +199,7 @@ class TestImageFileValidation:
         assert response.status_code == 400
         assert "invalid file type" in response.json()["detail"].lower()
 
-    def test_reject_pdf_file(
-        self, client: TestClient, seller_token: str, artwork, db_session
-    ):
+    def test_reject_pdf_file(self, client: TestClient, seller_token: str, artwork, db_session):
         """Test that PDF files are rejected."""
         response = client.post(
             f"/api/artworks/{artwork.id}/upload-image",
@@ -253,9 +241,7 @@ class TestFileSizeValidation:
         assert response.status_code == 400
         assert "too large" in response.json()["detail"].lower()
 
-    def test_accept_file_at_limit(
-        self, client: TestClient, seller_token: str, artwork, db_session
-    ):
+    def test_accept_file_at_limit(self, client: TestClient, seller_token: str, artwork, db_session):
         """Test that files exactly at 5MB limit are accepted."""
         # Create 5MB file
         limit_file = BytesIO(b"0" * (5 * 1024 * 1024))
@@ -270,9 +256,7 @@ class TestFileSizeValidation:
         # Most implementations accept exactly at limit
         assert response.status_code in [200, 400]
 
-    def test_accept_small_file(
-        self, client: TestClient, seller_token: str, artwork, db_session
-    ):
+    def test_accept_small_file(self, client: TestClient, seller_token: str, artwork, db_session):
         """Test that small files are accepted."""
         # Create tiny image (< 10KB)
         img = PILImage.new("RGB", (50, 50), color="red")
@@ -292,9 +276,7 @@ class TestFileSizeValidation:
 class TestImageProcessing:
     """Test image processing and optimization."""
 
-    def test_image_url_returned(
-        self, client: TestClient, seller_token: str, artwork, db_session
-    ):
+    def test_image_url_returned(self, client: TestClient, seller_token: str, artwork, db_session):
         """Test that image URL is returned after upload."""
         img = PILImage.new("RGB", (100, 100), color="blue")
         img_bytes = BytesIO()
@@ -313,9 +295,7 @@ class TestImageProcessing:
         assert isinstance(data["image_url"], str)
         assert len(data["image_url"]) > 0
 
-    def test_image_file_created(
-        self, client: TestClient, seller_token: str, artwork, db_session
-    ):
+    def test_image_file_created(self, client: TestClient, seller_token: str, artwork, db_session):
         """Test that image file is actually created on disk."""
         img = PILImage.new("RGB", (200, 200), color="purple")
         img_bytes = BytesIO()
@@ -343,9 +323,7 @@ class TestImageProcessing:
         if os.path.exists(file_path):
             os.remove(file_path)
 
-    def test_large_image_resized(
-        self, client: TestClient, seller_token: str, artwork, db_session
-    ):
+    def test_large_image_resized(self, client: TestClient, seller_token: str, artwork, db_session):
         """Test that large images are resized to 1200px max dimension."""
         # Create large image (2000x2000)
         img = PILImage.new("RGB", (2000, 2000), color="orange")
@@ -461,9 +439,7 @@ class TestArtworkImageAssociation:
 class TestEdgeCases:
     """Test edge cases and error scenarios."""
 
-    def test_upload_to_nonexistent_artwork(
-        self, client: TestClient, seller_token: str, db_session
-    ):
+    def test_upload_to_nonexistent_artwork(self, client: TestClient, seller_token: str, db_session):
         """Test uploading to non-existent artwork."""
         img = PILImage.new("RGB", (100, 100), color="red")
         img_bytes = BytesIO()
@@ -478,9 +454,7 @@ class TestEdgeCases:
 
         assert response.status_code == 404
 
-    def test_upload_without_file(
-        self, client: TestClient, seller_token: str, artwork, db_session
-    ):
+    def test_upload_without_file(self, client: TestClient, seller_token: str, artwork, db_session):
         """Test upload request without file."""
         response = client.post(
             f"/api/artworks/{artwork.id}/upload-image",

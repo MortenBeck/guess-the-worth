@@ -23,13 +23,14 @@ from pathlib import Path
 backend_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_dir))
 
+# Import after path modification (noqa: E402)
+from sqlalchemy.orm import Session  # noqa: E402
+
 from config.settings import settings  # noqa: E402
 from database import SessionLocal  # noqa: E402
 from seeds.demo_artworks import seed_artworks  # noqa: E402
 from seeds.demo_bids import seed_bids  # noqa: E402
 from seeds.demo_users import seed_users  # noqa: E402
-# Import after path modification (noqa: E402)
-from sqlalchemy.orm import Session  # noqa: E402
 
 
 class SeedManager:
@@ -57,9 +58,7 @@ class SeedManager:
                 f"❌ Error: Target environment '{self.target_env}' does not match "
                 f"current environment '{self.current_env}'"
             )
-            print(
-                f"   Update your .env file ENVIRONMENT variable to '{self.target_env}'"
-            )
+            print(f"   Update your .env file ENVIRONMENT variable to '{self.target_env}'")
             return False
 
         # Warn if seeding production
