@@ -192,3 +192,8 @@ alembic/versions/*.py
 
 # Claude Code
 .claude/
+
+# Azure deployment files
+LogFiles/
+azure-logs.zip
+deployments/

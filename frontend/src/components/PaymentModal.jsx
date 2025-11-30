@@ -134,6 +134,8 @@ function PaymentModal({ isOpen, onClose, bidId, amount, artworkTitle }) {
             colorPrimary: "#2563eb",
           },
         },
+        // Enable Apple Pay, Google Pay, and other payment methods
+        paymentMethodOrder: ['apple_pay', 'google_pay', 'card'],
       }
     : null;
 
