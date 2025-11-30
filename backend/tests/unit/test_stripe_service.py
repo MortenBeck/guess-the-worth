@@ -184,6 +184,24 @@ class TestStripeServiceCreatePaymentIntent:
         call_args = mock_stripe_create.call_args
         assert call_args.kwargs["amount"] == 12345  # 123.45 * 100
 
+    def test_create_payment_intent_exceeds_stripe_maximum(
+        self,
+        db_session,
+        winning_bid,
+        buyer_user,
+    ):
+        """Test payment intent creation fails when amount exceeds Stripe's maximum."""
+        # Set bid amount above Stripe's $999,999.99 limit
+        winning_bid.amount = 1000000.00
+        db_session.commit()
+
+        with pytest.raises(HTTPException) as exc_info:
+            StripeService.create_payment_intent(bid=winning_bid, buyer=buyer_user, db=db_session)
+
+        assert exc_info.value.status_code == 400
+        assert "exceeds Stripe's maximum limit" in exc_info.value.detail
+        assert "$1,000,000.00" in exc_info.value.detail
+
 
 class TestStripeServiceGetPaymentIntent:
     """Tests for StripeService.get_payment_intent."""
