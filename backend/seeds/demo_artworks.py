@@ -5,10 +5,9 @@ Creates a variety of artworks with different categories, statuses, and price poi
 
 from datetime import UTC, datetime, timedelta
 
-from sqlalchemy.orm import Session
-
 from models.artwork import Artwork, ArtworkStatus
 from models.user import User
+from sqlalchemy.orm import Session
 
 
 def seed_artworks(db: Session) -> int:

@@ -5,11 +5,10 @@ Creates realistic bid history for artworks with active bidding.
 
 from datetime import UTC, datetime, timedelta
 
-from sqlalchemy.orm import Session
-
 from models.artwork import Artwork, ArtworkStatus
 from models.bid import Bid
 from models.user import User
+from sqlalchemy.orm import Session
 
 
 def seed_bids(db: Session) -> int:

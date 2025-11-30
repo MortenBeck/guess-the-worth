@@ -1,12 +1,11 @@
 from typing import List, Optional
 
+from database import get_db
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlalchemy.orm import Session
-
-from database import get_db
 from models import User
 from schemas import UserResponse, UserUpdate
+from sqlalchemy.orm import Session
 from utils.auth import get_current_user
 
 router = APIRouter()

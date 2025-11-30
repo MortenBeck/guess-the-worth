@@ -1,8 +1,7 @@
 from datetime import UTC, datetime
 
-from sqlalchemy.orm import Session
-
 from models import Artwork, Bid
+from sqlalchemy.orm import Session
 
 
 class AuctionService:

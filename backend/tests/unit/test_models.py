@@ -6,11 +6,10 @@ Tests model creation, relationships, constraints, and enums.
 from datetime import datetime
 
 import pytest
-from sqlalchemy.exc import IntegrityError
-
 from models.artwork import Artwork, ArtworkStatus
 from models.bid import Bid
 from models.user import User
+from sqlalchemy.exc import IntegrityError
 
 
 class TestUserModel:

@@ -3,13 +3,12 @@
 from typing import Any, Dict
 
 import stripe
-from fastapi import HTTPException
-from sqlalchemy.orm import Session
-from stripe._error import SignatureVerificationError, StripeError
-
 from config.settings import settings
+from fastapi import HTTPException
 from models import Bid, Payment, User
 from models.payment import PaymentStatus
+from sqlalchemy.orm import Session
+from stripe._error import SignatureVerificationError, StripeError
 
 # Initialize Stripe with API key from settings
 stripe.api_key = settings.stripe_secret_key

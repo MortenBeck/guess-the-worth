@@ -17,9 +17,8 @@ This script creates only minimal database references - actual user data
 comes from Auth0.
 """
 
-from sqlalchemy.orm import Session
-
 from models.user import User
+from sqlalchemy.orm import Session
 
 
 def seed_users(db: Session) -> int:

@@ -8,12 +8,8 @@ from typing import Generator
 from unittest.mock import patch
 
 import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, event
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
-
 from database import get_db
+from fastapi.testclient import TestClient
 from main import app
 from models.artwork import Artwork, ArtworkStatus
 from models.base import Base
@@ -21,6 +17,9 @@ from models.bid import Bid
 from models.user import User
 from schemas.auth import AuthUser
 from services.jwt_service import JWTService
+from sqlalchemy import create_engine, event
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 # Test database setup with SQLite in-memory
 SQLALCHEMY_TEST_DATABASE_URL = "sqlite:///:memory:"

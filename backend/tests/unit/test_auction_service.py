@@ -6,13 +6,12 @@ Tests the auction expiration and closing logic.
 from datetime import datetime, timedelta
 
 import pytest
-from sqlalchemy.orm import Session
-
 from models import Artwork
 from models.artwork import ArtworkStatus
 from models.bid import Bid
 from models.user import User
 from services.auction_service import AuctionService
+from sqlalchemy.orm import Session
 
 
 @pytest.fixture

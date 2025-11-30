@@ -3,9 +3,8 @@ Tests for admin API endpoints.
 """
 
 from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
-
 from models.user import User
+from sqlalchemy.orm import Session
 
 
 def test_list_users_requires_admin(client: TestClient, buyer_token: str):

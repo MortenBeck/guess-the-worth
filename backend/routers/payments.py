@@ -2,16 +2,15 @@
 
 from typing import List
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request
-from sqlalchemy.orm import Session, joinedload
-
 from config.settings import settings
 from database import get_db
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from models import Artwork, Bid, Payment, User
 from models.payment import PaymentStatus
 from schemas import PaymentCreate, PaymentIntentResponse, PaymentResponse
 from services.audit_service import AuditService
 from services.stripe_service import StripeService
+from sqlalchemy.orm import Session, joinedload
 from utils.auth import get_current_user
 
 router = APIRouter()

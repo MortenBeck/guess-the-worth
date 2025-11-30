@@ -7,10 +7,9 @@ from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
-
 from models import Artwork
 from models.audit_log import AuditLog
+from sqlalchemy.orm import Session
 
 
 @pytest.fixture(autouse=True)

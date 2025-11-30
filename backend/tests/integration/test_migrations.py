@@ -10,11 +10,10 @@ These tests verify that database schema updates have been applied correctly:
 from datetime import datetime, timedelta
 
 import pytest
-from sqlalchemy import inspect
-
 from models.artwork import Artwork, ArtworkStatus
 from models.bid import Bid
 from models.user import User
+from sqlalchemy import inspect
 
 
 class TestArtworkNewFields:

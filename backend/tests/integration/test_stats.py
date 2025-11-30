@@ -12,7 +12,6 @@ from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
-
 from models.artwork import Artwork, ArtworkStatus
 from models.bid import Bid
 from models.user import User

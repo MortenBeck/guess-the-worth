@@ -6,7 +6,6 @@ Tests /api/artworks routes with authentication and database.
 from unittest.mock import patch
 
 import pytest
-
 from models.artwork import ArtworkStatus
 
 

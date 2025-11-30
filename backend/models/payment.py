@@ -3,10 +3,10 @@
 from datetime import datetime
 from enum import Enum
 
-from sqlalchemy import DECIMAL, JSON, Column, DateTime, ForeignKey, Index, Integer, String, Text
-from sqlalchemy.orm import relationship
-
 from models.base import Base
+from sqlalchemy import (DECIMAL, JSON, Column, DateTime, ForeignKey, Index,
+                        Integer, String, Text)
+from sqlalchemy.orm import relationship
 
 
 class PaymentStatus(str, Enum):

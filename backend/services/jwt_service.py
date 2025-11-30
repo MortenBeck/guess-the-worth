@@ -2,7 +2,6 @@ from datetime import UTC, datetime, timedelta
 from typing import Any, Dict, Optional
 
 import jwt
-
 from config.settings import settings
 
 

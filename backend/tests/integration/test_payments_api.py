@@ -7,7 +7,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
-
 from models import Bid, Payment
 from models.payment import PaymentStatus
 from tests.conftest import create_auth_header

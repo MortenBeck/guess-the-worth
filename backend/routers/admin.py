@@ -6,16 +6,15 @@ Proof-of-concept implementation.
 from datetime import UTC, datetime, timedelta
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import desc, func
-from sqlalchemy.orm import Session, joinedload
-
 from database import get_db
+from fastapi import APIRouter, Depends, HTTPException, Query
 from models.artwork import Artwork, ArtworkStatus
 from models.audit_log import AuditLog
 from models.bid import Bid
 from models.user import User
 from services.audit_service import AuditService
+from sqlalchemy import desc, func
+from sqlalchemy.orm import Session, joinedload
 from utils.auth import get_current_user
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])

@@ -3,12 +3,11 @@ from contextlib import asynccontextmanager
 
 import sentry_sdk
 import socketio
+from config.settings import settings
+from database import engine
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-
-from config.settings import settings
-from database import engine
 from middleware.rate_limit import setup_rate_limiting
 from middleware.security_headers import SecurityHeadersMiddleware
 from models.base import Base

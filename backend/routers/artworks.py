@@ -3,16 +3,16 @@ import uuid
 from datetime import UTC, datetime
 from typing import List
 
-from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
-from PIL import Image
-from sqlalchemy.orm import Session, joinedload
-
 from database import get_db
+from fastapi import (APIRouter, Depends, File, HTTPException, Request,
+                     UploadFile)
 from middleware.rate_limit import limiter
 from models import Artwork
 from models.user import User
+from PIL import Image
 from schemas import ArtworkCreate, ArtworkResponse, ArtworkUpdate
 from services.auction_service import AuctionService
+from sqlalchemy.orm import Session, joinedload
 from utils.auth import get_current_user, require_admin, require_seller
 
 router = APIRouter()

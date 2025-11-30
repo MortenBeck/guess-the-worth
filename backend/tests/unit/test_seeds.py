@@ -7,7 +7,6 @@ from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from models.artwork import Artwork, ArtworkStatus
 from models.bid import Bid
 from models.user import User
