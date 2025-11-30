@@ -40,14 +40,18 @@ class Settings(BaseSettings):
     # Environment
     environment: str = "development"
 
-    model_config = ConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = ConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+    )
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
         # Override allowed_origins if cors_origins is provided
         if self.cors_origins:
-            self.allowed_origins = [origin.strip() for origin in self.cors_origins.split(",")]
+            self.allowed_origins = [
+                origin.strip() for origin in self.cors_origins.split(",")
+            ]
 
         # Validate required secrets are not using default/placeholder values
         # Skip validation in: test mode, alembic, and development environment
@@ -70,7 +74,10 @@ class Settings(BaseSettings):
                 "Generate one using: openssl rand -hex 32"
             )
 
-        if "your-" in self.auth0_client_secret.lower() or len(self.auth0_client_secret) < 20:
+        if (
+            "your-" in self.auth0_client_secret.lower()
+            or len(self.auth0_client_secret) < 20
+        ):
             raise ValueError(
                 "AUTH0_CLIENT_SECRET must be set to your actual Auth0 client secret. "
                 "Get it from: https://manage.auth0.com/"

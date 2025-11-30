@@ -6,7 +6,6 @@ Tests /api/artworks routes with authentication and database.
 from unittest.mock import patch
 
 import pytest
-
 from models.artwork import ArtworkStatus
 
 
@@ -118,7 +117,9 @@ class TestListArtworks:
         data = response.json()
         assert len(data) == 3
 
-    def test_list_artworks_pagination_skip_and_limit(self, client, db_session, seller_user):
+    def test_list_artworks_pagination_skip_and_limit(
+        self, client, db_session, seller_user
+    ):
         """Test pagination with both skip and limit."""
         from models.artwork import Artwork
 
@@ -247,7 +248,9 @@ class TestCreateArtwork:
         # For now, we'll need to pass seller_id somehow (or use auth headers)
         # This test may need adjustment based on actual API implementation
 
-        response = client.post(f"/api/artworks?seller_id={seller_user.id}", json=payload)
+        response = client.post(
+            f"/api/artworks?seller_id={seller_user.id}", json=payload
+        )
 
         # If endpoint requires auth, use this instead:
         # headers = create_auth_header(seller_token)
@@ -265,23 +268,31 @@ class TestCreateArtwork:
         """Test creating artwork without optional description."""
         payload = {"title": "Minimal Art", "secret_threshold": 200.0}
 
-        response = client.post(f"/api/artworks?seller_id={seller_user.id}", json=payload)
+        response = client.post(
+            f"/api/artworks?seller_id={seller_user.id}", json=payload
+        )
 
         if response.status_code == 200:
             data = response.json()
             assert data["title"] == "Minimal Art"
             assert data["description"] is None
 
-    def test_create_artwork_missing_required_fields(self, client, seller_user, seller_token):
+    def test_create_artwork_missing_required_fields(
+        self, client, seller_user, seller_token
+    ):
         """Test creating artwork with missing required fields."""
         headers = {"Authorization": f"Bearer {seller_token}"}
 
         # Missing title
-        response = client.post("/api/artworks/", json={"secret_threshold": 100.0}, headers=headers)
+        response = client.post(
+            "/api/artworks/", json={"secret_threshold": 100.0}, headers=headers
+        )
         assert response.status_code == 422
 
         # Missing secret_threshold
-        response = client.post("/api/artworks/", json={"title": "Test"}, headers=headers)
+        response = client.post(
+            "/api/artworks/", json={"title": "Test"}, headers=headers
+        )
         assert response.status_code == 422
 
     def test_create_artwork_invalid_seller(self, client):
@@ -308,7 +319,9 @@ class TestCreateArtwork:
         """Test creating artwork with zero threshold."""
         payload = {"title": "Free Art", "secret_threshold": 0.0}
 
-        response = client.post(f"/api/artworks?seller_id={seller_user.id}", json=payload)
+        response = client.post(
+            f"/api/artworks?seller_id={seller_user.id}", json=payload
+        )
 
         if response.status_code == 200:
             data = response.json()
@@ -392,8 +405,12 @@ class TestArtworkFiltering:
         another_seller.name = "Seller 2"
         another_seller.role = "SELLER"
 
-        artwork1 = Artwork(seller_id=seller_user.id, title="Art 1", secret_threshold=100.0)
-        artwork2 = Artwork(seller_id=another_seller.id, title="Art 2", secret_threshold=100.0)
+        artwork1 = Artwork(
+            seller_id=seller_user.id, title="Art 1", secret_threshold=100.0
+        )
+        artwork2 = Artwork(
+            seller_id=another_seller.id, title="Art 2", secret_threshold=100.0
+        )
 
         db_session.add_all([artwork1, artwork2])
         db_session.commit()
@@ -441,7 +458,9 @@ class TestArtworkEdgeCases:
             "secret_threshold": 100.0,
         }
 
-        response = client.post(f"/api/artworks?seller_id={seller_user.id}", json=payload)
+        response = client.post(
+            f"/api/artworks?seller_id={seller_user.id}", json=payload
+        )
 
         if response.status_code == 200:
             data = response.json()
@@ -456,7 +475,9 @@ class TestArtworkEdgeCases:
             "secret_threshold": 100.0,
         }
 
-        response = client.post(f"/api/artworks?seller_id={seller_user.id}", json=payload)
+        response = client.post(
+            f"/api/artworks?seller_id={seller_user.id}", json=payload
+        )
 
         if response.status_code == 200:
             data = response.json()
@@ -557,7 +578,9 @@ class TestUpdateArtwork:
         headers = {"Authorization": f"Bearer {buyer_token}"}
         payload = {"title": "Hacked Title"}
 
-        response = client.put(f"/api/artworks/{artwork.id}", json=payload, headers=headers)
+        response = client.put(
+            f"/api/artworks/{artwork.id}", json=payload, headers=headers
+        )
         assert response.status_code == 403
 
     def test_update_artwork_success(self, client, artwork, seller_token):
@@ -565,7 +588,9 @@ class TestUpdateArtwork:
         headers = {"Authorization": f"Bearer {seller_token}"}
         payload = {"title": "Updated Title"}
 
-        response = client.put(f"/api/artworks/{artwork.id}", json=payload, headers=headers)
+        response = client.put(
+            f"/api/artworks/{artwork.id}", json=payload, headers=headers
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["title"] == "Updated Title"
@@ -575,7 +600,9 @@ class TestUpdateArtwork:
         headers = {"Authorization": f"Bearer {seller_token}"}
         payload = {"title": "ab"}
 
-        response = client.put(f"/api/artworks/{artwork.id}", json=payload, headers=headers)
+        response = client.put(
+            f"/api/artworks/{artwork.id}", json=payload, headers=headers
+        )
         assert response.status_code == 400
         assert "3 characters" in response.json()["detail"]
 
@@ -584,7 +611,9 @@ class TestUpdateArtwork:
         headers = {"Authorization": f"Bearer {seller_token}"}
         payload = {"title": "a" * 201}
 
-        response = client.put(f"/api/artworks/{artwork.id}", json=payload, headers=headers)
+        response = client.put(
+            f"/api/artworks/{artwork.id}", json=payload, headers=headers
+        )
         assert response.status_code == 400
         assert "200" in response.json()["detail"]
 
@@ -593,7 +622,9 @@ class TestUpdateArtwork:
         headers = {"Authorization": f"Bearer {seller_token}"}
         payload = {"description": "a" * 2001}
 
-        response = client.put(f"/api/artworks/{artwork.id}", json=payload, headers=headers)
+        response = client.put(
+            f"/api/artworks/{artwork.id}", json=payload, headers=headers
+        )
         assert response.status_code == 400
         assert "2000" in response.json()["detail"]
 
@@ -605,7 +636,9 @@ class TestUpdateArtwork:
         past_date = (datetime.now(UTC) - timedelta(days=1)).isoformat()
         payload = {"end_date": past_date}
 
-        response = client.put(f"/api/artworks/{artwork.id}", json=payload, headers=headers)
+        response = client.put(
+            f"/api/artworks/{artwork.id}", json=payload, headers=headers
+        )
         assert response.status_code == 400
         assert "future" in response.json()["detail"].lower()
 
@@ -614,7 +647,9 @@ class TestUpdateArtwork:
         headers = {"Authorization": f"Bearer {seller_token}"}
         payload = {"secret_threshold": -100.0}
 
-        response = client.put(f"/api/artworks/{artwork.id}", json=payload, headers=headers)
+        response = client.put(
+            f"/api/artworks/{artwork.id}", json=payload, headers=headers
+        )
         assert response.status_code == 400
         assert "non-negative" in response.json()["detail"].lower()
 
@@ -650,7 +685,9 @@ class TestAdminArtworkAccess:
         headers = {"Authorization": f"Bearer {admin_token}"}
         payload = {"title": "Admin Updated Title"}
 
-        response = client.put(f"/api/artworks/{artwork.id}", json=payload, headers=headers)
+        response = client.put(
+            f"/api/artworks/{artwork.id}", json=payload, headers=headers
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["title"] == "Admin Updated Title"

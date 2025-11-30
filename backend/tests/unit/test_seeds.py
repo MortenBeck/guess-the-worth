@@ -7,7 +7,6 @@ from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from models.artwork import Artwork, ArtworkStatus
 from models.bid import Bid
 from models.user import User
@@ -130,9 +129,19 @@ class TestSeedArtworks:
         seed_users(db_session)
         seed_artworks(db_session)
 
-        active = db_session.query(Artwork).filter(Artwork.status == ArtworkStatus.ACTIVE).all()
-        sold = db_session.query(Artwork).filter(Artwork.status == ArtworkStatus.SOLD).all()
-        archived = db_session.query(Artwork).filter(Artwork.status == ArtworkStatus.ARCHIVED).all()
+        active = (
+            db_session.query(Artwork)
+            .filter(Artwork.status == ArtworkStatus.ACTIVE)
+            .all()
+        )
+        sold = (
+            db_session.query(Artwork).filter(Artwork.status == ArtworkStatus.SOLD).all()
+        )
+        archived = (
+            db_session.query(Artwork)
+            .filter(Artwork.status == ArtworkStatus.ARCHIVED)
+            .all()
+        )
 
         assert len(active) > 0
         assert len(sold) > 0
@@ -193,11 +202,15 @@ class TestSeedArtworks:
         seed_artworks(db_session)
 
         active_artworks = (
-            db_session.query(Artwork).filter(Artwork.status == ArtworkStatus.ACTIVE).all()
+            db_session.query(Artwork)
+            .filter(Artwork.status == ArtworkStatus.ACTIVE)
+            .all()
         )
 
         for artwork in active_artworks:
-            if artwork.current_highest_bid > 0:  # Active with bids should have end dates
+            if (
+                artwork.current_highest_bid > 0
+            ):  # Active with bids should have end dates
                 assert artwork.end_date is not None
                 assert isinstance(artwork.end_date, datetime)
 
@@ -357,7 +370,9 @@ class TestSeedManager:
         manager = SeedManager(target_env="development")
 
         # Mock seed_users to raise an exception
-        with patch("seeds.seed_manager.seed_users", side_effect=Exception("Test error")):
+        with patch(
+            "seeds.seed_manager.seed_users", side_effect=Exception("Test error")
+        ):
             success = manager.seed_database(db_session)
 
         assert success is False

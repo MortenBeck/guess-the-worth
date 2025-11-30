@@ -15,7 +15,7 @@ if __name__ == "__main__":
             [sys.executable, "-m", "alembic", "upgrade", "head"],
             check=True,
             capture_output=True,
-            text=True
+            text=True,
         )
         print("✓ Database migrations completed successfully")
         print(result.stdout)
@@ -34,4 +34,6 @@ if __name__ == "__main__":
 
     # Binding to 0.0.0.0 is required for Docker containers
     # to accept external connections
-    uvicorn.run("main:socket_app", host="0.0.0.0", port=port, log_level="info")  # nosec B104
+    uvicorn.run(
+        "main:socket_app", host="0.0.0.0", port=port, log_level="info"
+    )  # nosec B104

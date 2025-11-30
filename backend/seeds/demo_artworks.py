@@ -5,10 +5,9 @@ Creates a variety of artworks with different categories, statuses, and price poi
 
 from datetime import UTC, datetime, timedelta
 
-from sqlalchemy.orm import Session
-
 from models.artwork import Artwork, ArtworkStatus
 from models.user import User
+from sqlalchemy.orm import Session
 
 
 def seed_artworks(db: Session) -> int:
@@ -72,7 +71,8 @@ def seed_artworks(db: Session) -> int:
             "artist_name": "Alice Johnson",
             "category": "Abstract",
             "description": (
-                "An abstract interpretation of city life with bold colors and " "geometric shapes."
+                "An abstract interpretation of city life with bold colors and "
+                "geometric shapes."
             ),
             "secret_threshold": 800.00,
             "current_highest_bid": 600.00,
@@ -85,7 +85,9 @@ def seed_artworks(db: Session) -> int:
             "title": "Morning Coffee",
             "artist_name": "Alice Johnson",
             "category": "Still Life",
-            "description": ("A cozy still life capturing the essence of a perfect morning."),
+            "description": (
+                "A cozy still life capturing the essence of a perfect morning."
+            ),
             "secret_threshold": 500.00,
             "current_highest_bid": 500.00,
             "status": ArtworkStatus.SOLD,
@@ -110,7 +112,9 @@ def seed_artworks(db: Session) -> int:
             "title": "Ocean Waves",
             "artist_name": "Bob Martinez",
             "category": "Seascape",
-            "description": ("Dynamic representation of powerful ocean waves " "crashing on rocks."),
+            "description": (
+                "Dynamic representation of powerful ocean waves " "crashing on rocks."
+            ),
             "secret_threshold": 1200.00,
             "current_highest_bid": 950.00,
             "status": ArtworkStatus.ACTIVE,
@@ -122,7 +126,9 @@ def seed_artworks(db: Session) -> int:
             "title": "Jazz Night",
             "artist_name": "Bob Martinez",
             "category": "Abstract",
-            "description": ("Abstract piece inspired by jazz music and nightlife energy."),
+            "description": (
+                "Abstract piece inspired by jazz music and nightlife energy."
+            ),
             "secret_threshold": 900.00,
             "current_highest_bid": 0.00,
             "status": ArtworkStatus.ACTIVE,
@@ -136,7 +142,8 @@ def seed_artworks(db: Session) -> int:
             "artist_name": "Carol Chen",
             "category": "Floral",
             "description": (
-                "Vibrant flowers in full bloom, celebrating nature's beauty. " "Watercolor."
+                "Vibrant flowers in full bloom, celebrating nature's beauty. "
+                "Watercolor."
             ),
             "secret_threshold": 600.00,
             "current_highest_bid": 450.00,

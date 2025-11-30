@@ -10,11 +10,10 @@ These tests verify that database schema updates have been applied correctly:
 from datetime import datetime, timedelta
 
 import pytest
-from sqlalchemy import inspect
-
 from models.artwork import Artwork, ArtworkStatus
 from models.bid import Bid
 from models.user import User
+from sqlalchemy import inspect
 
 
 class TestArtworkNewFields:
@@ -137,7 +136,9 @@ class TestDatabaseIndexes:
         artwork_indexes = inspector.get_indexes("artworks")
 
         # Check for status index
-        status_indexed = any("status" in idx.get("column_names", []) for idx in artwork_indexes)
+        status_indexed = any(
+            "status" in idx.get("column_names", []) for idx in artwork_indexes
+        )
 
         assert status_indexed or "ix_artworks_status" in [
             idx["name"] for idx in artwork_indexes
@@ -149,7 +150,9 @@ class TestDatabaseIndexes:
         bid_indexes = inspector.get_indexes("bids")
 
         # Check for artwork_id index
-        artwork_id_indexed = any("artwork_id" in idx.get("column_names", []) for idx in bid_indexes)
+        artwork_id_indexed = any(
+            "artwork_id" in idx.get("column_names", []) for idx in bid_indexes
+        )
 
         assert artwork_id_indexed or "ix_bids_artwork_id" in [
             idx["name"] for idx in bid_indexes
@@ -161,7 +164,9 @@ class TestDatabaseIndexes:
         bid_indexes = inspector.get_indexes("bids")
 
         # Check for bidder_id index
-        bidder_id_indexed = any("bidder_id" in idx.get("column_names", []) for idx in bid_indexes)
+        bidder_id_indexed = any(
+            "bidder_id" in idx.get("column_names", []) for idx in bid_indexes
+        )
 
         assert bidder_id_indexed or "ix_bids_bidder_id" in [
             idx["name"] for idx in bid_indexes
@@ -331,7 +336,9 @@ class TestDatabaseConstraints:
         db_session.refresh(duplicate_user)
 
         # Attach Auth0 data (simulated) - emails are no longer stored in DB
-        duplicate_user.email = buyer_user.email  # Duplicate email (but not enforced at DB level)
+        duplicate_user.email = (
+            buyer_user.email
+        )  # Duplicate email (but not enforced at DB level)
         duplicate_user.name = "Duplicate"
         duplicate_user.role = "BUYER"
 

@@ -20,7 +20,9 @@ def test_rate_limiting_on_registration(client: TestClient):
 
     # If we get here, rate limiting middleware is loaded
     # Actual rate limits are tested on specific endpoints below
-    assert response.status_code == 200, "Rate limiting middleware should not break public endpoints"
+    assert (
+        response.status_code == 200
+    ), "Rate limiting middleware should not break public endpoints"
 
 
 @patch("services.auth_service.AuthService.verify_auth0_token")

@@ -3,13 +3,12 @@
 from typing import Any, Dict
 
 import stripe
-from fastapi import HTTPException
-from sqlalchemy.orm import Session
-from stripe._error import SignatureVerificationError, StripeError
-
 from config.settings import settings
+from fastapi import HTTPException
 from models import Bid, Payment, User
 from models.payment import PaymentStatus
+from sqlalchemy.orm import Session
+from stripe._error import SignatureVerificationError, StripeError
 
 # Initialize Stripe with API key from settings
 stripe.api_key = settings.stripe_secret_key
@@ -110,7 +109,9 @@ class StripeService:
             )
 
     @staticmethod
-    def handle_payment_succeeded(payment_intent: stripe.PaymentIntent, db: Session) -> Payment:
+    def handle_payment_succeeded(
+        payment_intent: stripe.PaymentIntent, db: Session
+    ) -> Payment:
         """
         Handle successful payment webhook event.
 
@@ -128,7 +129,9 @@ class StripeService:
         """
         # Find payment record
         payment = (
-            db.query(Payment).filter(Payment.stripe_payment_intent_id == payment_intent.id).first()
+            db.query(Payment)
+            .filter(Payment.stripe_payment_intent_id == payment_intent.id)
+            .first()
         )
 
         if not payment:
@@ -156,7 +159,9 @@ class StripeService:
         return payment
 
     @staticmethod
-    def handle_payment_failed(payment_intent: stripe.PaymentIntent, db: Session) -> Payment:
+    def handle_payment_failed(
+        payment_intent: stripe.PaymentIntent, db: Session
+    ) -> Payment:
         """
         Handle failed payment webhook event.
 
@@ -173,7 +178,9 @@ class StripeService:
             HTTPException: If payment not found
         """
         payment = (
-            db.query(Payment).filter(Payment.stripe_payment_intent_id == payment_intent.id).first()
+            db.query(Payment)
+            .filter(Payment.stripe_payment_intent_id == payment_intent.id)
+            .first()
         )
 
         if not payment:

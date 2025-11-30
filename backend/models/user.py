@@ -19,7 +19,9 @@ class User(Base):
     auth0_sub = Column(String, unique=True, nullable=False, index=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
-    artworks = relationship("Artwork", back_populates="seller", cascade="all, delete-orphan")
+    artworks = relationship(
+        "Artwork", back_populates="seller", cascade="all, delete-orphan"
+    )
     bids = relationship("Bid", back_populates="bidder", cascade="all, delete-orphan")
 
     def __repr__(self):

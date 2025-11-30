@@ -136,7 +136,9 @@ class TestListUsers:
         data = response.json()
         assert len(data) == 5
 
-    def test_list_users_includes_all_roles(self, client, buyer_user, seller_user, admin_user):
+    def test_list_users_includes_all_roles(
+        self, client, buyer_user, seller_user, admin_user
+    ):
         """Test listing includes users of all roles."""
         response = client.get("/api/users")
 
@@ -222,7 +224,9 @@ class TestGetSingleUser:
 class TestUserFiltering:
     """Test user filtering capabilities (if implemented)."""
 
-    def test_filter_users_by_role_buyer(self, client, buyer_user, seller_user, admin_user):
+    def test_filter_users_by_role_buyer(
+        self, client, buyer_user, seller_user, admin_user
+    ):
         """Test filtering users by role (if implemented)."""
         response = client.get("/api/users?role=BUYER")
 
@@ -280,7 +284,9 @@ class TestUserRelationships:
         from models.artwork import Artwork
 
         # Create artworks for seller
-        artwork = Artwork(seller_id=seller_user.id, title="Seller's Art", secret_threshold=100.0)
+        artwork = Artwork(
+            seller_id=seller_user.id, title="Seller's Art", secret_threshold=100.0
+        )
         db_session.add(artwork)
         db_session.commit()
 
@@ -402,7 +408,9 @@ class TestUserStatistics:
         from models.bid import Bid
 
         # Create artworks for seller
-        artwork = Artwork(seller_id=seller_user.id, title="Stats Art", secret_threshold=100.0)
+        artwork = Artwork(
+            seller_id=seller_user.id, title="Stats Art", secret_threshold=100.0
+        )
         db_session.add(artwork)
         db_session.commit()
 

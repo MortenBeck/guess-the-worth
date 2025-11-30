@@ -13,7 +13,6 @@ from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
-
 from models.user import User
 
 
@@ -43,7 +42,9 @@ class TestAuthenticationRequirements:
 
     def test_create_bid_requires_auth(self, client: TestClient, artwork):
         """Test that placing bid requires authentication."""
-        response = client.post("/api/bids/", json={"artwork_id": artwork.id, "amount": 150.0})
+        response = client.post(
+            "/api/bids/", json={"artwork_id": artwork.id, "amount": 150.0}
+        )
         assert response.status_code == 401
 
     def test_get_my_artworks_requires_auth(self, client: TestClient):
@@ -60,7 +61,9 @@ class TestAuthenticationRequirements:
 
     def test_update_artwork_requires_auth(self, client: TestClient, artwork):
         """Test that updating artwork requires authentication."""
-        response = client.put(f"/api/artworks/{artwork.id}", json={"title": "Updated Title"})
+        response = client.put(
+            f"/api/artworks/{artwork.id}", json={"title": "Updated Title"}
+        )
         assert response.status_code == 401
 
     def test_delete_artwork_requires_auth(self, client: TestClient, artwork):
@@ -341,7 +344,9 @@ class TestCurrentUserEndpoint:
         self, client: TestClient, buyer_token: str, buyer_user: User
     ):
         """Test that current user is retrieved from token, not query param."""
-        response = client.get("/api/auth/me", headers={"Authorization": f"Bearer {buyer_token}"})
+        response = client.get(
+            "/api/auth/me", headers={"Authorization": f"Bearer {buyer_token}"}
+        )
 
         assert response.status_code == 200
         data = response.json()

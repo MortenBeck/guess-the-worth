@@ -7,10 +7,9 @@ from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
-
 from models import Artwork
 from models.audit_log import AuditLog
+from sqlalchemy.orm import Session
 
 
 @pytest.fixture(autouse=True)
@@ -38,7 +37,9 @@ def test_bid_placement_creates_audit_log(
     assert response.status_code == 200
 
     # Check that audit log was created
-    audit_logs = db_session.query(AuditLog).filter(AuditLog.action == "bid_placed").all()
+    audit_logs = (
+        db_session.query(AuditLog).filter(AuditLog.action == "bid_placed").all()
+    )
 
     assert len(audit_logs) > 0, "No audit log created for bid placement"
 
@@ -182,7 +183,9 @@ def test_losing_bid_does_not_create_artwork_sold_log(
     assert artwork.status.value == "ACTIVE"
 
     # Check that no new artwork_sold log was created
-    final_sold_count = db_session.query(AuditLog).filter(AuditLog.action == "artwork_sold").count()
+    final_sold_count = (
+        db_session.query(AuditLog).filter(AuditLog.action == "artwork_sold").count()
+    )
 
     assert (
         final_sold_count == initial_sold_count
@@ -209,7 +212,9 @@ def test_audit_log_queryable_by_user(db_session: Session, buyer_user):
     )
 
     # Query logs by user
-    user_logs = db_session.query(AuditLog).filter(AuditLog.user_id == buyer_user.id).all()
+    user_logs = (
+        db_session.query(AuditLog).filter(AuditLog.user_id == buyer_user.id).all()
+    )
 
     assert len(user_logs) > 0, "Should be able to query audit logs by user"
 
@@ -230,12 +235,18 @@ def test_audit_log_queryable_by_action(db_session: Session, buyer_user):
     )
 
     # Query logs by action
-    action_logs = db_session.query(AuditLog).filter(AuditLog.action == "specific_test_action").all()
+    action_logs = (
+        db_session.query(AuditLog)
+        .filter(AuditLog.action == "specific_test_action")
+        .all()
+    )
 
     assert len(action_logs) > 0, "Should be able to query audit logs by action"
 
 
-def test_audit_service_handles_database_errors_gracefully(db_session: Session, buyer_user):
+def test_audit_service_handles_database_errors_gracefully(
+    db_session: Session, buyer_user
+):
     """Test that AuditService returns None when database errors occur
     without crashing."""
     from unittest.mock import MagicMock
