@@ -91,10 +91,9 @@ async def create_bid(
 
     # If this is a winning bid, unmark all previous winning bids for this artwork
     if is_winning:
-        db.query(Bid).filter(
-            Bid.artwork_id == bid.artwork_id,
-            Bid.is_winning == True
-        ).update({"is_winning": False})
+        db.query(Bid).filter(Bid.artwork_id == bid.artwork_id, Bid.is_winning == True).update(
+            {"is_winning": False}
+        )
 
     # Create bid with authenticated user's ID
     db_bid = Bid(

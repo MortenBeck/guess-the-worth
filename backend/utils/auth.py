@@ -62,11 +62,15 @@ async def get_current_user(
                 # Try as integer ID first (backward compatibility)
                 user_id = int(user_sub)
                 user = db.query(User).filter(User.id == user_id).first()
-                print(f"[AUTH DEBUG] Looked up user by ID {user_id}: {'found' if user else 'not found'}")
+                print(
+                    f"[AUTH DEBUG] Looked up user by ID {user_id}: {'found' if user else 'not found'}"
+                )
             except (ValueError, TypeError):
                 # Try as auth0_sub
                 user = db.query(User).filter(User.auth0_sub == user_sub).first()
-                print(f"[AUTH DEBUG] Looked up user by auth0_sub {user_sub}: {'found' if user else 'not found'}")
+                print(
+                    f"[AUTH DEBUG] Looked up user by auth0_sub {user_sub}: {'found' if user else 'not found'}"
+                )
 
             if user:
                 # Attach data from JWT payload (not in DB)
