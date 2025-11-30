@@ -23,7 +23,7 @@ class Artwork(Base):
     artist_name = Column(String, nullable=True)
     category = Column(String, nullable=True, index=True)
     secret_threshold = Column(Float, nullable=False)
-    current_highest_bid = Column(Float, default=0.0)
+    current_highest_bid = Column(Float, default=0.0, nullable=False, server_default="0.0")
     description = Column(String)
     image_url = Column(String)
     status = Column(Enum(ArtworkStatus), default=ArtworkStatus.ACTIVE, nullable=False, index=True)
