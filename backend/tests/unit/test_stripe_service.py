@@ -10,7 +10,8 @@ from fastapi import HTTPException
 from models import Bid, Payment
 from models.payment import PaymentStatus
 from services.stripe_service import StripeService
-from stripe._error import CardError, InvalidRequestError, SignatureVerificationError
+from stripe._error import (CardError, InvalidRequestError,
+                           SignatureVerificationError)
 
 
 @pytest.fixture

@@ -56,8 +56,8 @@ def seed_artworks(db: Session) -> int:
             "artist_name": "Alice Johnson",
             "category": "Landscape",
             "description": (
-                "A breathtaking view of sunset casting golden hues over mountain peaks. "
-                "Oil on canvas."
+                "A breathtaking view of sunset casting golden hues over "
+                "mountain peaks. Oil on canvas."
             ),
             "secret_threshold": 1500.00,
             "current_highest_bid": 1200.00,
@@ -85,7 +85,9 @@ def seed_artworks(db: Session) -> int:
             "title": "Morning Coffee",
             "artist_name": "Alice Johnson",
             "category": "Still Life",
-            "description": "A cozy still life capturing the essence of a perfect morning.",
+            "description": (
+                "A cozy still life capturing the essence of a perfect morning."
+            ),
             "secret_threshold": 500.00,
             "current_highest_bid": 500.00,
             "status": ArtworkStatus.SOLD,
@@ -110,7 +112,9 @@ def seed_artworks(db: Session) -> int:
             "title": "Ocean Waves",
             "artist_name": "Bob Martinez",
             "category": "Seascape",
-            "description": "Dynamic representation of powerful ocean waves crashing on rocks.",
+            "description": (
+                "Dynamic representation of powerful ocean waves " "crashing on rocks."
+            ),
             "secret_threshold": 1200.00,
             "current_highest_bid": 950.00,
             "status": ArtworkStatus.ACTIVE,
@@ -122,7 +126,9 @@ def seed_artworks(db: Session) -> int:
             "title": "Jazz Night",
             "artist_name": "Bob Martinez",
             "category": "Abstract",
-            "description": "Abstract piece inspired by jazz music and nightlife energy.",
+            "description": (
+                "Abstract piece inspired by jazz music and nightlife energy."
+            ),
             "secret_threshold": 900.00,
             "current_highest_bid": 0.00,
             "status": ArtworkStatus.ACTIVE,

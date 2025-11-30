@@ -50,7 +50,8 @@ class TestAuthenticationRequirements:
     def test_get_my_artworks_requires_auth(self, client: TestClient):
         """Test that viewing own artworks requires authentication."""
         response = client.get("/api/artworks/my-artworks")
-        # Should return 401 for missing auth, but may return 422 due to FastAPI validation order
+        # Should return 401 for missing auth, but may return 422
+        # due to FastAPI validation order
         assert response.status_code in [401, 422]
 
     def test_get_my_bids_requires_auth(self, client: TestClient):

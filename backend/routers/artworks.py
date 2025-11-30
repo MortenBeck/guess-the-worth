@@ -4,7 +4,8 @@ from datetime import UTC, datetime
 from typing import List
 
 from database import get_db
-from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
+from fastapi import (APIRouter, Depends, File, HTTPException, Request,
+                     UploadFile)
 from middleware.rate_limit import limiter
 from models import Artwork
 from models.user import User

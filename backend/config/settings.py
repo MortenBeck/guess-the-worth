@@ -69,7 +69,8 @@ class Settings(BaseSettings):
         # Check for placeholder values in critical secrets
         if "your-" in self.jwt_secret_key.lower() or len(self.jwt_secret_key) < 32:
             raise ValueError(
-                "JWT_SECRET_KEY must be set to a secure value (at least 32 characters). "
+                "JWT_SECRET_KEY must be set to a secure value "
+                "(at least 32 characters). "
                 "Generate one using: openssl rand -hex 32"
             )
 

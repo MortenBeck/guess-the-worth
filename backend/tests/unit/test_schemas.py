@@ -8,14 +8,9 @@ from datetime import datetime
 import pytest
 from models.artwork import ArtworkStatus
 from pydantic import ValidationError
-
 # UserRole enum removed - now using string literals
-from schemas.artwork import (
-    ArtworkCreate,
-    ArtworkResponse,
-    ArtworkUpdate,
-    ArtworkWithSecretResponse,
-)
+from schemas.artwork import (ArtworkCreate, ArtworkResponse, ArtworkUpdate,
+                             ArtworkWithSecretResponse)
 from schemas.auth import AuthUser, TokenResponse
 from schemas.bid import BidCreate, BidResponse
 from schemas.user import UserCreate, UserResponse, UserUpdate
@@ -25,7 +20,8 @@ class TestUserSchemas:
     """Test user-related Pydantic schemas."""
 
     def test_user_create_valid(self):
-        """Test UserCreate with valid data (Auth0 migration - minimal user reference)."""
+        """Test UserCreate with valid data
+        (Auth0 migration - minimal user reference)."""
         user_data = {
             "auth0_sub": "auth0|123456",
         }

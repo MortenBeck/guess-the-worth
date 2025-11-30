@@ -10,7 +10,6 @@ import jwt
 import pytest
 from config.settings import Settings
 from jwt import DecodeError, ExpiredSignatureError
-
 # UserRole enum removed - now using string literals
 from schemas.auth import AuthUser
 from services.auth_service import AuthService

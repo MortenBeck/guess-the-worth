@@ -545,7 +545,8 @@ class TestStripeWebhook:
         db_session,
         winning_bid,
     ):
-        """Test webhook failed event when socket emission fails - should still succeed."""
+        """Test webhook failed event when socket emission fails -
+        should still succeed."""
         payment = Payment(
             bid_id=winning_bid.id,
             stripe_payment_intent_id="pi_test123",

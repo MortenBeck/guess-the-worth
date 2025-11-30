@@ -28,7 +28,6 @@ from database import SessionLocal  # noqa: E402
 from seeds.demo_artworks import seed_artworks  # noqa: E402
 from seeds.demo_bids import seed_bids  # noqa: E402
 from seeds.demo_users import seed_users  # noqa: E402
-
 # Import after path modification (noqa: E402)
 from sqlalchemy.orm import Session  # noqa: E402
 

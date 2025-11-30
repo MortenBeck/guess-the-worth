@@ -4,15 +4,10 @@ Tests that each custom exception returns the correct status code and error messa
 """
 
 from fastapi import status
-from utils.errors import (
-    ArtworkNotActiveError,
-    ArtworkNotFoundError,
-    InvalidBidError,
-    InvalidPaginationError,
-    UnauthorizedError,
-    UserNotFoundError,
-    ValidationError,
-)
+from utils.errors import (ArtworkNotActiveError, ArtworkNotFoundError,
+                          InvalidBidError, InvalidPaginationError,
+                          UnauthorizedError, UserNotFoundError,
+                          ValidationError)
 
 
 class TestArtworkNotFoundError:
