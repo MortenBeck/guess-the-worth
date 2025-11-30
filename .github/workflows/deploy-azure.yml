@@ -43,16 +43,11 @@ jobs:
           app-name: ${{ secrets.AZURE_BACKEND_APP_NAME }}
           images: ghcr.io/${{ env.REPO_LOWERCASE }}/backend:latest
 
-      - name: Run database migrations
+      - name: Wait for app startup
         run: |
-          # Install Azure CLI if not available
-          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash || true
-
-          # Run migrations via Azure App Service SSH or use a migration job
-          # This requires the app to be running first
-          echo "Database migrations should be run manually or via a separate migration job"
-          echo "You can use: az webapp ssh --name ${{ secrets.AZURE_BACKEND_APP_NAME }} --resource-group <your-rg>"
-          echo "Then run: python -m alembic upgrade head"
+          echo "Waiting for app to start and run migrations..."
+          echo "Migrations run automatically in start.py"
+          sleep 20
 
       - name: Health check
         run: |
