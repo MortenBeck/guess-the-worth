@@ -78,10 +78,12 @@ async def create_bid(
         raise HTTPException(status_code=403, detail="You cannot bid on your own artwork")
 
     # Validate bid is higher than current highest bid (if any)
-    if artwork.current_highest_bid and bid.amount <= artwork.current_highest_bid:
+    # Use 0.0 as default if current_highest_bid is None
+    current_bid = artwork.current_highest_bid or 0.0
+    if current_bid > 0 and bid.amount <= current_bid:
         raise HTTPException(
             status_code=400,
-            detail=f"Bid must be higher than current highest bid (${artwork.current_highest_bid})",
+            detail=f"Bid must be higher than current highest bid (${current_bid})",
         )
 
     # Check if bid meets threshold
@@ -95,8 +97,8 @@ async def create_bid(
         is_winning=is_winning,
     )
 
-    # Update artwork current highest bid
-    if bid.amount > artwork.current_highest_bid:
+    # Update artwork current highest bid (handle None safely)
+    if bid.amount > current_bid:
         artwork.current_highest_bid = bid.amount
 
     # If winning bid, mark artwork as PENDING_PAYMENT
@@ -140,7 +142,7 @@ async def create_bid(
                 },
                 "artwork": {
                     "id": artwork.id,
-                    "current_highest_bid": float(artwork.current_highest_bid),
+                    "current_highest_bid": float(artwork.current_highest_bid or 0.0),
                     "status": artwork.status.value,
                 },
             },

@@ -6,8 +6,12 @@ exclude =
     __pycache__,
     .venv,
     venv,
-    alembic/versions,
+    env,
+    node_modules,
+    frontend/node_modules,
+    .eggs,
+    *.egg,
     build,
-    dist
-per-file-ignores =
-    __init__.py:F401
+    dist,
+    .tox,
+    backend/alembic/versions

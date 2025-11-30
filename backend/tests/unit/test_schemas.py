@@ -21,7 +21,8 @@ class TestUserSchemas:
     """Test user-related Pydantic schemas."""
 
     def test_user_create_valid(self):
-        """Test UserCreate with valid data (Auth0 migration - minimal user reference)."""
+        """Test UserCreate with valid data
+        (Auth0 migration - minimal user reference)."""
         user_data = {
             "auth0_sub": "auth0|123456",
         }

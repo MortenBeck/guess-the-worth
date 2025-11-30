@@ -236,7 +236,8 @@ def test_audit_log_queryable_by_action(db_session: Session, buyer_user):
 
 
 def test_audit_service_handles_database_errors_gracefully(db_session: Session, buyer_user):
-    """Test that AuditService returns None when database errors occur without crashing."""
+    """Test that AuditService returns None when database errors occur
+    without crashing."""
     from unittest.mock import MagicMock
 
     from services.audit_service import AuditService

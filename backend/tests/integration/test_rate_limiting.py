@@ -9,7 +9,8 @@ from fastapi.testclient import TestClient
 
 
 def test_rate_limiting_on_registration(client: TestClient):
-    """Test rate limiting functionality - registration endpoint removed (handled by Auth0)."""
+    """Test rate limiting functionality - registration endpoint removed
+    (handled by Auth0)."""
     # NOTE: Registration endpoint removed - Auth0 handles authentication
     # This test is kept to verify general rate limiting middleware is active
     # Testing with a simple GET endpoint instead
