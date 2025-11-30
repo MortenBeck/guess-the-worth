@@ -245,7 +245,7 @@ class TestStripeWebhook:
 
     def test_webhook_no_secret_configured(self, client: TestClient):
         """Test webhook when webhook secret not configured."""
-        with patch("config.settings.settings") as mock_settings:
+        with patch("routers.payments.settings") as mock_settings:
             mock_settings.stripe_webhook_secret = None
 
             response = client.post(

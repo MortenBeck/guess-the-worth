@@ -69,7 +69,7 @@ class TestStripeServiceCreatePaymentIntent:
         call_args = mock_stripe_create.call_args
         assert call_args.kwargs["amount"] == 10000  # $100.00 in cents
         assert call_args.kwargs["currency"] == "usd"
-        assert call_args.kwargs["payment_method_types"] == ["card"]
+        assert call_args.kwargs["automatic_payment_methods"] == {"enabled": True}
         assert str(winning_bid.id) in call_args.kwargs["metadata"]["bid_id"]
 
         # Verify result
