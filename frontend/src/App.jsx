@@ -25,7 +25,6 @@ const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const FavouritesPage = lazy(() => import("./pages/FavouritesPage"));
 const HelpPage = lazy(() => import("./pages/HelpPage"));
-const PaymentPage = lazy(() => import("./pages/PaymentPage"));
 
 function App() {
   const { isLoading: auth0Loading, isAuthenticated, user, getAccessTokenSilently } = useAuth0();
@@ -94,7 +93,6 @@ function App() {
             <Route path="/dashboard" element={<UserDashboard />} />
             <Route path="/seller-dashboard" element={<SellerDashboard />} />
             <Route path="/add-artwork" element={<AddArtworkPage />} />
-            <Route path="/payment" element={<PaymentPage />} />
             <Route
               path="/admin-dashboard"
               element={
