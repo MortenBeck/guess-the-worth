@@ -1,8 +1,10 @@
 """Tests for Stripe configuration validator."""
 
+import sys
 import pytest
 from unittest.mock import patch, MagicMock
 from utils.stripe_validator import StripeValidator
+import stripe
 
 
 class TestStripeValidator:
@@ -120,3 +122,71 @@ class TestStripeValidator:
         assert status["publishable_key_set"] is False
         assert status["webhook_secret_set"] is False
         assert len(status["errors"]) > 0
+
+    @patch("utils.stripe_validator.settings")
+    @patch("stripe.Account.retrieve")
+    def test_validate_configuration_stripe_auth_error(self, mock_retrieve, mock_settings):
+        """Test validation with Stripe authentication error."""
+        mock_settings.stripe_secret_key = "sk_test_invalid"
+        mock_settings.stripe_publishable_key = "pk_test_valid_key"
+        mock_settings.stripe_webhook_secret = "whsec_secret"
+        mock_retrieve.side_effect = stripe.error.AuthenticationError("Invalid key")
+
+        is_valid, errors = StripeValidator.validate_configuration()
+
+        assert is_valid is False
+        assert any("authentication failed" in error.lower() for error in errors)
+
+    @patch("utils.stripe_validator.settings")
+    @patch("stripe.Account.retrieve")
+    def test_validate_configuration_stripe_generic_error(self, mock_retrieve, mock_settings):
+        """Test validation with generic Stripe error."""
+        mock_settings.stripe_secret_key = "sk_test_valid_key"
+        mock_settings.stripe_publishable_key = "pk_test_valid_key"
+        mock_settings.stripe_webhook_secret = "whsec_secret"
+        mock_retrieve.side_effect = Exception("Network error")
+
+        is_valid, errors = StripeValidator.validate_configuration()
+
+        assert is_valid is False
+        assert any("Network error" in error for error in errors)
+
+    @patch("utils.stripe_validator.settings")
+    @patch("builtins.print")
+    def test_print_validation_report_valid(self, mock_print, mock_settings):
+        """Test print_validation_report with valid configuration."""
+        mock_settings.stripe_secret_key = "sk_test_valid_key_long_enough"
+        mock_settings.stripe_publishable_key = "pk_test_valid_key_long_enough"
+        mock_settings.stripe_webhook_secret = "whsec_secret"
+        mock_settings.environment = "test"
+
+        with patch("stripe.Account.retrieve"):
+            result = StripeValidator.print_validation_report()
+
+        assert result is True
+        mock_print.assert_called()
+
+    @patch("utils.stripe_validator.settings")
+    @patch("builtins.print")
+    def test_print_validation_report_invalid(self, mock_print, mock_settings):
+        """Test print_validation_report with invalid configuration."""
+        mock_settings.stripe_secret_key = ""
+        mock_settings.stripe_publishable_key = ""
+        mock_settings.stripe_webhook_secret = None
+
+        result = StripeValidator.print_validation_report()
+
+        assert result is False
+        mock_print.assert_called()
+
+    @patch("utils.stripe_validator.settings")
+    def test_validate_none_keys(self, mock_settings):
+        """Test validation with None values."""
+        mock_settings.stripe_secret_key = None
+        mock_settings.stripe_publishable_key = None
+        mock_settings.stripe_webhook_secret = None
+
+        is_valid, errors = StripeValidator.validate_configuration()
+
+        assert is_valid is False
+        assert len(errors) >= 3
