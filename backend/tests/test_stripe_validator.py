@@ -1,10 +1,9 @@
 """Tests for Stripe configuration validator."""
 
-import sys
-import pytest
-from unittest.mock import patch, MagicMock
-from utils.stripe_validator import StripeValidator
+from unittest.mock import patch
 import stripe
+
+from utils.stripe_validator import StripeValidator
 
 
 class TestStripeValidator:
