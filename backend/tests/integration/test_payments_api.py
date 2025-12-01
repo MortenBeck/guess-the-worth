@@ -240,6 +240,26 @@ class TestCreatePaymentIntent:
         assert response.status_code == 400
         assert "already completed" in response.json()["detail"]
 
+    @patch("routers.payments.StripeValidator.get_stripe_status")
+    def test_create_payment_intent_stripe_not_configured(
+        self, mock_get_status, client: TestClient, winning_bid, buyer_token
+    ):
+        """Test payment intent creation when Stripe is not configured."""
+        mock_get_status.return_value = {
+            "configured": False,
+            "errors": ["STRIPE_SECRET_KEY is not set", "STRIPE_PUBLISHABLE_KEY is not set"],
+        }
+
+        response = client.post(
+            "/api/payments/create-intent",
+            json={"bid_id": winning_bid.id},
+            headers=create_auth_header(buyer_token),
+        )
+
+        assert response.status_code == 503
+        assert "Payment processing is not configured" in response.json()["detail"]
+        assert "STRIPE_SECRET_KEY is not set" in response.json()["detail"]
+
 
 class TestStripeWebhook:
     """
