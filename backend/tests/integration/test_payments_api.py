@@ -122,56 +122,6 @@ class TestCreatePaymentIntent:
 
         assert response.status_code == 401
 
-    @patch("services.stripe_service.StripeService.create_payment_intent")
-    @patch("services.audit_service.AuditService.log_action")
-    def test_create_payment_intent_wrong_user(
-        self,
-        mock_audit_log,
-        mock_create_intent,
-        client: TestClient,
-        db_session,
-        winning_bid,
-        buyer_user,
-        buyer_token,
-    ):
-        """Test successful payment intent creation."""
-        mock_create_intent.return_value = {
-            "client_secret": "pi_test123_secret_abc",
-            "payment_intent_id": "pi_test123",
-            "amount": 100.0,
-            "currency": "usd",
-            "payment_id": 1,
-        }
-
-        response = client.post(
-            "/api/payments/create-intent",
-            json={"bid_id": winning_bid.id},
-            headers=create_auth_header(buyer_token),
-        )
-
-        assert response.status_code == 200
-        data = response.json()
-        assert data["client_secret"] == "pi_test123_secret_abc"
-        assert data["payment_intent_id"] == "pi_test123"
-        assert float(data["amount"]) == 100.0
-        assert data["currency"] == "usd"
-
-        # Verify artwork status updated
-        db_session.refresh(winning_bid.artwork)
-        assert winning_bid.artwork.status == "PENDING_PAYMENT"
-
-        # Verify audit log called
-        mock_audit_log.assert_called_once()
-        call_args = mock_audit_log.call_args
-        assert call_args.kwargs["action"] == "payment_intent_created"
-        assert call_args.kwargs["resource_type"] == "payment"
-
-    def test_create_payment_intent_unauthorized(self, client: TestClient, winning_bid):
-        """Test payment intent creation without authentication."""
-        response = client.post("/api/payments/create-intent", json={"bid_id": winning_bid.id})
-
-        assert response.status_code == 401
-
     def test_create_payment_intent_wrong_user(self, client: TestClient, winning_bid, seller_token):
         """Test payment intent creation by non-bid owner."""
         response = client.post(
