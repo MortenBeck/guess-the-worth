@@ -3,9 +3,18 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import paymentService from "../services/paymentService";
 import { toaster } from "./ui/toaster-instance";
+import { checkStripeConfig, getStripeErrorMessage } from "../utils/stripeConfig";
+
+// Validate Stripe configuration
+const stripeConfig = checkStripeConfig();
+if (!stripeConfig.configured) {
+  console.error("Stripe Configuration Error:", stripeConfig.errors);
+}
 
 // Initialize Stripe with publishable key
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+const stripePromise = stripeConfig.configured
+  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
+  : null;
 
 /**
  * Payment form component (must be inside Elements provider)
@@ -36,13 +45,15 @@ function PaymentForm({ onSuccess, onError, amount, artworkTitle }) {
       });
 
       if (error) {
-        setErrorMessage(error.message);
+        const userMessage = getStripeErrorMessage(error);
+        setErrorMessage(userMessage);
         onError(error);
       } else if (paymentIntent && paymentIntent.status === "succeeded") {
         onSuccess(paymentIntent);
       }
     } catch (err) {
-      setErrorMessage("Payment failed. Please try again.");
+      const userMessage = getStripeErrorMessage(err);
+      setErrorMessage(userMessage);
       onError(err);
     } finally {
       setIsProcessing(false);
@@ -102,7 +113,18 @@ function PaymentModal({ isOpen, onClose, bidId, amount, artworkTitle }) {
       setClientSecret(data.client_secret);
     } catch (err) {
       console.error("Failed to create payment intent:", err);
-      setError(err.response?.data?.detail || "Failed to initialize payment. Please try again.");
+      const userMessage = getStripeErrorMessage(err);
+      setError(userMessage);
+
+      // Show toast for critical errors
+      if (err.response?.status === 503) {
+        toaster.create({
+          title: "Payment Unavailable",
+          description: "Payment processing is not configured. Please contact support.",
+          type: "error",
+          duration: 10000,
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -134,6 +156,38 @@ function PaymentModal({ isOpen, onClose, bidId, amount, artworkTitle }) {
   };
 
   if (!isOpen) return null;
+
+  // Check if Stripe is not configured
+  if (!stripeConfig.configured) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold text-red-600">Payment Unavailable</h2>
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 text-2xl leading-none"
+              aria-label="Close"
+            >
+              ×
+            </button>
+          </div>
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+            <p className="font-semibold mb-2">Stripe is not configured</p>
+            <p className="text-sm mb-2">Payment processing is currently unavailable.</p>
+            <ul className="text-sm list-disc list-inside">
+              {stripeConfig.errors.map((error, index) => (
+                <li key={index}>{error}</li>
+              ))}
+            </ul>
+          </div>
+          <p className="text-sm text-gray-600">
+            Please contact support or see STRIPE_SETUP_GUIDE.md for configuration instructions.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const stripeOptions = clientSecret
     ? {

@@ -76,6 +76,25 @@ async def root():
     return {"message": "Guess The Worth API"}
 
 
+@app.get("/stripe-health")
+async def public_stripe_health():
+    """Public Stripe configuration health check (no auth required)."""
+    from utils.stripe_validator import StripeValidator
+
+    status = StripeValidator.get_stripe_status()
+    return {
+        "stripe_configured": status["configured"],
+        "keys_configured": {
+            "secret_key": status["secret_key_set"],
+            "publishable_key": status["publishable_key_set"],
+            "webhook_secret": status["webhook_secret_set"],
+        },
+        "ready_for_payments": status["configured"],
+        "errors": status["errors"] if not status["configured"] else [],
+        "help": "See STRIPE_SETUP_GUIDE.md for configuration instructions",
+    }
+
+
 @sio.event
 async def connect(sid, environ):
     """

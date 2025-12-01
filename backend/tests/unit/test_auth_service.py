@@ -65,6 +65,16 @@ class TestAuth0Service:
             AuthService.verify_auth0_token("token")
 
     @patch("services.auth_service.requests.get")
+    def test_verify_auth0_token_request_exception(self, mock_get):
+        """Test Auth0 token verification with requests.RequestException."""
+        import requests
+
+        mock_get.side_effect = requests.RequestException("Connection timeout")
+
+        with pytest.raises(ValueError, match="Auth0 verification failed"):
+            AuthService.verify_auth0_token("token")
+
+    @patch("services.auth_service.requests.get")
     def test_verify_auth0_token_no_roles(self, mock_get):
         """Test Auth0 token with missing roles claim."""
         mock_response = Mock()

@@ -1,6 +1,6 @@
 """Payment endpoints for Stripe integration."""
 
-from typing import List
+from typing import Any, Dict, List
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from sqlalchemy.orm import Session, joinedload
@@ -13,6 +13,7 @@ from schemas import PaymentCreate, PaymentIntentResponse, PaymentResponse
 from services.audit_service import AuditService
 from services.stripe_service import StripeService
 from utils.auth import get_current_user
+from utils.stripe_validator import StripeValidator
 
 router = APIRouter()
 
@@ -32,6 +33,18 @@ async def create_payment_intent(
     - Bid must be winning
     - Payment intent can only be created once per bid
     """
+    # Validate Stripe is configured
+    stripe_status = StripeValidator.get_stripe_status()
+    if not stripe_status["configured"]:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Payment processing is not configured. "
+                "Please contact support. "
+                f"Errors: {', '.join(stripe_status['errors'][:2])}"
+            ),
+        )
+
     # Get bid with related data
     bid = (
         db.query(Bid)
@@ -304,3 +317,28 @@ async def get_artwork_payment(
         status_code=403,
         detail="You don't have permission to view this payment",
     )
+
+
+@router.get("/health", response_model=Dict[str, Any])
+async def stripe_health_check():
+    """
+    Health check endpoint for Stripe configuration.
+
+    Returns Stripe configuration status without exposing sensitive keys.
+    Useful for debugging and monitoring.
+
+    Public endpoint - no authentication required.
+    """
+    status = StripeValidator.get_stripe_status()
+
+    return {
+        "stripe_configured": status["configured"],
+        "keys_configured": {
+            "secret_key": status["secret_key_set"],
+            "publishable_key": status["publishable_key_set"],
+            "webhook_secret": status["webhook_secret_set"],
+        },
+        "ready_for_payments": status["configured"],
+        "errors": status["errors"] if not status["configured"] else [],
+        "help": "See STRIPE_SETUP_GUIDE.md for configuration instructions",
+    }
