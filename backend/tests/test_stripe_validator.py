@@ -1,6 +1,7 @@
 """Tests for Stripe configuration validator."""
 
 from unittest.mock import patch
+
 import stripe
 
 from utils.stripe_validator import StripeValidator
