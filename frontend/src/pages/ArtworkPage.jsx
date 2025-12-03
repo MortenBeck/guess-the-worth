@@ -13,7 +13,7 @@ import {
   Spinner,
   Center,
 } from "@chakra-ui/react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { artworkService, bidService } from "../services/api";
 import useAuthStore from "../store/authStore";
 import useFavoritesStore from "../store/favoritesStore";
@@ -21,13 +21,15 @@ import { useRealtimeBids } from "../hooks/useRealtimeBids";
 import placeholderImg from "../assets/placeholder.jpg";
 import { toaster } from "../components/ui/toaster-instance";
 import socket from "../services/socket";
+import PaymentModal from "../components/PaymentModal";
 
 const ArtworkPage = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
   const { isAuthenticated } = useAuthStore();
   const { toggleFavorite, isFavorite } = useFavoritesStore();
   const [bidAmount, setBidAmount] = useState("");
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [paymentData, setPaymentData] = useState(null);
   const queryClient = useQueryClient();
 
   // Enable real-time bid updates for this artwork
@@ -60,15 +62,19 @@ const ArtworkPage = () => {
         return;
       }
 
-      // Only redirect to payment page if it's for this artwork
+      // Only open payment modal if it's for this artwork
       if (data.artwork_id === parseInt(id)) {
         const winningBid = data.winning_bid ?? 0;
         const artworkTitle = artwork?.title || "Unknown Artwork";
 
-        // Redirect to dedicated payment page
-        navigate(
-          `/payment?bidId=${data.bid_id}&amount=${winningBid}&artwork=${encodeURIComponent(artworkTitle)}`
-        );
+        // Open payment modal with data
+        setPaymentData({
+          bidId: data.bid_id,
+          amount: winningBid,
+          artworkTitle: artworkTitle,
+          artworkId: data.artwork_id,
+        });
+        setPaymentModalOpen(true);
 
         // Small delay to prevent collision with bid success toast
         setTimeout(() => {
@@ -91,6 +97,10 @@ const ArtworkPage = () => {
 
       // Only handle if for this artwork
       if (data.artwork_id === parseInt(id)) {
+        // Close payment modal
+        setPaymentModalOpen(false);
+        setPaymentData(null);
+
         // Invalidate queries to refetch fresh data
         queryClient.invalidateQueries(["artwork", id]);
         queryClient.invalidateQueries(["bids", id]);
@@ -134,7 +144,7 @@ const ArtworkPage = () => {
       socket.off("payment_completed", handlePaymentCompleted);
       socket.off("payment_failed", handlePaymentFailed);
     };
-  }, [id, isAuthenticated, artwork, queryClient, navigate]);
+  }, [id, isAuthenticated, artwork, queryClient]);
 
   // Fetch recent bids
   const { data: recentBids = [], isLoading: bidsLoading } = useQuery({
@@ -550,6 +560,21 @@ const ArtworkPage = () => {
           </VStack>
         </Box>
       </Container>
+
+      {/* Payment Modal */}
+      {paymentModalOpen && paymentData && (
+        <PaymentModal
+          isOpen={paymentModalOpen}
+          onClose={() => {
+            setPaymentModalOpen(false);
+            setPaymentData(null);
+          }}
+          bidId={paymentData.bidId}
+          amount={paymentData.amount}
+          artworkTitle={paymentData.artworkTitle}
+          artworkId={paymentData.artworkId}
+        />
+      )}
     </Box>
   );
 };
