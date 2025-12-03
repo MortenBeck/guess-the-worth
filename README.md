@@ -125,11 +125,6 @@ docker exec guess_the_worth_backend python seeds/seed_manager.py
 - **Status**: ✅ **Code: 9.5/10 Production-Ready** - Just needs webhook secret!
 - **Implementation**: Complete PCI-compliant payment flow, webhooks, real-time updates
 - **Current State**: API keys set ✅ | Webhook secret needed ⚠️ (3 min fix)
-- **Quickstart**: [QUICKSTART_STRIPE.md](QUICKSTART_STRIPE.md) - Get payments working in 10 min
-- **Full Setup**: [STRIPE_SETUP_GUIDE.md](STRIPE_SETUP_GUIDE.md) - Complete configuration guide
-- **Testing**: [test_stripe_integration.md](test_stripe_integration.md) - Comprehensive test procedures
-- **Status Check**: [STRIPE_STATUS.md](STRIPE_STATUS.md) - Current status & next steps
-- **Validation**: Run `python validate_stripe.py` to check configuration
 - **Health Check**: `GET /api/payments/health`
 
 ---
@@ -252,9 +247,6 @@ npm run dev
      # Copy webhook secret (whsec_...) to backend/.env
      # Restart backend → DONE! 🎉
      ```
-   - Quickstart: [QUICKSTART_STRIPE.md](QUICKSTART_STRIPE.md)
-   - Full guide: [STRIPE_SETUP_GUIDE.md](STRIPE_SETUP_GUIDE.md)
-   - Validation: `python validate_stripe.py`
 
 2. **Fix SENTRY Frontend**
 
