@@ -1,5 +1,5 @@
 # Builder stage - build the application
-FROM node:20-alpine AS builder
+FROM node:25-alpine AS builder
 
 WORKDIR /app
 
@@ -37,7 +37,7 @@ ENV VITE_SENTRY_DSN=$VITE_SENTRY_DSN
 RUN npm run build
 
 # Dependencies stage - install production dependencies
-FROM node:20-alpine AS dependencies
+FROM node:25-alpine AS dependencies
 
 WORKDIR /app
 
@@ -53,7 +53,7 @@ COPY package*.json ./
 RUN npm ci --only=production
 
 # Production stage - alpine for compatibility
-FROM node:20-alpine
+FROM node:25-alpine
 
 WORKDIR /app
 
